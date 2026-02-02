@@ -7,8 +7,10 @@ from django.contrib import messages
 from .forms import ProfileForm
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth import login as auth_login
 from .models import Profile
 
+from django.contrib.messages.views import SuccessMessageMixin
 from django.contrib.auth.views import PasswordChangeView
 
 # 1. 클래스명을 조금 더 명확하게 변경
@@ -20,19 +22,24 @@ class UserLoginView(DjangoLoginView):
 
 class UserLogoutView(DjangoLogoutView):
     # 템플릿 없이 처리하거나 POST 요청으로 로그아웃을 처리하는 것이 정석입니다.
-    next_page = reverse_lazy("accounts:login")
+    next_page = reverse_lazy("accounts:home")
 
 def signup(request):
     if request.method == "POST":
         form = UserCreationForm(request.POST)
         if form.is_valid():
-            form.save()
-            return redirect("accounts:login")
+            user = form.save() # 저장된 유저 객체를 변수에 담음
+            auth_login(request, user) # 가입 즉시 로그인 처리
+            messages.success(request, f"{user.username}님, 환영합니다! 가입이 완료되었습니다.")
+            return redirect("accounts:home")
+        else:
+            # 유효성 검사 실패 시 에러 메시지 추가 (선택 사항)
+            messages.error(request, "가입 정보를 확인해주세요.")
     else:
         form = UserCreationForm()
+    
     return render(request, "accounts/signup.html", {"form": form})
 
-# 이 함수를 추가합니다! (@login_required는 제거)
 def home(request):
     """로그인 여부에 따라 다른 화면 렌더링"""
     if request.user.is_authenticated:
@@ -49,16 +56,10 @@ def home(request):
     return render(request, "accounts/home.html", context)
     
 
-class MyPasswordChangeView(PasswordChangeView):
+class MyPasswordChangeView(SuccessMessageMixin, PasswordChangeView):
     template_name = 'accounts/password_change.html'
-    # 기존코드
-    # success_url = reverse_lazy('password_change_done') # 변경 성공 시 이동할 URL 이름 
-    success_url = reverse_lazy('accounts:password_change_done') # 변경 성공 시 이동할 URL 이름
-
-    # 성공했을 때 사용자에게 알림(메시지)을 띄우고 싶다면 추가
-    def form_valid(self, form):
-        messages.success(self.request, "비밀번호가 성공적으로 변경되었습니다.")
-        return super().form_valid(form)
+    success_url = reverse_lazy('accounts:home')  # 홈으로 바로 이동
+    success_message = "비밀번호가 성공적으로 변경되었습니다." # 👈 Mixin 덕분에 한 줄로 해결!
     
 
 @login_required

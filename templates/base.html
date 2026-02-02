@@ -7,10 +7,31 @@
 <body>
     {% include 'components/header.html' %}
 
+    
     <div class="main-container">
-        {% include 'components/sidebar.html' %}
+        {% load static %}
+
+    <!-- 사이드바 -->
+        <aside class="sidebar">
+            <div class="logo-section">
+                <span class="logo-icon">💼</span>
+                <h1 class="logo-text">스마트 사업자<br>가계부</h1>
+            </div>
+
+            <nav class="sidebar-nav">
+                <!-- 사이드 네비게이션, 이부분 지우고 각 app의 사이드바로 설정 -->
+                {% block sidebar_nav %}
+                {% endblock %}
+            </nav>
+
+            <div class="sidebar-footer">
+                <p class="copyright">© 2026 스마트 사업자 가계부.<br>All rights reserved.</p>
+            </div>
+        </aside>
         <!-- 메인 콘텐츠 -->
         <main class="main-content">
+            {% include 'components/messages.html' %}
+
             <!-- 상단 네비게이션, 이부분 지우고 각 app의 네비로 설정 -->
             <nav class="top-nav">
                 {% block top_nav %}
