@@ -9,7 +9,7 @@
 {% block sidebar_nav %}
 <ul class="nav-list">
     <li class="nav-item active">
-        <a href="{% url 'dashboard:home' %}" class="nav-link">
+        <a href="{% url 'accounts:home_view' %}" class="nav-link">
             <span class="nav-icon">🏠</span>
             <span class="nav-text">홈</span>
         </a>
@@ -43,7 +43,7 @@
 
 {% block top_nav %}
 <div class="top-nav-links">
-    <a href="{% url 'dashboard:home' %}" class="nav-button active">홈</a>
+    <a href="{% url 'accounts:home_view' %}" class="nav-button active">홈</a>
     {% if user.is_authenticated %}
     <form method="post" action="{% url 'accounts:logout' %}" style="display:inline;">
         {% csrf_token %}
