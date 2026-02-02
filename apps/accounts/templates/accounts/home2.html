@@ -57,13 +57,14 @@
     <a href="#" class="nav-button">거래 내역</a>
     <a href="#" class="nav-button">프로필</a>
     <span class="nav-divider">|</span>
-    <span class="user-name">홈길동님</span>
+    <span class="user-name"> {{ user.username }} 님</span>
     <span class="nav-divider">|</span>
     <form action="{% url 'accounts:logout' %}" method="post" style="display:inline;">
     {% csrf_token %}
     <button type="submit" style="background:none; border:none; color:blue; text-decoration:underline; cursor:pointer; padding:0;">
         로그아웃
     </button>
+    <a href="{% url 'accounts:password_change' %}">비밀번호 변경</a>
     </form>
 
 </div>

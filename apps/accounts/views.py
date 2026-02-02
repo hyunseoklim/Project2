@@ -48,7 +48,9 @@ def home(request):
 
 class MyPasswordChangeView(PasswordChangeView):
     template_name = 'accounts/password_change.html'
-    success_url = reverse_lazy('password_change_done') # 변경 성공 시 이동할 URL 이름
+    # 기존코드
+    # uccess_url = reverse_lazy('password_change_done') # 변경 성공 시 이동할 URL 이름 
+    success_url = reverse_lazy('accounts:password_change_done') # 변경 성공 시 이동할 URL 이름
 
     # 성공했을 때 사용자에게 알림(메시지)을 띄우고 싶다면 추가
     def form_valid(self, form):
