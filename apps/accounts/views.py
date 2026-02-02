@@ -11,14 +11,15 @@ from .models import Profile
 
 from django.contrib.auth.views import PasswordChangeView
 
-class LoginView(DjangoLoginView):
+# 1. 클래스명을 조금 더 명확하게 변경
+class UserLoginView(DjangoLoginView):
     template_name = "accounts/login.html"
     redirect_authenticated_user = True
+    # 메서드 대신 변수로 간단하게 지정 가능
+    next_page = reverse_lazy("accounts:home") 
 
-    def get_success_url(self):
-        return reverse_lazy("accounts:home")
-
-class LogoutView(DjangoLogoutView):
+class UserLogoutView(DjangoLogoutView):
+    # 템플릿 없이 처리하거나 POST 요청으로 로그아웃을 처리하는 것이 정석입니다.
     next_page = reverse_lazy("accounts:login")
 
 def signup(request):
@@ -33,21 +34,19 @@ def signup(request):
 
 # 이 함수를 추가합니다! (@login_required는 제거)
 def home(request):
-    """
-    로그인 여부에 따라 다른 화면 렌더링
-    """
+    """로그인 여부에 따라 다른 화면 렌더링"""
     if request.user.is_authenticated:
-        # 로그인 상태: 프로필 정보를 가져와서 home.html 렌더링
         profile = getattr(request.user, 'profile', None)
         context = {
             'user': request.user,
             'profile': profile,
             'masked_biz_num': profile.get_masked_business_number() if profile else "미등록"
         }
-        return render(request, "accounts/home2.html", context)
     else:
-        # 비로그인 상태: 서비스 소개 화면 home2.html 렌더링
-        return render(request, "accounts/home.html")
+        context = {}
+    
+    # 하나의 템플릿으로 통일!
+    return render(request, "accounts/home.html", context)
     
 
 class MyPasswordChangeView(PasswordChangeView):

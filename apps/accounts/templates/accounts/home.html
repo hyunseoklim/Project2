@@ -23,7 +23,6 @@
                 <span class="nav-text">로그아웃</span>
             </button>
         </form>
-        <a href="{% url 'password_change' %}">비밀번호 변경</a>
     </li>
     {% else %}
     <li class="nav-item">
@@ -50,6 +49,12 @@
         {% csrf_token %}
         <button type="submit" class="nav-button">로그아웃</button>
     </form>
+    <form method="post" action="{% url 'accounts:password_change' %}" style="display:inline;">
+        {% csrf_token %}
+        <button type="submit" class="nav-button">비밀번호 변경</button>
+    </form>
+    <a href="{% url 'accounts:profile_detail' %}" class="nav-button">프로필 보기</a>
+    <a href="{% url 'accounts:profile_edit' %}" class="nav-button">프로필 수정</a>
     {% else %}
     <a href="{% url 'accounts:login' %}" class="nav-button">로그인</a>
     <a href="{% url 'accounts:signup' %}" class="nav-button">회원가입</a>

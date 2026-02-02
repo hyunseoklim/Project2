@@ -7,8 +7,8 @@ app_name = "accounts"
 urlpatterns = [
     # root(/) 혹은 accounts/home/ 경로를 views.home에 연결
     path("", views.home, name="home"), 
-    path("login/", views.LoginView.as_view(), name="login"),
-    path("logout/", views.LogoutView.as_view(), name="logout"),
+    path("login/", views.UserLoginView.as_view(), name="login"),
+    path("logout/", views.UserLogoutView.as_view(), name="logout"),
     path("signup/", views.signup, name="signup"),
     # 비밀번호 변경 페이지 
     path('password_change/', views.MyPasswordChangeView.as_view(), name='password_change'),
