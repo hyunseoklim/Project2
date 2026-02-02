@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>나의 사업자 프로필</h2>
+
+<ul>
+    <li><strong>사업자 번호:</strong> {{ profile.business_registration_number }}</li>
+    <li><strong>업종:</strong> {{ profile.business_type }}</li>
+    <li><strong>전화번호:</strong> {{ profile.phone }}</li>
+</ul>
+
+<a href="{% url 'accounts:profile_edit' %}">수정하기</a>
+{% endblock %}

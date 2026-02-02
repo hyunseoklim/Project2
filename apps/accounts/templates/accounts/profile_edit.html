@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h2>사업자 프로필 설정</h2>
+    <p class="text-muted">세무 증빙과 가계부 관리를 위해 정확한 정보를 입력해주세요.</p>
+    
+    <form method="post" class="profile-form">
+        {% csrf_token %}
+        <div class="card" style="padding: 20px; border: 1px solid #eee;">
+            {{ form.as_p }}
+        </div>
+        <div style="margin-top: 20px;">
+            <button type="submit" class="btn btn-primary">저장하기</button>
+            <a href="{% url 'accounts:home' %}" class="btn btn-secondary">취소</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
