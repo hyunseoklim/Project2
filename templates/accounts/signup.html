@@ -1,0 +1,59 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>회원가입 - 스마트 사업자 가계부</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+
+<body>
+    <div class="content-wrapper" style="max-width: 480px; margin: 80px auto;">
+        <h2 class="page-title" style="margin-bottom: 16px;">회원가입</h2>
+        {% if form.errors %}
+        <div class="alert" style="margin-bottom: 12px; color: #c0392b;">
+            입력값을 확인해 주세요.
+            <ul style="margin-top: 8px; padding-left: 18px;">
+                {% for field in form %}
+                {% for error in field.errors %}
+                <li>{{ error }}</li>
+                {% endfor %}
+                {% endfor %}
+                {% for error in form.non_field_errors %}
+                <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+        <form method="post" novalidate>
+            {% csrf_token %}
+            <div style="margin-bottom: 12px;">
+                <label for="id_username">아이디</label>
+                {{ form.username }}
+                {% if form.username.help_text %}
+                <small style="display:block; color:#666; margin-top:4px;">{{ form.username.help_text }}</small>
+                {% endif %}
+            </div>
+            <div style="margin-bottom: 12px;">
+                <label for="id_password1">비밀번호</label>
+                {{ form.password1 }}
+                {% if form.password1.help_text %}
+                <small style="display:block; color:#666; margin-top:4px;">{{ form.password1.help_text }}</small>
+                {% endif %}
+            </div>
+            <div style="margin-bottom: 16px;">
+                <label for="id_password2">비밀번호 확인</label>
+                {{ form.password2 }}
+                {% if form.password2.help_text %}
+                <small style="display:block; color:#666; margin-top:4px;">{{ form.password2.help_text }}</small>
+                {% endif %}
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%;">회원가입</button>
+        </form>
+        <p style="margin-top: 12px;">이미 계정이 있나요? <a href="{% url 'accounts:login' %}">로그인</a></p>
+    </div>
+</body>
+
+</html>
