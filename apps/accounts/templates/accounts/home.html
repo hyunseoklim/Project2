@@ -1,26 +1,120 @@
 {% extends "base.html" %}
 {% load static %}
-{% block content %}
-<!DOCTYPE html>
-<html lang="ko">
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>계정 홈 - 스마트 사업자 가계부</title>
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
-</head>
+{% block title %}환영합니다 - 스마트 사업자 가계부{% endblock %}
 
-<body>
-    <div class="content-wrapper" style="max-width: 640px; margin: 80px auto;">
-        <h2 class="page-title" style="margin-bottom: 12px;">환영합니다</h2>
-        <p style="margin-bottom: 20px;">로그인이 완료되었습니다.</p>
-        <form method="post" action="{% url 'accounts:logout' %}">
+{% block banner_mode %}{% if user.is_authenticated %}로그인 상태{% else %}로그아웃 상태{% endif %}{% endblock %}
+{% block current_status %}{% if user.is_authenticated %}로그인 상태{% else %}로그아웃 상태{% endif %}{% endblock %}
+
+{% block sidebar_nav %}
+<ul class="nav-list">
+    <li class="nav-item active">
+        <a href="{% url 'accounts:home' %}" class="nav-link">
+            <span class="nav-icon">🏠</span>
+            <span class="nav-text">홈</span>
+        </a>
+    </li>
+    {% if user.is_authenticated %}
+    <li class="nav-item">
+        <form method="post" action="{% url 'accounts:logout' %}" style="display:inline;">
             {% csrf_token %}
-            <button type="submit" class="btn btn-secondary">로그아웃</button>
+            <button type="submit" class="nav-link" style="background:none;border:none;padding:0;cursor:pointer;">
+                <span class="nav-icon">🔓</span>
+                <span class="nav-text">로그아웃</span>
+            </button>
         </form>
-    </div>
-</body>
+    </li>
+    {% else %}
+    <li class="nav-item">
+        <a href="{% url 'accounts:login' %}" class="nav-link">
+            <span class="nav-icon">🔐</span>
+            <span class="nav-text">로그인</span>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a href="{% url 'accounts:signup' %}" class="nav-link">
+            <span class="nav-icon">✏️</span>
+            <span class="nav-text">회원가입</span>
+        </a>
+    </li>
+    {% endif %}
+</ul>
+{% endblock %}
 
-</html>
+{% block top_nav %}
+<div class="top-nav-links">
+    <a href="{% url 'accounts:home' %}" class="nav-button active">홈</a>
+    {% if user.is_authenticated %}
+    <form method="post" action="{% url 'accounts:logout' %}" style="display:inline;">
+        {% csrf_token %}
+        <button type="submit" class="nav-button">로그아웃</button>
+    </form>
+    {% else %}
+    <a href="{% url 'accounts:login' %}" class="nav-button">로그인</a>
+    <a href="{% url 'accounts:signup' %}" class="nav-button">회원가입</a>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="welcome-section">
+    <div class="welcome-header">
+        <div class="welcome-icon">💼</div>
+        <h2 class="page-title">스마트 사업자 가계부</h2>
+    </div>
+
+    <div class="welcome-message">
+        <h3 class="greeting">환영합니다! 👋</h3>
+        <p class="subtitle">스마트 사업자 가계부란?</p>
+        <p class="description">1인 사업자와 무인 사업자를 위한 똑똑한 재무 관리 시스템입니다.</p>
+    </div>
+
+    <div class="features-section">
+        <h4 class="section-title">주요 기능:</h4>
+        <ul class="feature-list">
+            <li class="feature-item">
+                <span class="check-icon">✅</span>
+                <span class="feature-text">부가세 자동 계산 (과세 10%, 면세, 영세율)</span>
+            </li>
+            <li class="feature-item">
+                <span class="check-icon">✅</span>
+                <span class="feature-text">계좌 잔액 실시간 추적</span>
+            </li>
+            <li class="feature-item">
+                <span class="check-icon">✅</span>
+                <span class="feature-text">결별/카테고리별 지출 분석</span>
+            </li>
+            <li class="feature-item">
+                <span class="check-icon">✅</span>
+                <span class="feature-text">영수증 첨부 및 관리</span>
+            </li>
+            <li class="feature-item">
+                <span class="check-icon">✅</span>
+                <span class="feature-text">다중 사업장 지원</span>
+            </li>
+            <li class="feature-item">
+                <span class="check-icon">✅</span>
+                <span class="feature-text">부가세 신고 준비 자료</span>
+            </li>
+        </ul>
+    </div>
+
+    <div class="cta-section">
+        <h4 class="section-title">지금 바로 시작하세요!</h4>
+        <div class="button-group">
+            <a href="#" class="btn btn-primary">회원가입하기</a>
+            <a href="#" class="btn btn-secondary">로그인하기</a>
+        </div>
+    </div>
+
+    <div class="target-audience">
+        <h4 class="section-title">이런 분들께 추천합니다:</h4>
+        <ul class="audience-list">
+            <li class="audience-item">💡 혼자서 사업을 운영하는 1인 사업자</li>
+            <li class="audience-item">💡 무인 카페, 무인 빨래방 등 무인 매장 운영자</li>
+            <li class="audience-item">💡 여러 지출을 관리하는 소규모 사업자</li>
+            <li class="audience-item">💡 부가세 신고와 복잡하게 느껴지는 초보 사업자</li>
+        </ul>
+    </div>
+</div>
 {% endblock %}

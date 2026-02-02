@@ -56,6 +56,12 @@
                     </li>
                     {% else %}
                     <li class="nav-item">
+                        <a href="{% url 'accounts:home' %}" class="nav-link">
+                            <span class="nav-icon">🏠</span>
+                            <span class="nav-text">홈</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a href="{% url 'accounts:login' %}" class="nav-link">
                             <span class="nav-icon">🔐</span>
                             <span class="nav-text">로그인</span>
@@ -90,6 +96,7 @@
                         <button type="submit" class="nav-button">로그아웃</button>
                     </form>
                     {% else %}
+                    <a href="{% url 'accounts:home' %}" class="nav-button">홈</a>
                     <a href="{% url 'accounts:login' %}" class="nav-button">로그인</a>
                     <a href="{% url 'accounts:signup' %}" class="nav-button">회원가입</a>
                     {% endif %}
