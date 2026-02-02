@@ -53,7 +53,7 @@ def home(request):
 class MyPasswordChangeView(PasswordChangeView):
     template_name = 'accounts/password_change.html'
     # 기존코드
-    # uccess_url = reverse_lazy('password_change_done') # 변경 성공 시 이동할 URL 이름 
+    # success_url = reverse_lazy('password_change_done') # 변경 성공 시 이동할 URL 이름 
     success_url = reverse_lazy('accounts:password_change_done') # 변경 성공 시 이동할 URL 이름
 
     # 성공했을 때 사용자에게 알림(메시지)을 띄우고 싶다면 추가
@@ -64,17 +64,19 @@ class MyPasswordChangeView(PasswordChangeView):
 
 @login_required
 def profile_edit(request):
-    # 1. 현재 유저의 프로필을 가져오거나, 없으면 생성
+    # 1. 안전하게 프로필을 가져옵니다. (없으면 여기서 생성됨)
     profile, created = Profile.objects.get_or_create(user=request.user)
     
     if request.method == "POST":
-        # 2. POST 데이터로 폼 채우기
+        # 2. instance=profile을 사용하여 데이터를 덮어씁니다.
         form = ProfileForm(request.POST, instance=profile)
         if form.is_valid():
             form.save()
-            return redirect('accounts:home')  # 수정 후 홈으로 리다이렉트
+            # 3. 성공 메시지 추가
+            messages.success(request, "프로필이 성공적으로 저장되었습니다.")
+            return redirect('accounts:home')
     else:
-        # 3. 기존 데이터를 폼에 채워서 보여주기
+        # 4. 기존 데이터를 폼에 채워서 보여주기
         form = ProfileForm(instance=profile)
         
     return render(request, "accounts/profile_edit.html", {"form": form})
@@ -85,3 +87,4 @@ def profile_detail(request):
     
     # 'profile'이라는 이름으로 HTML에 데이터를 보냅니다.
     return render(request, 'accounts/profile_detail.html', {'profile': profile})
+

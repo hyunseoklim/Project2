@@ -5,6 +5,7 @@
 
 <ul>
     <li><strong>사업자 번호:</strong> {{ profile.business_registration_number }}</li>
+    <li><strong>사업자 번호:</strong> {{ profile.get_masked_business_number }}</li>
     <li><strong>업종:</strong> {{ profile.business_type }}</li>
     <li><strong>전화번호:</strong> {{ profile.phone }}</li>
 </ul>

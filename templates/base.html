@@ -39,6 +39,12 @@
                 <ul class="nav-list">
                     {% if user.is_authenticated %}
                     <li class="nav-item">
+                        <strong>{{ user.username }}</strong>님 환영합니다!
+                        {% if user.profile.business_type %}
+                            <br><small>({{ user.profile.get_business_type_display }})</small>
+                        {% endif %}
+                    </li>
+                    <li class="nav-item">
                         <a href="{% url 'accounts:home' %}" class="nav-link">
                             <span class="nav-icon">🏠</span>
                             <span class="nav-text">홈</span>
