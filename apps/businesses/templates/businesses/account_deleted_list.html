@@ -16,7 +16,7 @@
         </a>
     </li>
     <li class="nav-item">
-        <a href="{% url 'transactions:list' %}" class="nav-link">
+        <a href="{% url 'transactions:transaction_list' %}" class="nav-link">
             <span class="nav-icon">💰</span>
             <span class="nav-text">거래 관리</span>
         </a>
@@ -42,7 +42,7 @@
 <div class="top-nav-links">
     <a href="{% url 'accounts:home' %}" class="nav-button">홈</a>
     <a href="{% url 'accounts:home' %}" class="nav-button">대시보드</a>
-    <a href="{% url 'transactions:list' %}" class="nav-button">거래 관리</a>
+    <a href="{% url 'transactions:transaction_list' %}" class="nav-button">거래 관리</a>
     <a href="{% url 'businesses:account_list' %}" class="nav-button active">계좌 관리</a>
     <a href="{% url 'accounts:profile_detail' %}" class="nav-button">프로필</a>
     <span class="nav-divider">|</span>

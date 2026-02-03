@@ -18,7 +18,7 @@
         </a>
     </li>
     <li class="nav-item active">
-        <a href="{% url 'transactions:list' %}" class="nav-link">
+        <a href="{% url 'transactions:transaction_list' %}" class="nav-link">
             <span class="nav-icon">💰</span>
             <span class="nav-text">거래 관리</span>
         </a>
@@ -36,7 +36,7 @@
 <div class="top-nav-links">
     <a href="{% url 'accounts:home' %}" class="nav-button">홈</a>
     <a href="{% url 'accounts:home' %}" class="nav-button">대시보드</a>
-    <a href="{% url 'transactions:list' %}" class="nav-button active">거래 관리</a>
+    <a href="{% url 'transactions:transaction_list' %}" class="nav-button active">거래 관리</a>
     <a href="{% url 'businesses:account_list' %}" class="nav-button">계좌 관리</a>
     <a href="{% url 'accounts:profile_detail' %}" class="nav-button">프로필</a>
     <span class="nav-divider">|</span>
@@ -52,10 +52,10 @@
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h4>거래 상세</h4>
                     <div>
-                        <a href="{% url 'transactions:edit' transaction.pk %}" class="btn btn-warning btn-sm">
+                        <a href="{% url 'transactions:transaction_update' transaction.pk %}" class="btn btn-warning btn-sm">
                             <i class="fas fa-edit"></i> 수정
                         </a>
-                        <a href="{% url 'transactions:delete' transaction.pk %}" class="btn btn-danger btn-sm">
+                        <a href="{% url 'transactions:transaction_delete' transaction.pk %}" class="btn btn-danger btn-sm">
                             <i class="fas fa-trash"></i> 삭제
                         </a>
                     </div>
@@ -140,14 +140,14 @@
                     </table>
 
                     <div class="d-flex justify-content-between mt-4">
-                        <a href="{% url 'transactions:list' %}" class="btn btn-secondary">
+                        <a href="{% url 'transactions:transaction_list' %}" class="btn btn-secondary">
                             <i class="fas fa-list"></i> 목록으로
                         </a>
                         <div>
-                            <a href="{% url 'transactions:edit' transaction.pk %}" class="btn btn-warning">
+                            <a href="{% url 'transactions:transaction_update' transaction.pk %}" class="btn btn-warning">
                                 <i class="fas fa-edit"></i> 수정
                             </a>
-                            <a href="{% url 'transactions:delete' transaction.pk %}" class="btn btn-danger">
+                            <a href="{% url 'transactions:transaction_delete' transaction.pk %}" class="btn btn-danger">
                                 <i class="fas fa-trash"></i> 삭제
                             </a>
                         </div>

@@ -21,9 +21,15 @@
         </a>
     </li>
     <li class="nav-item">
-        <a href="{% url 'transactions:list' %}" class="nav-link">
+        <a href="{% url 'transactions:transaction_list' %}" class="nav-link">
             <span class="nav-icon">💰</span>
             <span class="nav-text">거래 관리</span>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a href="{% url 'businesses:business_list' %}" class="nav-link">
+            <span class="nav-icon">🏢</span>
+            <span class="nav-text">사업장 관리</span>
         </a>
     </li>
     <li class="nav-item">
@@ -48,7 +54,7 @@
 <div class="top-nav-links">
     <a href="{% url 'accounts:home' %}" class="nav-button">홈</a>
     <a href="{% url 'accounts:home' %}" class="nav-button active">대시보드</a>
-    <a href="{% url 'transactions:list' %}" class="nav-button">거래 관리</a>
+    <a href="{% url 'transactions:transaction_list' %}" class="nav-button">거래 관리</a>
     <a href="{% url 'businesses:account_list' %}" class="nav-button">계좌 관리</a>
     <a href="#" class="nav-button">프로필</a>
     <span class="nav-divider">|</span>
@@ -146,7 +152,7 @@
             </table>
         </div>
 
-        <a href="{% url 'transactions:list' %}" class="detail-link">전체 거래 내역 보기 →</a>
+        <a href="{% url 'transactions:transaction_list' %}" class="detail-link">전체 거래 내역 보기 →</a>
     </section>
 
     <!-- 빠른 메뉴 섹션 -->
@@ -157,13 +163,21 @@
         </div>
 
         <div class="quick-menu-grid">
-            <a href="{% url 'transactions:create' %}" class="quick-menu-item">
+            <a href="{% url 'transactions:transaction_create' %}" class="quick-menu-item">
                 <span class="menu-icon">➕</span>
                 <span class="menu-text">거래 등록</span>
             </a>
             <a href="#" class="quick-menu-item">
                 <span class="menu-icon">➕</span>
                 <span class="menu-text">계좌 등록</span>
+            </a>
+            <a href="{% url 'businesses:business_list' %}" class="quick-menu-item">
+                <span class="menu-icon">🏢</span>
+                <span class="menu-text">사업장 관리</span>
+            </a>
+            <a href="{% url 'businesses:business_create' %}" class="quick-menu-item">
+                <span class="menu-icon">➕</span>
+                <span class="menu-text">사업장 추가</span>
             </a>
         </div>
     </section>
