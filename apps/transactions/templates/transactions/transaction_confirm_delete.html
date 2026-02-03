@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}거래 삭제 확인{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h4><i class="fas fa-exclamation-triangle"></i> 거래 삭제 확인</h4>
+                </div>
+                <div class="card-body">
+                    <p class="lead">다음 거래를 삭제하시겠습니까?</p>
+                    
+                    <div class="alert alert-warning">
+                        <strong>주의:</strong> 삭제된 거래는 복구할 수 없으며, 계좌 잔액이 조정됩니다.
+                    </div>
+
+                    <table class="table table-bordered">
+                        <tbody>
+                            <tr>
+                                <th width="30%" class="bg-light">거래일시</th>
+                                <td>{{ transaction.occurred_at|date:"Y-m-d H:i" }}</td>
+                            </tr>
+                            <tr>
+                                <th class="bg-light">유형</th>
+                                <td>
+                                    {% if transaction.tx_type == 'IN' %}
+                                    <span class="badge bg-success">수입</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">지출</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th class="bg-light">거래처</th>
+                                <td>{{ transaction.get_merchant_display }}</td>
+                            </tr>
+                            <tr>
+                                <th class="bg-light">금액</th>
+                                <td class="fw-bold">{{ transaction.amount|floatformat:0 }}원</td>
+                            </tr>
+                            <tr>
+                                <th class="bg-light">계좌</th>
+                                <td>{{ transaction.account.name }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'transactions:detail' transaction.pk %}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> 취소
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash"></i> 삭제
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

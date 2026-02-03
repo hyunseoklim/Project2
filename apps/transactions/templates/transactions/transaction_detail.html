@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}거래 상세{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4>거래 상세</h4>
+                    <div>
+                        <a href="{% url 'transactions:edit' transaction.pk %}" class="btn btn-warning btn-sm">
+                            <i class="fas fa-edit"></i> 수정
+                        </a>
+                        <a href="{% url 'transactions:delete' transaction.pk %}" class="btn btn-danger btn-sm">
+                            <i class="fas fa-trash"></i> 삭제
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <table class="table table-bordered">
+                        <tbody>
+                            <tr>
+                                <th width="30%" class="bg-light">거래 유형</th>
+                                <td>
+                                    {% if transaction.tx_type == 'IN' %}
+                                    <span class="badge bg-success">수입</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">지출</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th class="bg-light">거래일시</th>
+                                <td>{{ transaction.occurred_at|date:"Y-m-d H:i" }}</td>
+                            </tr>
+                            <tr>
+                                <th class="bg-light">사업장</th>
+                                <td>{{ transaction.business.name|default:"-" }}</td>
+                            </tr>
+                            <tr>
+                                <th class="bg-light">계좌</th>
+                                <td>{{ transaction.account.name }}</td>
+                            </tr>
+                            <tr>
+                                <th class="bg-light">거래처</th>
+                                <td>{{ transaction.get_merchant_display }}</td>
+                            </tr>
+                            <tr>
+                                <th class="bg-light">카테고리</th>
+                                <td>{{ transaction.category.name }} ({{ transaction.category.get_type_display }})</td>
+                            </tr>
+                            <tr>
+                                <th class="bg-light">금액</th>
+                                <td class="fw-bold fs-5">{{ transaction.amount|floatformat:0 }}원</td>
+                            </tr>
+                            <tr>
+                                <th class="bg-light">부가세 유형</th>
+                                <td>{{ transaction.get_tax_type_display }}</td>
+                            </tr>
+                            {% if transaction.vat_amount %}
+                            <tr>
+                                <th class="bg-light">부가세</th>
+                                <td>{{ transaction.vat_amount|floatformat:0 }}원</td>
+                            </tr>
+                            <tr>
+                                <th class="bg-light">총액 (금액 + 부가세)</th>
+                                <td class="fw-bold">{{ transaction.amount|add:transaction.vat_amount|floatformat:0 }}원</td>
+                            </tr>
+                            {% endif %}
+                            <tr>
+                                <th class="bg-light">사업용 거래</th>
+                                <td>
+                                    {% if transaction.is_business %}
+                                    <span class="badge bg-primary">사업용</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">개인용</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% if transaction.memo %}
+                            <tr>
+                                <th class="bg-light">메모</th>
+                                <td>{{ transaction.memo|linebreaks }}</td>
+                            </tr>
+                            {% endif %}
+                            <tr>
+                                <th class="bg-light">등록일시</th>
+                                <td>{{ transaction.created_at|date:"Y-m-d H:i:s" }}</td>
+                            </tr>
+                            <tr>
+                                <th class="bg-light">수정일시</th>
+                                <td>{{ transaction.updated_at|date:"Y-m-d H:i:s" }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{% url 'transactions:list' %}" class="btn btn-secondary">
+                            <i class="fas fa-list"></i> 목록으로
+                        </a>
+                        <div>
+                            <a href="{% url 'transactions:edit' transaction.pk %}" class="btn btn-warning">
+                                <i class="fas fa-edit"></i> 수정
+                            </a>
+                            <a href="{% url 'transactions:delete' transaction.pk %}" class="btn btn-danger">
+                                <i class="fas fa-trash"></i> 삭제
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
