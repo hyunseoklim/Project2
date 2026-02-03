@@ -78,6 +78,20 @@ def account_list(request):
     
     return render(request, 'businesses/account_list.html', context)
 
+@login_required
+def account_deleted_list(request):
+    """삭제된 계좌 목록"""
+    user = request.user
+    deleted_accounts = Account.objects.filter(user=user, is_active=False).select_related('business').order_by('-updated_at')
+    paginator = Paginator(deleted_accounts, 20)
+    page_obj = paginator.get_page(request.GET.get('page', 1))
+    
+    context = {
+        'page_obj': page_obj,
+        'deleted_count': deleted_accounts.count(),
+    }
+    return render(request, 'businesses/account_deleted_list.html', context)
+
 
 @login_required
 def account_detail(request, pk):
@@ -209,6 +223,8 @@ def account_delete(request, pk):
     }
     
     return render(request, 'businesses/account_confirm_delete.html', context)
+
+
 
 
 @login_required

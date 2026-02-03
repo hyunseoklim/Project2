@@ -6,6 +6,7 @@ app_name = 'businesses'
 urlpatterns = [
     # 계좌 목록 및 요약
     path('accounts/', views.account_list, name='account_list'),
+    path('accounts/deleted/', views.account_deleted_list, name='account_deleted_list'),# 삭제된 계좌 목록
     path('accounts/summary/', views.account_summary, name='account_summary'),
     
     # 계좌 생성
