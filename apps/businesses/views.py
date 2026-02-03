@@ -34,6 +34,7 @@ def business_create(request):
             location=location,
             business_type=business_type,
             registration_number=registration_number,
+            branch_type=request.POST.get('branch_type', 'main'),
         )
         messages.success(request, f"'{name}' 사업장이 생성되었습니다.")
         return redirect('businesses:business_list')
@@ -55,6 +56,8 @@ def business_update(request, pk):
         business.name = request.POST.get('name', business.name)
         business.location = request.POST.get('location', business.location)
         business.business_type = request.POST.get('business_type', business.business_type)
+        business.branch_type = request.POST.get('branch_type', business.branch_type)
+        business.save()
         business.registration_number = request.POST.get('registration_number', business.registration_number)
         business.save()
         messages.success(request, f"'{business.name}' 사업장이 수정되었습니다.")
