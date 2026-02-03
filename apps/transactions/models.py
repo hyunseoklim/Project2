@@ -126,7 +126,7 @@ class TransactionQuerySet(models.QuerySet):
     
     def with_relations(self):
         """관계 데이터 한번에 조회 (N+1 방지)"""
-        return self.select_related('account', 'merchant', 'category', 'business', 'user')
+        return self.select_related('account', 'merchant', 'category', 'business', 'user').prefetch_related('attachment')
 
 
 class TransactionManager(models.Manager):

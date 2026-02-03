@@ -60,10 +60,11 @@ class VATReportView(LoginRequiredMixin, TemplateView):
         end_date = date(year, end_month, last_day)
 
         # 3. 기초 쿼리셋
-        base_qs = Transaction.active.filter(
+        base_qs = Transaction.active.with_relations().filter(
             user=user, 
             is_business=True,
-            occurred_at__date__range=[start_date, end_date],
+            occurred_at__year=year,
+            occurred_at__month__in=range(start_month, end_month + 1),
             tax_type='taxable'
         )
 
@@ -172,24 +173,21 @@ def transaction_list(request):
     year_list = Transaction.active.filter(user=user).dates('occurred_at', 'year', order='DESC')
     year_list = [d.year for d in year_list]
     
-    
-
-
 
     # 6. 통계 (선택적)
     from django.db.models import Sum, Count
 
-    total_income = transactions.filter(tx_type='IN').aggregate(total=Sum('amount'))['total'] or 0
-    total_expense = transactions.filter(tx_type='OUT').aggregate(total=Sum('amount'))['total'] or 0
-    net_profit = total_income - total_expense  
+    stats = transactions.aggregate(
+    total_count=Count('id'),
+    total_income=Sum('amount', filter=Q(tx_type='IN')),
+    total_expense=Sum('amount', filter=Q(tx_type='OUT'))
+)
 
-    stats = {
-        'total_count': transactions.count(),
-        'total_income': total_income,
-        'total_expense': total_expense,
-        'net_profit': net_profit,  
-    }
-    
+    # None 값 처리 (데이터가 없을 경우 0으로 변환)
+    stats['total_income'] = stats['total_income'] or 0
+    stats['total_expense'] = stats['total_expense'] or 0
+    stats['net_profit'] = stats['total_income'] - stats['total_expense']
+        
     context = {
         'page_obj': page_obj,
         'year_list': year_list,
