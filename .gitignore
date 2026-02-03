@@ -11,6 +11,9 @@ wheels/
 db.sqlite3
 *.db
 
+# media 폴더는 보여주고 싶지만, 파일들 보여주기 싫을 떄
+media/*
+!.gitkeep
 
 # Virtual environments
 .venv

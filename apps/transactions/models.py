@@ -304,6 +304,12 @@ class Transaction(SoftDeleteModel):
         if self.amount and self.vat_amount:
             return self.amount - self.vat_amount
         return self.amount or 0
+    
+    @property
+    def has_attachment(self):
+        # 장고가 알려준 'attachment'라는 이름을 사용합니다.
+        # hasattr는 "너 이런 이름 가지고 있니?"라고 물어보는 안전한 방법입니다.
+        return hasattr(self, 'attachment') and self.attachment is not None
 
 
 class Attachment(TimeStampedModel):
@@ -362,3 +368,4 @@ def delete_file_on_attachment_delete(sender, instance, **kwargs):
             logger.info(f"파일 삭제: {instance.file.path}")
     except Exception as e:
         logger.warning(f"파일 삭제 실패 ({instance.file.name}): {e}")
+

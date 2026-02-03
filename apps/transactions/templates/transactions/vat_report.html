@@ -116,6 +116,7 @@
                             <th>날짜</th>
                             <th>거래처</th>
                             <th>구분</th>
+                            <th>증빙</th>
                             <th>공급가액</th>
                             <th>부가세</th>
                             <th>합계</th>
@@ -132,6 +133,14 @@
                                         {{ tx.get_tx_type_display }}
                                     </span>
                                 </td>
+                                <td>
+                                    {% if tx.has_attachment %}
+                                        <span title="증빙 있음" style="cursor:pointer;">📄</span>
+                                        {# 나중에 클릭 시 파일을 보여주는 모달이나 링크를 연결할 수 있습니다 #}
+                                    {% else %}
+                                        <span class="text-muted" title="증빙 없음" style="opacity: 0.3;">📄</span>
+                                    {% endif %}
+                                </td>
                                 <td>{{ tx.supply_value|floatformat:0|intcomma }}원</td>
                                 <td class="amount {% if tx.tx_type == 'IN' %}income{% else %}expense{% endif %}">
                                     {{ tx.vat_amount|floatformat:0|intcomma }}원
@@ -141,7 +150,7 @@
                             {% endif %}
                         {% empty %}
                             <tr>
-                                <td colspan="6" class="text-center" style="color: var(--gray-500);">{{ stat.month }}월 거래 내역이 없습니다.</td>
+                                <td colspan="7" class="text-center" style="color: var(--gray-500);">{{ stat.month }}월 거래 내역이 없습니다.</td>
                             </tr>
                         {% endfor %}
                     </tbody>
@@ -164,6 +173,7 @@
                         <th>날짜</th>
                         <th>거래처</th>
                         <th>구분</th>
+                        <th>증빙</th>
                         <th>공급가액</th>
                         <th>부가세</th>
                         <th>합계</th>
@@ -179,6 +189,15 @@
                                 {{ tx.get_tx_type_display }}
                             </span>
                         </td>
+                        <td class="text-center">
+                            {% if tx.has_attachment %}
+                                <a href="{{ tx.attachment.file.url }}" target="_blank" title="증빙 보기">
+                                    <span style="color: #2c3e50; font-weight: bold; cursor: pointer;">📄증빙자료</span>
+                                </a>
+                            {% else %}
+                                <span style="opacity: 0.2;" title="증빙 없음">📄</span>
+                            {% endif %}
+                        </td>
                         <td>{{ tx.supply_value|floatformat:0|intcomma }}원</td>
                         <td class="amount {% if tx.tx_type == 'IN' %}income{% else %}expense{% endif %}">
                             {{ tx.vat_amount|floatformat:0|intcomma }}원
@@ -187,7 +206,7 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="6" class="text-center" style="color: var(--gray-500);">해당 기간의 과세 거래 내역이 없습니다.</td>
+                        <td colspan="7" class="text-center" style="color: var(--gray-500);">해당 기간의 과세 거래 내역이 없습니다.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
