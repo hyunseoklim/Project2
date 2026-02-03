@@ -34,6 +34,9 @@ class ProfileViewTest(TestCase):
         
         response = self.client.post(reverse('accounts:profile_edit'), data)
         self.assertRedirects(response, reverse('accounts:home'))
+        # DB 업데이트 확인
+        self.profile2.refresh_from_db()
+        self.assertEqual(self.profile2.business_registration_number, '9876543210')
 
     def test_profile_edit_integrity_error_message(self):
         """중복 체크 테스트: 폼 에러가 발생하는지 확인합니다."""
