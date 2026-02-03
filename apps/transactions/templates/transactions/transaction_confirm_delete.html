@@ -1,7 +1,47 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}거래 삭제 확인{% endblock %}
+{% block title %}거래 삭제 확인 - 스마트 사업자 가계부{% endblock %}
+
+{% block sidebar_nav %}
+<ul class="nav-list">
+    <li class="nav-item">
+        <a href="{% url 'accounts:home' %}" class="nav-link">
+            <span class="nav-icon">🏠</span>
+            <span class="nav-text">홈</span>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a href="{% url 'accounts:home' %}" class="nav-link">
+            <span class="nav-icon">📊</span>
+            <span class="nav-text">대시보드</span>
+        </a>
+    </li>
+    <li class="nav-item active">
+        <a href="{% url 'transactions:list' %}" class="nav-link">
+            <span class="nav-icon">💰</span>
+            <span class="nav-text">거래 관리</span>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a href="{% url 'accounts:profile_detail' %}" class="nav-link">
+            <span class="nav-icon">👤</span>
+            <span class="nav-text">프로필</span>
+        </a>
+    </li>
+</ul>
+{% endblock %}
+
+{% block top_nav %}
+<div class="top-nav-links">
+    <a href="{% url 'accounts:home' %}" class="nav-button">홈</a>
+    <a href="{% url 'accounts:home' %}" class="nav-button">대시보드</a>
+    <a href="{% url 'transactions:list' %}" class="nav-button active">거래 관리</a>
+    <a href="{% url 'accounts:profile_detail' %}" class="nav-button">프로필</a>
+    <span class="nav-divider">|</span>
+    <span class="user-name">{{ user.username }} 님</span>
+</div>
+{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
