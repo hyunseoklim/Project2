@@ -67,7 +67,8 @@
                             </tr>
                             <tr>
                                 <th class="bg-light">총액 (금액 + 부가세)</th>
-                                <td class="fw-bold">{{ transaction.amount|add:transaction.vat_amount|floatformat:0 }}원</td>
+                                <td class="fw-bold">{{ transaction.amount|add:transaction.vat_amount|floatformat:0 }}원
+                                </td>
                             </tr>
                             {% endif %}
                             <tr>

@@ -75,21 +75,22 @@
             <form method="get">
                 <div class="row g-2 align-items-end">
                     <div class="col-md-2">
-                        <input type="text" name="search" class="form-control form-control-sm" 
-                               placeholder="거래처, 메모" value="{{ request.GET.search }}">
+                        <input type="text" name="search" class="form-control form-control-sm" placeholder="거래처, 메모"
+                            value="{{ request.GET.search }}">
                     </div>
                     <div class="col-md-2">
                         <select name="tx_type" class="form-select form-select-sm">
                             <option value="">전체</option>
-                            <option value="IN" {% if request.GET.tx_type == 'IN' %}selected{% endif %}>수입</option>
-                            <option value="OUT" {% if request.GET.tx_type == 'OUT' %}selected{% endif %}>지출</option>
+                            <option value="IN" {% if request.GET.tx_type=='IN' %}selected{% endif %}>수입</option>
+                            <option value="OUT" {% if request.GET.tx_type=='OUT' %}selected{% endif %}>지출</option>
                         </select>
                     </div>
                     <div class="col-md-2">
                         <select name="business" class="form-select form-select-sm">
                             <option value="">사업장(전체)</option>
                             {% for business in businesses %}
-                            <option value="{{ business.id }}" {% if request.GET.business == business.id|stringformat:"s" %}selected{% endif %}>
+                            <option value="{{ business.id }}" {% if request.GET.business==business.id|stringformat:"s"
+                                %}selected{% endif %}>
                                 {{ business.name }}
                             </option>
                             {% endfor %}
@@ -99,19 +100,20 @@
                         <select name="account" class="form-select form-select-sm">
                             <option value="">계좌(전체)</option>
                             {% for account in accounts %}
-                            <option value="{{ account.id }}" {% if request.GET.account == account.id|stringformat:"s" %}selected{% endif %}>
+                            <option value="{{ account.id }}" {% if request.GET.account==account.id|stringformat:"s"
+                                %}selected{% endif %}>
                                 {{ account.name }}
                             </option>
                             {% endfor %}
                         </select>
                     </div>
                     <div class="col-md-2">
-                        <input type="date" name="date_from" class="form-control form-control-sm" 
-                               placeholder="시작일" value="{{ request.GET.date_from }}">
+                        <input type="date" name="date_from" class="form-control form-control-sm" placeholder="시작일"
+                            value="{{ request.GET.date_from }}">
                     </div>
                     <div class="col-md-1">
-                        <input type="date" name="date_to" class="form-control form-control-sm" 
-                               placeholder="종료일" value="{{ request.GET.date_to }}">
+                        <input type="date" name="date_to" class="form-control form-control-sm" placeholder="종료일"
+                            value="{{ request.GET.date_to }}">
                     </div>
                     <div class="col-md-1">
                         <button type="submit" class="btn btn-primary btn-sm w-100">검색</button>
@@ -155,13 +157,14 @@
                             <td><small>{{ transaction.account.name }}</small></td>
                             <td class="text-end fw-bold">{{ transaction.amount|floatformat:0 }}원</td>
                             <td class="text-end"><small>{{ transaction.vat_amount|default:"-" }}</small></td>
-                            <td><small class="text-muted">{{ transaction.memo|truncatewords:3|default:"-" }}</small></td>
+                            <td><small class="text-muted">{{ transaction.memo|truncatewords:3|default:"-" }}</small>
+                            </td>
                             <td class="text-center">
                                 <div class="btn-group btn-group-sm">
-                                    <a href="{% url 'transactions:detail' transaction.pk %}" 
-                                       class="btn btn-outline-secondary btn-sm" title="상세">👁️</a>
-                                    <a href="{% url 'transactions:edit' transaction.pk %}" 
-                                       class="btn btn-outline-warning btn-sm" title="수정">✏️</a>
+                                    <a href="{% url 'transactions:detail' transaction.pk %}"
+                                        class="btn btn-outline-secondary btn-sm" title="상세">👁️</a>
+                                    <a href="{% url 'transactions:edit' transaction.pk %}"
+                                        class="btn btn-outline-warning btn-sm" title="수정">✏️</a>
                                 </div>
                             </td>
                         </tr>
@@ -171,7 +174,8 @@
                                 <div>
                                     <span class="fs-1">📭</span>
                                     <p class="mt-2">거래 내역이 없습니다.</p>
-                                    <a href="{% url 'transactions:create' %}" class="btn btn-primary btn-sm">+ 첫 거래 등록하기</a>
+                                    <a href="{% url 'transactions:create' %}" class="btn btn-primary btn-sm">+ 첫 거래
+                                        등록하기</a>
                                 </div>
                             </td>
                         </tr>
@@ -196,18 +200,18 @@
                         <li class="page-item active">
                             <span class="page-link">{{ num }}</span>
                         </li>
-                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-                        <li class="page-item">
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %} <li
+                            class="page-item">
                             <a class="page-link" href="?page={{ num }}">{{ num }}</a>
-                        </li>
-                        {% endif %}
-                        {% endfor %}
+                            </li>
+                            {% endif %}
+                            {% endfor %}
 
-                        {% if page_obj.has_next %}
-                        <li class="page-item">
-                            <a class="page-link" href="?page={{ page_obj.next_page_number }}">다음</a>
-                        </li>
-                        {% endif %}
+                            {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}">다음</a>
+                            </li>
+                            {% endif %}
                     </ul>
                 </nav>
             </div>

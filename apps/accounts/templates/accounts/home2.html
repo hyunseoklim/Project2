@@ -34,11 +34,12 @@
     </li>
     <li class="nav-item logout">
         <form action="{% url 'accounts:logout' %}" method="post" style="display:inline;">
-    {% csrf_token %}
-    <button type="submit" style="background:none; border:none; color:blue; text-decoration:underline; cursor:pointer; padding:0;">
-        로그아웃
-    </button>
-</form>
+            {% csrf_token %}
+            <button type="submit"
+                style="background:none; border:none; color:blue; text-decoration:underline; cursor:pointer; padding:0;">
+                로그아웃
+            </button>
+        </form>
     </li>
 </ul>
 {% endblock %}
@@ -53,11 +54,12 @@
     <span class="user-name"> {{ user.username }} 님</span>
     <span class="nav-divider">|</span>
     <form action="{% url 'accounts:logout' %}" method="post" style="display:inline;">
-    {% csrf_token %}
-    <button type="submit" style="background:none; border:none; color:blue; text-decoration:underline; cursor:pointer; padding:0;">
-        로그아웃
-    </button>
-    <a href="{% url 'accounts:password_change' %}">비밀번호 변경</a>
+        {% csrf_token %}
+        <button type="submit"
+            style="background:none; border:none; color:blue; text-decoration:underline; cursor:pointer; padding:0;">
+            로그아웃
+        </button>
+        <a href="{% url 'accounts:password_change' %}">비밀번호 변경</a>
     </form>
 
 </div>
@@ -131,7 +133,7 @@
                 </tbody>
             </table>
         </div>
-        
+
         <a href="{% url 'transactions:list' %}" class="detail-link">전체 거래 내역 보기 →</a>
     </section>
 
