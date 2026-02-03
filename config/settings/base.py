@@ -153,3 +153,6 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+PASSWORD_CHANGE_REDIRECT_URL = 'password_change_done'

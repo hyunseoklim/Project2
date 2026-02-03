@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="content-wrapper">
+    <section class="welcome-section">
+        <div class="welcome-header">
+            <span class="welcome-icon">💼</span>
+            <h2 class="page-title">나의 사업자 프로필</h2>
+            <p class="description">등록된 사업자 정보는 세무 신고 및 지출 분석에 활용됩니다.</p>
+        </div>
+
+        <div class="welcome-message">
+            <div class="dashboard-container">
+                <div class="summary-grid" style="grid-template-columns: 1fr;">
+                    
+                    <div class="summary-item">
+                        <span class="summary-label">사업자 등록 번호</span>
+                        <span class="summary-value" style="font-size: 1.25rem; color: var(--gray-800);">
+                            {{ profile.get_masked_business_number|default:profile.business_registration_number|default:"등록된 번호가 없습니다." }}
+                        </span>
+                    </div>
+
+                    <div class="summary-item">
+                        <span class="summary-label">사업자 유형 (업종)</span>
+                        <span class="summary-value" style="font-size: 1.25rem; color: var(--gray-800);">
+                            {{ profile.get_business_type_display|default:"미설정" }}
+                        </span>
+                    </div>
+
+                    <div class="summary-item">
+                        <span class="summary-label">연락처</span>
+                        <span class="summary-value" style="font-size: 1.25rem; color: var(--gray-800);">
+                            {{ profile.phone|default:"등록된 전화번호가 없습니다." }}
+                        </span>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="cta-section" style="border: none; background: none; padding-bottom: 0;">
+            <div class="button-group">
+                <a href="{% url 'accounts:profile_edit' %}" class="btn btn-primary">
+                    <span class="check-icon">✏️</span> 정보 수정하기
+                </a>
+                <a href="{% url 'accounts:home' %}" class="btn btn-secondary">메인으로</a>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}
