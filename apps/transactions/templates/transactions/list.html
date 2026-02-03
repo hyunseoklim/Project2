@@ -1,0 +1,296 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block content %}
+<div class="content-wrapper">
+    <!-- 페이지 헤더 -->
+    <div class="welcome-header">
+        <div class="welcome-icon">📊</div>
+        <h1 class="page-title">거래 내역</h1>
+        <p class="text-muted">전체 {{ stats.total_count|default:0 }}건</p>
+    </div>
+
+    <!-- 필터 섹션 -->
+    <div class="dashboard-section mb-4">
+        <div class="section-header">
+            <span class="section-icon">🔍</span>
+            <h2 class="section-title">조회 기간 선택</h2>
+        </div>
+        
+        <div class="filter-tabs">
+            <!-- 연도 선택 -->
+            <div class="filter-group">
+                <span class="filter-label">연도:</span>
+                <a href="?" class="filter-btn {% if not selected_year %}active{% endif %}">전체</a>
+                {% for y in year_list %}
+                <a href="?year={{ y }}{% if selected_month %}&month={{ selected_month }}{% endif %}" 
+                   class="filter-btn {% if selected_year == y %}active{% endif %}">
+                    {{ y }}년
+                </a>
+                {% endfor %}
+            </div>
+            
+            <!-- 월 선택 (연도 선택 시에만 표시) -->
+            {% if selected_year %}
+            <div class="filter-group">
+                <span class="filter-label">월:</span>
+                <a href="?year={{ selected_year }}" class="filter-btn {% if not selected_month %}active{% endif %}">전체</a>
+                {% for m in "123456789ABC" %}
+                    {% if forloop.counter <= 12 %}
+                    <a href="?year={{ selected_year }}&month={{ forloop.counter }}" 
+                       class="filter-btn {% if selected_month == forloop.counter %}active{% endif %}">
+                        {{ forloop.counter }}월
+                    </a>
+                    {% endif %}
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- 요약 통계 -->
+    <div class="dashboard-section mb-4">
+        <div class="section-header">
+            <span class="section-icon">💰</span>
+            <h2 class="section-title">요약</h2>
+        </div>
+        <div class="summary-card">
+            <div class="summary-grid">
+                <div class="summary-item">
+                    <span class="summary-label">총 수입</span>
+                    <span class="summary-value income">{{ stats.total_income|floatformat:0|intcomma }}원</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">총 지출</span>
+                    <span class="summary-value expense">{{ stats.total_expense|floatformat:0|intcomma }}원</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">순이익</span>
+                    <span class="summary-value profit">{{ stats.net_profit|floatformat:0|intcomma }}원</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 거래 내역 테이블 -->
+    <div class="transactions-section">
+        <div class="section-header">
+            <span class="section-icon">📝</span>
+            <h2 class="section-title">
+                거래 상세 내역
+                {% if selected_year %}
+                    ({{ selected_year }}년{% if selected_month %} {{ selected_month }}월{% endif %})
+                {% else %}
+                    (전체)
+                {% endif %}
+            </h2>
+        </div>
+        
+        <div class="table-wrapper">
+            <table class="transaction-table">
+                <thead>
+                    <tr>
+                        <th>날짜</th>
+                        <th>거래처</th>
+                        <th>구분</th>
+                        <th>증빙</th>
+                        <th>사업장</th>
+                        <th>금액</th>
+                        <th>메모</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for tx in page_obj %}
+                    <tr>
+                        <td>{{ tx.occurred_at|date:"Y-m-d" }}</td>
+                        <td>{{ tx.get_merchant_display }}</td>
+                        <td>
+                            <span class="badge {% if tx.tx_type == 'IN' %}badge-income{% else %}badge-expense{% endif %}">
+                                {{ tx.get_tx_type_display }}
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            {% if tx.has_attachment %}
+                                <a href="{{ tx.attachment.file.url }}" target="_blank" title="증빙 보기">
+                                    <span style="color: #2c3e50; font-weight: bold; cursor: pointer;">📄</span>
+                                </a>
+                            {% else %}
+                                <span style="opacity: 0.2;" title="증빙 없음">📄</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if tx.business %}
+                                {{ tx.business.name }}
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="amount {% if tx.tx_type == 'IN' %}income{% else %}expense{% endif %}">
+                            {{ tx.amount|floatformat:0|intcomma }}원
+                        </td>
+                        <td>
+                            {% if tx.memo %}
+                                {{ tx.memo|truncatewords:5 }}
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center" style="color: var(--gray-500); padding: var(--spacing-xl);">
+                            조회된 거래 내역이 없습니다.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 페이지네이션 -->
+        {% if page_obj.has_other_pages %}
+        <div class="pagination-wrapper">
+            <div class="pagination">
+                {% if page_obj.has_previous %}
+                <a href="?page=1{% if selected_year %}&year={{ selected_year }}{% endif %}{% if selected_month %}&month={{ selected_month }}{% endif %}" 
+                   class="page-link">처음</a>
+                <a href="?page={{ page_obj.previous_page_number }}{% if selected_year %}&year={{ selected_year }}{% endif %}{% if selected_month %}&month={{ selected_month }}{% endif %}" 
+                   class="page-link">이전</a>
+                {% endif %}
+
+                <span class="page-current">
+                    {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+                </span>
+
+                {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}{% if selected_year %}&year={{ selected_year }}{% endif %}{% if selected_month %}&month={{ selected_month }}{% endif %}" 
+                   class="page-link">다음</a>
+                <a href="?page={{ page_obj.paginator.num_pages }}{% if selected_year %}&year={{ selected_year }}{% endif %}{% if selected_month %}&month={{ selected_month }}{% endif %}" 
+                   class="page-link">마지막</a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+/* 필터 탭 스타일 */
+.filter-tabs {
+    background: var(--gray-50);
+    padding: var(--spacing-md);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--spacing-lg);
+}
+
+.filter-group {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    flex-wrap: wrap;
+    margin-bottom: var(--spacing-sm);
+}
+
+.filter-group:last-child {
+    margin-bottom: 0;
+}
+
+.filter-label {
+    font-weight: 700;
+    color: var(--gray-700);
+    min-width: 60px;
+}
+
+.filter-btn {
+    padding: var(--spacing-xs) var(--spacing-md);
+    border: 2px solid transparent;
+    background: var(--white);
+    border-radius: var(--radius-sm);
+    text-decoration: none;
+    color: var(--gray-700);
+    font-weight: 600;
+    font-size: 0.9375rem;
+    transition: var(--transition);
+    box-shadow: var(--shadow-sm);
+}
+
+.filter-btn:hover {
+    background: var(--primary-yellow-light);
+    border-color: var(--primary-yellow);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.filter-btn.active {
+    background: linear-gradient(135deg, var(--primary-yellow) 0%, var(--primary-yellow-dark) 100%);
+    color: var(--gray-900);
+    font-weight: 700;
+    border-color: var(--primary-yellow-dark);
+    box-shadow: var(--shadow-md);
+}
+
+/* 페이지네이션 스타일 */
+.pagination-wrapper {
+    display: flex;
+    justify-content: center;
+    margin-top: var(--spacing-lg);
+}
+
+.pagination {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.page-link {
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: var(--white);
+    border: 2px solid var(--primary-yellow);
+    border-radius: var(--radius-sm);
+    text-decoration: none;
+    color: var(--gray-800);
+    font-weight: 600;
+    transition: var(--transition);
+}
+
+.page-link:hover {
+    background: var(--primary-yellow-light);
+    transform: translateY(-2px);
+}
+
+.page-current {
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: linear-gradient(135deg, var(--primary-yellow) 0%, var(--primary-yellow-dark) 100%);
+    border-radius: var(--radius-sm);
+    font-weight: 700;
+    color: var(--gray-900);
+}
+
+/* 유틸리티 */
+.mb-4 {
+    margin-bottom: var(--spacing-xl);
+}
+
+.text-center {
+    text-align: center;
+}
+
+.text-muted {
+    color: var(--gray-500);
+}
+
+/* 반응형 */
+@media (max-width: 768px) {
+    .filter-group {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .filter-btn {
+        width: 100%;
+        text-align: center;
+    }
+}
+</style>
+{% endblock %}
