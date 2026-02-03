@@ -1,0 +1,187 @@
+
+{% extends 'base.html' %}
+{% block title %}{{ account.name }} - 계좌 상세{% endblock %}
+{% block content %}
+<div class="container">
+    <!-- 뒤로가기 -->
+    <div class="mb-3">
+        <a href="{% url 'businesses:account_list' %}" class="btn btn-outline-secondary btn-sm">
+            ← 목록으로
+        </a>
+    </div>
+
+<div class="row">
+    <!-- 왼쪽: 계좌 정보 -->
+    <div class="col-lg-8">
+        <!-- 기본 정보 카드 -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">💳 {{ account.name }}</h4>
+                {% if account.account_type == 'business' %}
+                    <span class="badge badge-primary">사업용</span>
+                {% else %}
+                    <span class="badge badge-secondary">개인용</span>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <small class="text-muted">은행</small>
+                        <p class="mb-0"><strong>{{ account.bank_name }}</strong></p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <small class="text-muted">계좌번호</small>
+                        <p class="mb-0"><code>{{ account.get_masked_account_number }}</code></p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <small class="text-muted">잔액</small>
+                        <h3 class="text-primary mb-0">
+                            {{ account.balance|floatformat:0|default:"0" }}원
+                        </h3>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <small class="text-muted">연결 사업장</small>
+                        <p class="mb-0">
+                            {% if account.business %}
+                                🏢 {{ account.business.name }}
+                            {% else %}
+                                <span class="text-muted">연결된 사업장 없음</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <small class="text-muted">등록일</small>
+                        <p class="mb-0">{{ account.created_at|date:"Y년 m월 d일 H:i" }}</p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <small class="text-muted">최종 수정</small>
+                        <p class="mb-0">{{ account.updated_at|date:"Y년 m월 d일 H:i" }}</p>
+                    </div>
+                </div>
+
+                <!-- 관리 버튼 -->
+                <hr>
+                <div class="d-flex justify-content-end gap-2">
+                    <a href="{% url 'businesses:account_update' account.pk %}" 
+                       class="btn btn-primary">
+                        ✏️ 수정
+                    </a>
+                    <a href="{% url 'businesses:account_delete' account.pk %}" 
+                       class="btn btn-danger">
+                        🗑️ 삭제
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 최근 거래 내역 -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">📜 최근 거래 내역 (5건)</h5>
+            </div>
+            <div class="card-body" style="padding: 0;">
+                {% if recent_transactions %}
+                    <div class="table-responsive">
+                        <table class="table mb-0">
+                            <thead>
+                                <tr>
+                                    <th>날짜</th>
+                                    <th>구분</th>
+                                    <th>카테고리</th>
+                                    <th>거래처</th>
+                                    <th class="text-end">금액</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for tx in recent_transactions %}
+                                <tr>
+                                    <td>
+                                        <small>{{ tx.occurred_at|date:"m/d H:i" }}</small>
+                                    </td>
+                                    <td>
+                                        {% if tx.tx_type == 'IN' %}
+                                            <span class="badge badge-success">수입</span>
+                                        {% else %}
+                                            <span class="badge badge-danger">지출</span>
+                                        {% endif %}
+                                    </td>
+                                    <td><small>{{ tx.category.name }}</small></td>
+                                    <td><small>{{ tx.get_merchant_display }}</small></td>
+                                    <td class="text-end">
+                                        {% if tx.tx_type == 'IN' %}
+                                            <span class="text-success">
+                                                <strong>+{{ tx.amount|floatformat:0|default:"0" }}원</strong>
+                                            </span>
+                                        {% else %}
+                                            <span class="text-danger">
+                                                <strong>-{{ tx.amount|floatformat:0|default:"0" }}원</strong>
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <p class="text-muted mb-0">📭 거래 내역이 없습니다.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- 오른쪽: 통계 및 링크 -->
+    <div class="col-lg-4">
+        <!-- 계좌 통계 -->
+        <div class="card mb-3">
+            <div class="card-header">
+                <h6 class="mb-0">📊 계좌 통계</h6>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">총 거래</span>
+                    <strong>{{ account.transactions.count }}건</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">수입</span>
+                    <strong class="text-success">
+                        {% with income_count=account.transactions.filter|default:"0" %}
+                            {{ income_count }}건
+                        {% endwith %}
+                    </strong>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <span class="text-muted">지출</span>
+                    <strong class="text-danger">
+                        {% with expense_count=account.transactions.filter|default:"0" %}
+                            {{ expense_count }}건
+                        {% endwith %}
+                    </strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- 빠른 링크 -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">🔗 빠른 링크</h6>
+            </div>
+            <div class="card-body">
+                <a href="#" class="btn btn-outline-primary mb-2" style="width: 100%;">
+                    ➕ 거래 등록
+                </a>
+                <a href="#" class="btn btn-outline-primary mb-2" style="width: 100%;">
+                    📊 전체 거래 내역
+                </a>
+                <a href="{% url 'businesses:account_list' %}" 
+                   class="btn btn-outline-secondary" style="width: 100%;">
+                    💳 다른 계좌 보기
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+{% endblock %}
