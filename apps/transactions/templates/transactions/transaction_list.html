@@ -141,16 +141,15 @@
                     <div class="col-md-2">
                         <select name="tx_type" class="form-select form-select-sm">
                             <option value="">전체</option>
-                            <option value="IN" {% if request.GET.tx_type=='IN' %}selected{% endif %}>수입</option>
-                            <option value="OUT" {% if request.GET.tx_type=='OUT' %}selected{% endif %}>지출</option>
+                            <option value="IN" {% if request.GET.tx_type == 'IN' %}selected{% endif %}>수입</option>
+                            <option value="OUT" {% if request.GET.tx_type == 'OUT' %}selected{% endif %}>지출</option>
                         </select>
                     </div>
                     <div class="col-md-2">
                         <select name="business" class="form-select form-select-sm">
                             <option value="">사업장(전체)</option>
                             {% for business in businesses %}
-                            <option value="{{ business.id }}" {% if request.GET.business==business.id|stringformat:"s"
-                                %}selected{% endif %}>
+                            <option value="{{ business.id }}" {% if request.GET.business == business.id|stringformat:"s" %}selected{% endif %}>
                                 {{ business.name }}
                             </option>
                             {% endfor %}
@@ -160,8 +159,7 @@
                         <select name="account" class="form-select form-select-sm">
                             <option value="">계좌(전체)</option>
                             {% for account in accounts %}
-                            <option value="{{ account.id }}" {% if request.GET.account==account.id|stringformat:"s"
-                                %}selected{% endif %}>
+                            <option value="{{ account.id }}" {% if request.GET.account == account.id|stringformat:"s" %}selected{% endif %}>
                                 {{ account.name }}
                             </option>
                             {% endfor %}
