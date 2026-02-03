@@ -6,21 +6,15 @@ from datetime import datetime, date
 import calendar
 from django.shortcuts import render
 from .models import Transaction
-from django.db.models.functions import ExtractYear, ExtractMonth
+from django.db.models.functions import ExtractMonth
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
-
-
-from .models import Transaction
-
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
+from django.shortcuts import redirect, get_object_or_404
 from django.contrib import messages
-from django.core.paginator import Paginator
-from django.db.models import Q, Sum, Count
+from django.db.models import Count
 from django.utils import timezone
 
-from .models import Transaction, Merchant, Category
+from .models import Merchant, Category
 from .forms import TransactionForm, MerchantForm
 from apps.businesses.models import Account, Business
 
