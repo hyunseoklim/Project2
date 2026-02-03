@@ -153,3 +153,9 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+PASSWORD_CHANGE_REDIRECT_URL = 'password_change_done'
+
+# 메시지 프레임워크 (이미 설정되어 있을 것)
+MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'

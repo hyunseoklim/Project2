@@ -1,0 +1,200 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - 스마트 사업자 가계부{% endblock %}
+
+{% block sidebar_nav %}
+<ul class="nav-list">
+    <li class="nav-item">
+        <a href="{% url 'accounts:home' %}" class="nav-link">
+            <span class="nav-icon">🏠</span>
+            <span class="nav-text">홈</span>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a href="{% url 'accounts:home' %}" class="nav-link">
+            <span class="nav-icon">📊</span>
+            <span class="nav-text">대시보드</span>
+        </a>
+    </li>
+    <li class="nav-item active">
+        <a href="{% url 'transactions:transaction_list' %}" class="nav-link">
+            <span class="nav-icon">💰</span>
+            <span class="nav-text">거래 관리</span>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a href="{% url 'accounts:profile_detail' %}" class="nav-link">
+            <span class="nav-icon">👤</span>
+            <span class="nav-text">프로필</span>
+        </a>
+    </li>
+</ul>
+{% endblock %}
+
+{% block top_nav %}
+<div class="top-nav-links">
+    <a href="{% url 'accounts:home' %}" class="nav-button">홈</a>
+    <a href="{% url 'accounts:home' %}" class="nav-button">대시보드</a>
+    <a href="{% url 'transactions:transaction_list' %}" class="nav-button active">거래 관리</a>
+    <a href="{% url 'businesses:account_list' %}" class="nav-button">계좌 관리</a>
+    <a href="{% url 'accounts:profile_detail' %}" class="nav-button">프로필</a>
+    <span class="nav-divider">|</span>
+    <span class="user-name">{{ user.username }} 님</span>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4>{{ title }}</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <!-- 거래 유형 -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">거래 유형 *</label>
+                                {{ form.tx_type }}
+                                {% if form.tx_type.errors %}
+                                <div class="text-danger">{{ form.tx_type.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">부가세 유형 *</label>
+                                {{ form.tax_type }}
+                                {% if form.tax_type.errors %}
+                                <div class="text-danger">{{ form.tax_type.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- 거래일시 -->
+                        <div class="mb-3">
+                            <label class="form-label">거래일시 *</label>
+                            {{ form.occurred_at }}
+                            {% if form.occurred_at.errors %}
+                            <div class="text-danger">{{ form.occurred_at.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- 사업장 & 계좌 -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">사업장</label>
+                                {{ form.business }}
+                                {% if form.business.errors %}
+                                <div class="text-danger">{{ form.business.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">계좌 *</label>
+                                {{ form.account }}
+                                {% if form.account.errors %}
+                                <div class="text-danger">{{ form.account.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- 거래처 -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">거래처 (선택)</label>
+                                {{ form.merchant }}
+                                {% if form.merchant.errors %}
+                                <div class="text-danger">{{ form.merchant.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">거래처명 (직접입력)</label>
+                                {{ form.merchant_name }}
+                                {% if form.merchant_name.errors %}
+                                <div class="text-danger">{{ form.merchant_name.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- 카테고리 -->
+                        <div class="mb-3">
+                            <label class="form-label">카테고리 *</label>
+                            {{ form.category }}
+                            {% if form.category.errors %}
+                            <div class="text-danger">{{ form.category.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- 금액 & 부가세 -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">금액 *</label>
+                                {{ form.amount }}
+                                {% if form.amount.errors %}
+                                <div class="text-danger">{{ form.amount.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">부가세 (자동계산)</label>
+                                {{ form.vat_amount }}
+                                {% if form.vat_amount.errors %}
+                                <div class="text-danger">{{ form.vat_amount.errors }}</div>
+                                {% endif %}
+                                <small class="text-muted">과세 거래시 자동 계산됩니다</small>
+                            </div>
+                        </div>
+
+                        <!-- 사업용 여부 -->
+                        <div class="mb-3 form-check">
+                            {{ form.is_business }}
+                            <label class="form-check-label">사업용 거래</label>
+                            {% if form.is_business.errors %}
+                            <div class="text-danger">{{ form.is_business.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- 메모 -->
+                        <div class="mb-3">
+                            <label class="form-label">메모</label>
+                            {{ form.memo }}
+                            {% if form.memo.errors %}
+                            <div class="text-danger">{{ form.memo.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Non-field errors -->
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {{ form.non_field_errors }}
+                        </div>
+                        {% endif %}
+
+                        <!-- 버튼 -->
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'transactions:transaction_list' %}" class="btn btn-secondary">취소</a>
+                            <button type="submit" class="btn btn-primary">저장</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 폼 필드에 클래스 추가
+    document.addEventListener('DOMContentLoaded', function () {
+        const formInputs = document.querySelectorAll('input, select, textarea');
+        formInputs.forEach(input => {
+            if (input.type === 'checkbox') {
+                input.classList.add('form-check-input');
+            } else {
+                input.classList.add('form-control');
+            }
+        });
+    });
+</script>
+{% endblock %}

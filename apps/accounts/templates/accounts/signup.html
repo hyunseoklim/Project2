@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="content-wrapper">
+    <section class="welcome-section" style="max-width: 800px; margin: 40px auto;">
+        <div class="welcome-header">
+            <span class="welcome-icon">👋</span>
+            <h2 class="page-title">회원가입</h2>
+            <p class="description">스마트 사업자 가계부에 오신 것을 환영합니다!</p>
+        </div>
+ 
+        <div class="welcome-message">
+            <form method="post" novalidate>
+                {% csrf_token %}
+                
+                {% for field in form %}
+                    <div style="margin-bottom: var(--spacing-md);">
+                        <label class="section-title" style="font-size: 1rem; margin-bottom: 0.5rem; display: block;">
+                            {{ field.label }}
+                        </label>
+                        
+                        {# 뷰에서 클래스를 주입하거나, CSS 선택자로 스타일링됩니다 #}
+                        {{ field }}
+                        
+                        {% if field.help_text %}
+                            <div class="description" style="font-size: 0.8rem; margin-top: 0.4rem; color: var(--gray-500);">
+                                {{ field.help_text|safe }}
+                            </div>
+                        {% endif %}
+                        
+                        {% if field.errors %}
+                            {% for error in field.errors %}
+                                <div class="error-message">
+                                    <strong>!</strong> {{ error }}
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                {% endfor %}
+
+                <div class="cta-section" style="border: none; padding: var(--spacing-md) 0 0 0; background: none;">
+                    <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center;">
+                        무료로 시작하기
+                    </button>
+                </div>
+            </form>
+
+            <div style="margin-top: var(--spacing-lg); text-align: center; border-top: 1px solid var(--gray-100); padding-top: var(--spacing-md);">
+                <p class="description">
+                    이미 계정이 있나요? 
+                    <a href="{% url 'accounts:login' %}" style="color: var(--secondary-blue); font-weight: 600; text-decoration: none;">로그인하기</a>
+                </p>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}

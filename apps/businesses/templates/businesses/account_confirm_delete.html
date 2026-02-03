@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+{% block title %}계좌 삭제 확인{% endblock %}
+{% block sidebar_nav %}
+<ul class="nav-list">
+    <li class="nav-item active">
+        <a href="{% url 'accounts:home' %}" class="nav-link">
+            <span class="nav-icon">🏠</span>
+            <span class="nav-text">홈</span>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a href="{% url 'accounts:home' %}" class="nav-link">
+            <span class="nav-icon">📊</span>
+            <span class="nav-text">대시보드</span>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a href="{% url 'transactions:transaction_list' %}" class="nav-link">
+            <span class="nav-icon">💰</span>
+            <span class="nav-text">거래 관리</span>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a href="#" class="nav-link">
+            <span class="nav-icon">👤</span>
+            <span class="nav-text">프로필</span>
+        </a>
+    </li>
+    <li class="nav-item logout">
+        <form action="{% url 'accounts:logout' %}" method="post" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit"
+                style="background:none; border:none; color:blue; text-decoration:underline; cursor:pointer; padding:0;">
+                로그아웃
+            </button>
+        </form>
+    </li>
+</ul>
+{% endblock %}
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-lg-6 offset-lg-3">
+            <div class="card border-danger">
+                <div class="card-header bg-danger" style="color: white;">
+                    <h4 class="mb-0">⚠️ 계좌 삭제 확인</h4>
+                </div>
+                <div class="card-body">
+                    <p class="mb-4">다음 계좌를 정말 삭제하시겠습니까?</p>   
+  <!-- 계좌 정보 -->
+                <div class="alert alert-info">
+                    <h5 class="mb-3">💳 {{ account.name }}</h5>
+                    <hr>
+                    <div class="row">
+                        <div class="col-6">
+                            <small class="text-muted">은행</small>
+                            <p class="mb-2"><strong>{{ account.bank_name }}</strong></p>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted">계좌번호</small>
+                            <p class="mb-2"><code>{{ account.get_masked_account_number }}</code></p>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted">잔액</small>
+                            <p class="mb-2 text-primary">
+                                <strong>{{ account.balance|floatformat:0|default:"0" }}원</strong>
+                            </p>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted">거래 건수</small>
+                            <p class="mb-0"><strong>{{ transaction_count }}건</strong></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 경고 안내 -->
+                <div class="alert alert-warning">
+                    <h6 class="mb-2">📌 안내 사항</h6>
+                    <ul class="mb-0 small">
+                        <li>계좌는 <strong>소프트 삭제</strong>되어 복구가 가능합니다.</li>
+                        <li>연결된 거래 내역 <strong class="text-danger">{{ transaction_count }}건</strong>은 유지됩니다.</li>
+                        <li>삭제된 계좌는 목록에 표시되지 않습니다.</li>
+                        <li>필요시 관리자를 통해 복구할 수 있습니다.</li>
+                    </ul>
+                </div>
+
+                <!-- 버튼 -->
+                <form method="post" class="mt-4">
+                    {% csrf_token %}
+                    <div class="d-flex justify-content-end gap-2">
+                        <a href="{% url 'businesses:account_detail' account.pk %}" 
+                           class="btn btn-secondary">
+                            취소
+                        </a>
+                        <button type="submit" class="btn btn-danger">
+                            🗑️ 삭제 확인
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- 뒤로가기 -->
+        <div class="mt-3">
+            <a href="{% url 'businesses:account_list' %}" class="btn btn-outline-secondary btn-sm">
+                ← 목록으로 돌아가기
+            </a>
+        </div>
+    </div>
+</div>
+</div>
+{% endblock %}

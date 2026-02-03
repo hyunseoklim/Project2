@@ -1,0 +1,256 @@
+{% extends 'base.html' %}
+{% block title %}계좌 요약 대시보드{% endblock %}
+{% block sidebar_nav %}
+<ul class="nav-list">
+    <li class="nav-item active">
+        <a href="{% url 'accounts:home' %}" class="nav-link">
+            <span class="nav-icon">🏠</span>
+            <span class="nav-text">홈</span>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a href="{% url 'accounts:home' %}" class="nav-link">
+            <span class="nav-icon">📊</span>
+            <span class="nav-text">대시보드</span>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a href="{% url 'transactions:transaction_list' %}" class="nav-link">
+            <span class="nav-icon">💰</span>
+            <span class="nav-text">거래 관리</span>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a href="#" class="nav-link">
+            <span class="nav-icon">👤</span>
+            <span class="nav-text">프로필</span>
+        </a>
+    </li>
+    <li class="nav-item logout">
+        <form action="{% url 'accounts:logout' %}" method="post" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit"
+                style="background:none; border:none; color:blue; text-decoration:underline; cursor:pointer; padding:0;">
+                로그아웃
+            </button>
+        </form>
+    </li>
+</ul>
+{% endblock %}
+{% block top_nav %}
+<div class="top-nav-links">
+    <a href="{% url 'accounts:home' %}" class="nav-button">홈</a>
+    <a href="{% url 'accounts:home' %}" class="nav-button">대시보드</a>
+    <a href="{% url 'transactions:transaction_list' %}" class="nav-button">거래 관리</a>
+    <a href="{% url 'businesses:account_list' %}" class="nav-button active">계좌 관리</a>
+    <a href="{% url 'accounts:profile_detail' %}" class="nav-button">프로필</a>
+    <span class="nav-divider">|</span>
+    <span class="user-name">{{ user.username }} 님</span>
+</div>
+{% endblock %}
+{% block content %}
+<div class="container">
+    <!-- 헤더 -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2>📊 계좌 요약 대시보드</h2>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'businesses:account_list' %}" class="btn btn-outline-primary">
+                💳 계좌 목록
+            </a>
+        </div>
+    </div>
+<!-- 전체 통계 카드 -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <small class="text-muted">총 계좌 수</small>
+                <h2 class="mt-2 mb-0">{{ total_count }}</h2>
+                <small class="text-muted">개</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center border-primary">
+            <div class="card-body">
+                <small class="text-muted">사업용 계좌</small>
+                <h2 class="mt-2 mb-0 text-primary">{{ business_count }}</h2>
+                <small class="text-muted">개</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <small class="text-muted">개인용 계좌</small>
+                <h2 class="mt-2 mb-0 text-muted">{{ personal_count }}</h2>
+                <small class="text-muted">개</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center bg-success" style="color: white;">
+            <div class="card-body">
+                <small>총 잔액</small>
+                <h3 class="mt-2 mb-0">{{ total_balance|floatformat:0|default:"0" }}</h3>
+                <small>원</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- 사업장별 계좌 현황 -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">🏢 사업장별 계좌 현황</h5>
+            </div>
+            <div class="card-body">
+                {% if business_accounts %}
+                    <div class="table-responsive">
+                        <table class="table mb-0">
+                            <thead>
+                                <tr>
+                                    <th>사업장</th>
+                                    <th class="text-center">계좌 수</th>
+                                    <th class="text-end">총 잔액</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for ba in business_accounts %}
+                                <tr>
+                                    <td>
+                                        🏢 {{ ba.business__name }}
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge badge-primary">{{ ba.count }}개</span>
+                                    </td>
+                                    <td class="text-end">
+                                        <strong>{{ ba.total_balance|floatformat:0|default:"0" }}원</strong>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <p class="text-muted mb-0">📭 사업장에 연결된 계좌가 없습니다.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- 은행별 계좌 현황 -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">🏦 은행별 계좌 현황 (상위 5개)</h5>
+            </div>
+            <div class="card-body">
+                {% if bank_accounts %}
+                    <div class="table-responsive">
+                        <table class="table mb-0">
+                            <thead>
+                                <tr>
+                                    <th>은행</th>
+                                    <th class="text-center">계좌 수</th>
+                                    <th class="text-end">총 잔액</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for ba in bank_accounts %}
+                                <tr>
+                                    <td>
+                                        🏦 {{ ba.bank_name }}
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge badge-secondary">{{ ba.count }}개</span>
+                                    </td>
+                                    <td class="text-end">
+                                        <strong>{{ ba.total_balance|floatformat:0|default:"0" }}원</strong>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <p class="text-muted mb-0">📭 등록된 계좌가 없습니다.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 잔액 부족 계좌 -->
+<div class="row">
+    <div class="col-12">
+        <div class="card border-warning">
+            <div class="card-header bg-warning">
+                <h5 class="mb-0">
+                    ⚠️ 잔액 부족 계좌 ({{ low_balance_threshold|floatformat:0 }}원 미만)
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if low_balance_accounts %}
+                    <div class="table-responsive">
+                        <table class="table mb-0">
+                            <thead>
+                                <tr>
+                                    <th>계좌명</th>
+                                    <th>은행</th>
+                                    <th>계좌번호</th>
+                                    <th>구분</th>
+                                    <th class="text-end">잔액</th>
+                                    <th class="text-center">관리</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for account in low_balance_accounts %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ account.name }}</strong>
+                                    </td>
+                                    <td>{{ account.bank_name }}</td>
+                                    <td><code>{{ account.get_masked_account_number }}</code></td>
+                                    <td>
+                                        {% if account.account_type == 'business' %}
+                                            <span class="badge badge-primary">사업용</span>
+                                        {% else %}
+                                            <span class="badge badge-secondary">개인용</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end">
+                                        <span class="text-danger">
+                                            <strong>{{ account.balance|floatformat:0|default:"0" }}원</strong>
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        <a href="{% url 'businesses:account_detail' account.pk %}" 
+                                           class="btn btn-outline-primary btn-sm">
+                                            상세
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="alert alert-success mb-0">
+                        ✅ 모든 계좌의 잔액이 충분합니다.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+{% endblock %}

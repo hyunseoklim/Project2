@@ -1,0 +1,243 @@
+{% extends 'base.html' %}
+{% block title %}계좌 목록{% endblock %}
+{% block sidebar_nav %}
+<ul class="nav-list">
+    <li class="nav-item active">
+        <a href="{% url 'accounts:home' %}" class="nav-link">
+            <span class="nav-icon">🏠</span>
+            <span class="nav-text">홈</span>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a href="{% url 'accounts:home' %}" class="nav-link">
+            <span class="nav-icon">📊</span>
+            <span class="nav-text">대시보드</span>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a href="{% url 'transactions:transaction_list' %}" class="nav-link">
+            <span class="nav-icon">💰</span>
+            <span class="nav-text">거래 관리</span>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a href="#" class="nav-link">
+            <span class="nav-icon">👤</span>
+            <span class="nav-text">프로필</span>
+        </a>
+    </li>
+    <li class="nav-item logout">
+        <form action="{% url 'accounts:logout' %}" method="post" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit"
+                style="background:none; border:none; color:blue; text-decoration:underline; cursor:pointer; padding:0;">
+                로그아웃
+            </button>
+        </form>
+    </li>
+</ul>
+{% endblock %}
+{% block top_nav %}
+<div class="top-nav-links">
+    <a href="{% url 'accounts:home' %}" class="nav-button">홈</a>
+    <a href="{% url 'accounts:home' %}" class="nav-button">대시보드</a>
+    <a href="{% url 'transactions:transaction_list' %}" class="nav-button">거래 관리</a>
+    <a href="{% url 'businesses:account_list' %}" class="nav-button active">계좌 관리</a>
+    <a href="{% url 'accounts:profile_detail' %}" class="nav-button">프로필</a>
+    <span class="nav-divider">|</span>
+    <span class="user-name">{{ user.username }} 님</span>
+</div>
+{% endblock %}
+{% block content %}
+<div class="container">
+
+    <!-- 페이지 제목 -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2>💳 계좌 관리</h2>
+        </div>
+        <div class="col-md-4 text-end">
+        <a href="{% url 'businesses:account_deleted_list' %}" class="btn btn-outline-danger btn-sm">🗑️ 삭제된 계좌</a>
+            <a href="{% url 'businesses:account_summary' %}" class="btn btn-outline-primary btn-sm">📊 대시보드</a>
+            <a href="{% url 'businesses:account_create' %}" class="btn btn-success btn-sm">➕ 계좌 등록</a>
+        </div>
+    </div>
+
+<!-- 요약 통계 카드 -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <small class="text-muted">총 계좌</small>
+                <h3 class="mt-2 mb-0">{{ total_count }}</h3>
+                <small class="text-muted">개</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center border-primary">
+            <div class="card-body">
+                <small class="text-muted">사업용</small>
+                <h3 class="mt-2 mb-0 text-primary">{{ business_count }}</h3>
+                <small class="text-muted">개</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <small class="text-muted">개인용</small>
+                <h3 class="mt-2 mb-0 text-muted">{{ personal_count }}</h3>
+                <small class="text-muted">개</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center bg-success" style="color: white;">
+            <div class="card-body">
+                <small>총 잔액</small>
+                <h4 class="mt-2 mb-0">{{ total_balance|floatformat:0|default:"0" }}</h4>
+                <small>원</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 검색 및 필터 -->
+<div class="card mb-4">
+    <div class="card-header">🔍 검색 및 필터</div>
+    <div class="card-body">
+        <form method="get">
+            <div class="row">
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">계좌 구분</label>
+                    {{ search_form.account_type }}
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">사업장</label>
+                    {{ search_form.business }}
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">검색어</label>
+                    {{ search_form.search }}
+                </div>
+                <div class="col-md-2 mb-3">
+                    <label class="form-label">&nbsp;</label>
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">검색</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 계좌 목록 테이블 -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">📋 계좌 목록</h5>
+    </div>
+    {% if page_obj %}
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>계좌명</th>
+                        <th>은행</th>
+                        <th>계좌번호</th>
+                        <th>구분</th>
+                        <th>사업장</th>
+                        <th class="text-end">잔액</th>
+                        <th>등록일</th>
+                        <th class="text-center">관리</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for account in page_obj %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'businesses:account_detail' account.pk %}">
+                                <strong>{{ account.name }}</strong>
+                            </a>
+                        </td>
+                        <td>{{ account.bank_name }}</td>
+                        <td><code>{{ account.get_masked_account_number }}</code></td>
+                        <td>
+                            {% if account.account_type == 'business' %}
+                                <span class="badge badge-primary">사업용</span>
+                            {% else %}
+                                <span class="badge badge-secondary">개인용</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if account.business %}
+                                <small>{{ account.business.name }}</small>
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <strong>{{ account.balance|floatformat:0|default:"0" }}원</strong>
+                        </td>
+                        <td>
+                            <small class="text-muted">{{ account.created_at|date:"Y-m-d" }}</small>
+                        </td>
+                        <td class="text-center">
+                            <a href="{% url 'businesses:account_update' account.pk %}" 
+                               class="btn btn-outline-primary btn-sm">수정</a>
+                            <a href="{% url 'businesses:account_delete' account.pk %}" 
+                               class="btn btn-outline-danger btn-sm">삭제</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 페이지네이션 -->
+        {% if page_obj.has_other_pages %}
+        <div class="card-footer">
+            <ul class="pagination">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                            처음
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                            이전
+                        </a>
+                    </li>
+                {% endif %}
+
+                <li class="page-item active">
+                    <span class="page-link">
+                        {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+                    </span>
+                </li>
+
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                            다음
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                            마지막
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </div>
+        {% endif %}
+    {% else %}
+        <div class="card-body text-center py-5">
+            <p class="text-muted mb-3">📭 등록된 계좌가 없습니다.</p>
+            <a href="{% url 'businesses:account_create' %}" class="btn btn-primary">
+                첫 계좌 등록하기
+            </a>
+        </div>
+    {% endif %}
+</div>
+</div>
+{% endblock %}
