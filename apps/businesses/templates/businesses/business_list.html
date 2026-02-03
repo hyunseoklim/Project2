@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}사업장 목록 - 스마트 사업자 가계부{% endblock %}
+
+{% block content %}
+<div class="content-wrapper">
+    <section class="welcome-section">
+        <div class="welcome-header">
+            <span class="welcome-icon">🏢</span>
+            <h2 class="page-title">사업장 목록</h2>
+            <p class="description">등록된 사업장을 관리할 수 있습니다.</p>
+        </div>
+
+        <div class="cta-section" style="border: none; background: none; padding-bottom: 0;">
+            <a href="{% url 'businesses:business_create' %}" class="btn btn-primary">+ 사업장 추가</a>
+        </div>
+
+        <!-- 필터 -->
+        <div class="welcome-message">
+            <form method="get" style="display: flex; gap: 10px; margin-bottom: var(--spacing-md);">
+                <select name="branch_type" style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 0.95rem;">
+                    <option value="" {% if not selected_branch_type %}selected{% endif %}>전체</option>
+                    <option value="main" {% if selected_branch_type == 'main' %}selected{% endif %}>본점</option>
+                    <option value="branch" {% if selected_branch_type == 'branch' %}selected{% endif %}>지점</option>
+                </select>
+                <button type="submit" class="btn btn-primary" style="padding: 8px 16px;">필터</button>
+            </form>
+        </div>
+
+        <!-- 목록 -->
+        <div class="welcome-message">
+            {% if businesses %}
+            <div class="dashboard-container">
+                <div class="summary-grid" style="grid-template-columns: 1fr;">
+                    {% for business in businesses %}
+                    <div class="summary-item">
+                        <a href="{% url 'businesses:business_detail' business.pk %}" style="text-decoration: none; color: inherit; width: 100%; display: block;">
+                            <span class="summary-label">
+                                {{ business.name }}
+                                <span style="font-size: 0.8rem; color: {% if business.branch_type == 'main' %}#27ae60{% else %}#3498db{% endif %}; margin-left: 8px;">
+                                    [{{ business.get_branch_type_display }}]
+                                </span>
+                            </span>
+                            <span class="summary-value">{{ business.location|default:"위치 미등록" }} · {{ business.business_type|default:"업종 미등록" }}</span>
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% else %}
+            <p class="description">등록된 사업장이 없습니다. 새 사업장을 추가해보세요!</p>
+            {% endif %}
+        </div>
+    </section>
+</div>
+{% endblock %}

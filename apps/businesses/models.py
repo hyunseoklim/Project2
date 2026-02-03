@@ -32,6 +32,12 @@ class Business(SoftDeleteModel):
     business_type = models.CharField(max_length=50, blank=True)
     registration_number = models.CharField(max_length=12, blank=True)
 
+    BRANCH_TYPE_CHOICES = [
+        ('main', '본점'),
+        ('branch', '지점'),
+    ]
+    branch_type = models.CharField(max_length=10, choices=BRANCH_TYPE_CHOICES, default='main', db_index=True)
+
     class Meta:
         db_table = 'businesses'
         ordering = ['name']

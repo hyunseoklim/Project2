@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}{{ business.name }} - 스마트 사업자 가계부{% endblock %}
+
+{% block content %}
+<div class="content-wrapper">
+    <section class="welcome-section">
+        <div class="welcome-header">
+            <span class="welcome-icon">🏢</span>
+            <h2 class="page-title">{{ business.name }}</h2>
+        </div>
+
+        <div class="welcome-message">
+            <div class="dashboard-container">
+                <div class="summary-grid" style="grid-template-columns: 1fr;">
+                    <div class="summary-item">
+                        <span class="summary-label">위치</span>
+                        <span class="summary-value">{{ business.location|default:"미등록" }}</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">업종</span>
+                        <span class="summary-value">{{ business.business_type|default:"미등록" }}</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">사업자 등록번호</span>
+                        <span class="summary-value">{{ business.registration_number|default:"미등록" }}</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">본점/지점</span>
+                        <span class="summary-value" style="color: {% if business.branch_type == 'main' %}#27ae60{% else %}#3498db{% endif %};">
+                            {{ business.get_branch_type_display }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="cta-section" style="border: none; background: none;">
+            <div class="button-group">
+                <a href="{% url 'businesses:business_update' business.pk %}" class="btn btn-primary">✏️ 수정</a>
+                <a href="{% url 'businesses:business_delete' business.pk %}" class="btn btn-secondary">🗑️ 삭제</a>
+                <a href="{% url 'businesses:business_list' %}" class="btn btn-secondary">목록으로</a>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}

@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}{% if business %}사업장 수정{% else %}사업장 추가{% endif %} - 스마트 사업자 가계부{% endblock %}
+
+{% block content %}
+<div class="content-wrapper">
+    <section class="welcome-section">
+        <div class="welcome-header">
+            <span class="welcome-icon">🏢</span>
+            <h2 class="page-title">{% if business %}사업장 수정{% else %}사업장 추가{% endif %}</h2>
+            <p class="description">사업장 정보를 입력해주세요.</p>
+        </div>
+
+        <div class="welcome-message">
+            <form method="post">
+                {% csrf_token %}
+                <div style="margin-bottom: var(--spacing-md);">
+                    <label class="section-title" style="font-size: 1rem; margin-bottom: 0.5rem;">사업장 이름 *</label>
+                    <input type="text" name="name" value="{{ business.name|default:'' }}" required
+                        style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem;">
+                </div>
+                <div style="margin-bottom: var(--spacing-md);">
+                    <label class="section-title" style="font-size: 1rem; margin-bottom: 0.5rem;">위치</label>
+                    <input type="text" name="location" value="{{ business.location|default:'' }}"
+                        style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem;">
+                </div>
+                <div style="margin-bottom: var(--spacing-md);">
+                    <label class="section-title" style="font-size: 1rem; margin-bottom: 0.5rem;">업종</label>
+                    <input type="text" name="business_type" value="{{ business.business_type|default:'' }}"
+                        style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem;">
+                </div>
+                <div style="margin-bottom: var(--spacing-md);">
+                    <label class="section-title" style="font-size: 1rem; margin-bottom: 0.5rem;">사업자 등록번호</label>
+                    <input type="text" name="registration_number" value="{{ business.registration_number|default:'' }}"
+                        style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem;">
+                        <div style="margin-bottom: var(--spacing-md);">
+                            <label class="section-title" style="font-size: 1rem; margin-bottom: 0.5rem;">본점/지점</label>
+                            <select name="branch_type" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem;">
+                                <option value="main" {% if business.branch_type == 'main' %}selected{% endif %}>본점</option>
+                                <option value="branch" {% if business.branch_type == 'branch' %}selected{% endif %}>지점</option>
+                            </select>
+                        </div>
+                </div>
+
+                <div class="cta-section" style="border: none; background: none; padding-top: var(--spacing-lg);">
+                    <div class="button-group">
+                        <button type="submit" class="btn btn-primary">{% if business %}수정 저장{% else %}생성{% endif %}</button>
+                        <a href="{% url 'businesses:business_list' %}" class="btn btn-secondary">취소</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </section>
+</div>
+{% endblock %}
