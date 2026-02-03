@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}사업장 삭제 확인 - 스마트 사업자 가계부{% endblock %}
+
+{% block content %}
+<div class="content-wrapper">
+    <section class="welcome-section">
+        <div class="welcome-header">
+            <span class="welcome-icon">⚠️</span>
+            <h2 class="page-title">사업장 삭제 확인</h2>
+            <p class="description">"{{ business.name }}"을 삭제하고 싶으신가요?</p>
+            <p class="description" style="color: #e74c3c;">이 작업은 되돌릴 수 없습니다.</p>
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+            <div class="cta-section" style="border: none; background: none;">
+                <div class="button-group">
+                    <button type="submit" class="btn btn-primary" style="background-color: #e74c3c;">🗑️ 삭제 확인</button>
+                    <a href="{% url 'businesses:business_detail' business.pk %}" class="btn btn-secondary">취소</a>
+                </div>
+            </div>
+        </form>
+    </section>
+</div>
+{% endblock %}

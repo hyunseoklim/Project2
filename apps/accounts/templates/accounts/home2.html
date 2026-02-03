@@ -21,15 +21,15 @@
         </a>
     </li>
     <li class="nav-item">
-        <a href="#" class="nav-link">
+        <a href="{% url 'transactions:transaction_list' %}" class="nav-link">
             <span class="nav-icon">💰</span>
             <span class="nav-text">거래 관리</span>
         </a>
     </li>
     <li class="nav-item">
-        <a href="#" class="nav-link">
-            <span class="nav-icon">📋</span>
-            <span class="nav-text">거래 내역</span>
+        <a href="{% url 'businesses:business_list' %}" class="nav-link">
+            <span class="nav-icon">🏢</span>
+            <span class="nav-text">사업장 관리</span>
         </a>
     </li>
     <li class="nav-item">
@@ -40,11 +40,12 @@
     </li>
     <li class="nav-item logout">
         <form action="{% url 'accounts:logout' %}" method="post" style="display:inline;">
-    {% csrf_token %}
-    <button type="submit" style="background:none; border:none; color:blue; text-decoration:underline; cursor:pointer; padding:0;">
-        로그아웃
-    </button>
-</form>
+            {% csrf_token %}
+            <button type="submit"
+                style="background:none; border:none; color:blue; text-decoration:underline; cursor:pointer; padding:0;">
+                로그아웃
+            </button>
+        </form>
     </li>
 </ul>
 {% endblock %}
@@ -53,28 +54,30 @@
 <div class="top-nav-links">
     <a href="{% url 'accounts:home' %}" class="nav-button">홈</a>
     <a href="{% url 'accounts:home' %}" class="nav-button active">대시보드</a>
-    <a href="#" class="nav-button">거래 관리</a>
-    <a href="#" class="nav-button">거래 내역</a>
+    <a href="{% url 'transactions:transaction_list' %}" class="nav-button">거래 관리</a>
     <a href="#" class="nav-button">프로필</a>
     <span class="nav-divider">|</span>
     <span class="user-name"> {{ user.username }} 님</span>
     <span class="nav-divider">|</span>
     <form action="{% url 'accounts:logout' %}" method="post" style="display:inline;">
-    {% csrf_token %}
-    <button type="submit" style="background:none; border:none; color:blue; text-decoration:underline; cursor:pointer; padding:0;">
-        로그아웃
-    </button>
-    </form>
-    
-    <form action="{% url 'accounts:password_change' %}" method="post" style="display:inline;">
-    {% csrf_token %}
-    <button type="submit" style="background:none; border:none; color:blue; text-decoration:underline; cursor:pointer; padding:0;">
-        비밀번호 변경
-    </button>
+        {% csrf_token %}
+        <button type="submit"
+            style="background:none; border:none; color:blue; text-decoration:underline; cursor:pointer; padding:0;">
+            로그아웃
+        </button>
     </form>
 
-    <a href="{% url 'accounts:profile_edit' %}" 
-   style="color:blue; text-decoration:underline; cursor:pointer;">
+    <form action="{% url 'accounts:password_change' %}" method="post" style="display:inline;">
+        {% csrf_token %}
+        <button type="submit"
+            style="background:none; border:none; color:blue; text-decoration:underline; cursor:pointer; padding:0;">
+            비밀번호 변경
+        </button>
+    </form>
+
+    <a href="{% url 'accounts:profile_edit' %}" style="color:blue; text-decoration:underline; cursor:pointer;">
+        프로필 수정
+    </a>
 
 </div>
 {% endblock %}
@@ -147,8 +150,8 @@
                 </tbody>
             </table>
         </div>
-        
-        <a href="#" class="detail-link">전체 거래 내역 보기 →</a>
+
+        <a href="{% url 'transactions:transaction_list' %}" class="detail-link">전체 거래 내역 보기 →</a>
     </section>
 
     <!-- 빠른 메뉴 섹션 -->
@@ -159,13 +162,21 @@
         </div>
 
         <div class="quick-menu-grid">
-            <a href="#" class="quick-menu-item">
+            <a href="{% url 'transactions:transaction_create' %}" class="quick-menu-item">
                 <span class="menu-icon">➕</span>
                 <span class="menu-text">거래 등록</span>
             </a>
             <a href="#" class="quick-menu-item">
                 <span class="menu-icon">➕</span>
                 <span class="menu-text">계좌 등록</span>
+            </a>
+            <a href="{% url 'businesses:business_list' %}" class="quick-menu-item">
+                <span class="menu-icon">🏢</span>
+                <span class="menu-text">사업장 관리</span>
+            </a>
+            <a href="{% url 'businesses:business_create' %}" class="quick-menu-item">
+                <span class="menu-icon">➕</span>
+                <span class="menu-text">사업장 추가</span>
             </a>
         </div>
     </section>
