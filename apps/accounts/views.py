@@ -5,10 +5,10 @@ from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
 from django.contrib import messages
 from .forms import ProfileForm
-from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login as auth_login
 from .models import Profile
+from django.db import IntegrityError,transaction
 
 from django.contrib.messages.views import SuccessMessageMixin
 from django.contrib.auth.views import PasswordChangeView
@@ -59,32 +59,38 @@ def home(request):
 class MyPasswordChangeView(SuccessMessageMixin, PasswordChangeView):
     template_name = 'accounts/password_change.html'
     success_url = reverse_lazy('accounts:home')  # 홈으로 바로 이동
-    success_message = "비밀번호가 성공적으로 변경되었습니다." # 👈 Mixin 덕분에 한 줄로 해결!
+    success_message = "비밀번호가 성공적으로 변경되었습니다." # Mixin 사용으로 이득
     
 
 @login_required
 def profile_edit(request):
-    # 1. 안전하게 프로필을 가져옵니다. (없으면 여기서 생성됨)
-    profile, created = Profile.objects.get_or_create(user=request.user)
+    profile, _ = Profile.objects.get_or_create(user=request.user)
     
     if request.method == "POST":
-        # 2. instance=profile을 사용하여 데이터를 덮어씁니다.
-        form = ProfileForm(request.POST, instance=profile)
+        # 추후 프로필에 파일 업로드 예상.
+        form = ProfileForm(request.POST, request.FILES, instance=profile)
         if form.is_valid():
-            form.save()
-            # 3. 성공 메시지 추가
-            messages.success(request, "프로필이 성공적으로 저장되었습니다.")
-            return redirect('accounts:home')
+            try:
+                # 데이터 저장 시 안전하게 트랜잭션 사용 가능
+                with transaction.atomic():
+                    form.save()
+                messages.success(request, "프로필이 저장되었습니다.")
+                return redirect('accounts:home')
+            except IntegrityError:
+                # DB 제약 조건 위반 (중복 데이터 등) 시 처리
+                messages.error(request, "이미 등록된 정보이거나 데이터 충돌이 발생했습니다. 입력값을 다시 확인해주세요.")
+            except Exception as e:
+                # 예상치 못한 DB 에러 등 처리
+                messages.error(request, f"저장 중 오류가 발생했습니다: {e}")
     else:
-        # 4. 기존 데이터를 폼에 채워서 보여주기
         form = ProfileForm(instance=profile)
         
     return render(request, "accounts/profile_edit.html", {"form": form})
 
+@login_required  # 로그인을 안 한 사용자는 로그인 페이지로 보냅니다.
 def profile_detail(request):
-    # 로그인한 사용자의 프로필 정보를 가져옵니다.
-    profile = get_object_or_404(Profile, user=request.user)
+    # 없으면 빈 프로필이라도 가져옴
+    # signals.py가 있지만, 만약을 대비한 안전장치입니다.
+    profile, created = Profile.objects.get_or_create(user=request.user)
     
-    # 'profile'이라는 이름으로 HTML에 데이터를 보냅니다.
     return render(request, 'accounts/profile_detail.html', {'profile': profile})
-

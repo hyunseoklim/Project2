@@ -1,19 +1,50 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container">
-    <h2>사업자 프로필 설정</h2>
-    <p class="text-muted">세무 증빙과 가계부 관리를 위해 정확한 정보를 입력해주세요.</p>
-    
-    <form method="post" class="profile-form">
-        {% csrf_token %}
-        <div class="card" style="padding: 20px; border: 1px solid #eee;">
-            {{ form.as_p }}
+<div class="content-wrapper">
+    <section class="welcome-section">
+        <div class="welcome-header">
+            <span class="welcome-icon">📝</span>
+            <h2 class="page-title">사업자 프로필 설정</h2>
+            <p class="description">세무 증빙과 가계부 관리를 위해 정확한 정보를 입력해주세요.</p>
         </div>
-        <div style="margin-top: 20px;">
-            <button type="submit" class="btn btn-primary">저장하기</button>
-            <a href="{% url 'accounts:home' %}" class="btn btn-secondary">취소</a>
+
+        <div class="welcome-message">
+            <form method="post">
+                {% csrf_token %}
+                
+                {% for field in form %}
+                    <div style="margin-bottom: var(--spacing-md);">
+                        <label class="section-title" style="font-size: 1rem; margin-bottom: 0.5rem; display: block;">
+                            {{ field.label }}
+                        </label>
+                        
+                        {{ field }}
+                        
+                        {% if field.help_text %}
+                            <div class="description" style="font-size: 0.85rem; margin-top: 0.5rem; color: var(--gray-600);">
+                                {{ field.help_text|safe }}
+                            </div>
+                        {% endif %}
+                        
+                        {% if field.errors %}
+                            {% for error in field.errors %}
+                                <div class="badge-expense" style="display: inline-block; margin-top: 5px; border-radius: 4px; padding: 5px 10px; font-size: 0.85rem;">
+                                    <strong>!</strong> {{ error }}
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                {% endfor %}
+
+                <div class="cta-section" style="border: none; padding-top: var(--spacing-lg); background: none;">
+                    <div class="button-group">
+                        <button type="submit" class="btn btn-primary">프로필 저장하기</button>
+                        <a href="{% url 'accounts:home' %}" class="btn btn-secondary">취소</a>
+                    </div>
+                </div>
+            </form>
         </div>
-    </form>
+    </section>
 </div>
 {% endblock %}
