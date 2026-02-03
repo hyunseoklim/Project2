@@ -13,9 +13,14 @@ def business_list(request):
     if branch_type:
         businesses = businesses.filter(branch_type=branch_type)
 
+    business_type = request.GET.get('business_type')
+    if business_type:
+        businesses = businesses.filter(business_type=business_type)
+
     context = {
         'businesses': businesses,
         'selected_branch_type': branch_type,
+        'selected_business_type': business_type,
     }
     return render(request, 'businesses/business_list.html', context)
 
@@ -57,7 +62,6 @@ def business_update(request, pk):
         business.location = request.POST.get('location', business.location)
         business.business_type = request.POST.get('business_type', business.business_type)
         business.branch_type = request.POST.get('branch_type', business.branch_type)
-        business.save()
         business.registration_number = request.POST.get('registration_number', business.registration_number)
         business.save()
         messages.success(request, f"'{business.name}' 사업장이 수정되었습니다.")

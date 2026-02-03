@@ -23,6 +23,14 @@
                     <option value="main" {% if selected_branch_type == 'main' %}selected{% endif %}>본점</option>
                     <option value="branch" {% if selected_branch_type == 'branch' %}selected{% endif %}>지점</option>
                 </select>
+                <select name="business_type" style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 0.95rem;">
+                    <option value="" {% if not selected_business_type %}selected{% endif %}>업종 전체</option>
+                    <option value="카페" {% if selected_business_type == '카페' %}selected{% endif %}>카페</option>
+                    <option value="빨래방" {% if selected_business_type == '빨래방' %}selected{% endif %}>빨래방</option>
+                    <option value="자동판매기" {% if selected_business_type == '자동판매기' %}selected{% endif %}>자동판매기</option>
+                    <option value="무인편의점" {% if selected_business_type == '무인편의점' %}selected{% endif %}>무인편의점</option>
+                    <option value="기타" {% if selected_business_type == '기타' %}selected{% endif %}>기타</option>
+                </select>
                 <button type="submit" class="btn btn-primary" style="padding: 8px 16px;">필터</button>
             </form>
         </div>

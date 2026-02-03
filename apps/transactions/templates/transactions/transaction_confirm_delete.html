@@ -18,7 +18,7 @@
         </a>
     </li>
     <li class="nav-item active">
-        <a href="{% url 'transactions:list' %}" class="nav-link">
+        <a href="{% url 'transactions:transaction_list' %}" class="nav-link">
             <span class="nav-icon">💰</span>
             <span class="nav-text">거래 관리</span>
         </a>
@@ -36,7 +36,7 @@
 <div class="top-nav-links">
     <a href="{% url 'accounts:home' %}" class="nav-button">홈</a>
     <a href="{% url 'accounts:home' %}" class="nav-button">대시보드</a>
-    <a href="{% url 'transactions:list' %}" class="nav-button active">거래 관리</a>
+    <a href="{% url 'transactions:transaction_list' %}" class="nav-button active">거래 관리</a>
     <a href="{% url 'accounts:profile_detail' %}" class="nav-button">프로필</a>
     <span class="nav-divider">|</span>
     <span class="user-name">{{ user.username }} 님</span>
@@ -92,7 +92,7 @@
                     <form method="post">
                         {% csrf_token %}
                         <div class="d-flex justify-content-between">
-                            <a href="{% url 'transactions:detail' transaction.pk %}" class="btn btn-secondary">
+                            <a href="{% url 'transactions:transaction_detail' transaction.pk %}" class="btn btn-secondary">
                                 <i class="fas fa-times"></i> 취소
                             </a>
                             <button type="submit" class="btn btn-danger">
