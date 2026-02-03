@@ -10,6 +10,7 @@ urlpatterns = [
     path('accounts/', include('apps.accounts.urls')),
     path('businesses/', include('apps.businesses.urls')),  
     path('transactions/', include('apps.transactions.urls')),
+
 ]
 
 # 최재용_미디어파일 읽을때 사용하는 코드
