@@ -298,6 +298,13 @@ class Transaction(SoftDeleteModel):
         
         super().delete(*args, **kwargs)
 
+    @property
+    def supply_value(self):
+        """합계에서 부가세를 뺀 공급가액을 반환"""
+        if self.amount and self.vat_amount:
+            return self.amount - self.vat_amount
+        return self.amount or 0
+
 
 class Attachment(TimeStampedModel):
     """첨부파일 (영수증/세금계산서)"""
