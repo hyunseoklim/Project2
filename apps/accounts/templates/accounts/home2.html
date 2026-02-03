@@ -59,8 +59,20 @@
             style="background:none; border:none; color:blue; text-decoration:underline; cursor:pointer; padding:0;">
             로그아웃
         </button>
-        <a href="{% url 'accounts:password_change' %}">비밀번호 변경</a>
     </form>
+
+    <form action="{% url 'accounts:password_change' %}" method="post" style="display:inline;">
+        {% csrf_token %}
+        <button type="submit"
+            style="background:none; border:none; color:blue; text-decoration:underline; cursor:pointer; padding:0;">
+            비밀번호 변경
+        </button>
+    </form>
+
+    <a href="{% url 'accounts:profile_edit' %}"
+        style="color:blue; text-decoration:underline; cursor:pointer;">
+        프로필 수정
+    </a>
 
 </div>
 {% endblock %}

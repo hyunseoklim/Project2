@@ -4,9 +4,9 @@
 <div class="content-wrapper">
     <section class="welcome-section">
         <div class="welcome-header">
-            <span class="welcome-icon">🔐</span>
-            <h2 class="page-title">비밀번호 변경</h2>
-            <p class="description">계정 보안을 위해 새로운 비밀번호를 설정해주세요.</p>
+            <span class="welcome-icon">📝</span>
+            <h2 class="page-title">사업자 프로필 설정</h2>
+            <p class="description">세무 증빙과 가계부 관리를 위해 정확한 정보를 입력해주세요.</p>
         </div>
 
         <div class="welcome-message">
@@ -15,24 +15,21 @@
                 
                 {% for field in form %}
                     <div style="margin-bottom: var(--spacing-md);">
-                        <label class="section-title" style="font-size: 1rem; margin-bottom: 0.5rem;">
+                        <label class="section-title" style="font-size: 1rem; margin-bottom: 0.5rem; display: block;">
                             {{ field.label }}
                         </label>
                         
-                        {# 뷰에서 넣어준 클래스가 적용된 입력창 #}
                         {{ field }}
                         
-                        {# 도움말 (비밀번호 규칙 등) #}
                         {% if field.help_text %}
                             <div class="description" style="font-size: 0.85rem; margin-top: 0.5rem; color: var(--gray-600);">
                                 {{ field.help_text|safe }}
                             </div>
                         {% endif %}
                         
-                        {# 에러 발생 시 CSS의 accent-red 활용 #}
                         {% if field.errors %}
                             {% for error in field.errors %}
-                                <div class="badge-expense" style="display: block; margin-top: 5px; border-radius: 4px; padding: 5px 10px;">
+                                <div class="badge-expense" style="display: inline-block; margin-top: 5px; border-radius: 4px; padding: 5px 10px; font-size: 0.85rem;">
                                     <strong>!</strong> {{ error }}
                                 </div>
                             {% endfor %}
@@ -42,8 +39,8 @@
 
                 <div class="cta-section" style="border: none; padding-top: var(--spacing-lg); background: none;">
                     <div class="button-group">
-                        <button type="submit" class="btn btn-primary">변경 내용 저장</button>
-                        <a href="{% url 'accounts:home' %}" class="btn btn-secondary">취소하기</a>
+                        <button type="submit" class="btn btn-primary">프로필 저장하기</button>
+                        <a href="{% url 'accounts:home' %}" class="btn btn-secondary">취소</a>
                     </div>
                 </div>
             </form>
