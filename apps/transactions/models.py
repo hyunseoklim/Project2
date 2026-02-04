@@ -46,6 +46,23 @@ class Merchant(SoftDeleteModel):
     def __str__(self):
         return self.name
 
+    def get_masked_business_number(self):
+        """마스킹된 사업자번호 반환"""
+        if not self.business_number:
+            return '-'
+        
+        cleaned = self.business_number.replace('-', '')
+        if len(cleaned) < 10:
+            return self.business_number
+        
+        return f"{cleaned[:3]}-**-***{cleaned[-2:]}"
+    
+    def get_business_number_display(self, show_full=False):
+        """조건부 마스킹"""
+        if show_full:
+            return self.business_number
+        return self.get_masked_business_number()
+
 
 class Category(TimeStampedModel):
     """거래 카테고리 (수입/지출 분류)"""
@@ -70,11 +87,12 @@ class Category(TimeStampedModel):
         ('other', '기타 경비'),
     ]
     
-    name = models.CharField(max_length=50, unique=True)
+    name = models.CharField(max_length=50)
     type = models.CharField(max_length=20, choices=TYPE_CHOICES, db_index=True)
     expense_type = models.CharField(max_length=30, choices=EXPENSE_TYPE_CHOICES, blank=True, null=True, db_index=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name='custom_categories')
     order = models.IntegerField(default=0, db_index=True)
+    is_system = models.BooleanField(default=False, db_index=True) 
 
     class Meta:
         db_table = 'categories'
@@ -82,6 +100,20 @@ class Category(TimeStampedModel):
         indexes = [
             models.Index(fields=['type', 'order']),
             models.Index(fields=['user', 'type']),
+        ]
+        constraints = [
+            # 사용자별 이름 중복 방지
+            models.UniqueConstraint(
+                fields=['user', 'name'],
+                condition=models.Q(user__isnull=False),
+                name='unique_user_category_name'
+            ),
+            # 시스템 카테고리 이름 중복 방지
+            models.UniqueConstraint(
+                fields=['name'],
+                condition=models.Q(is_system=True),
+                name='unique_system_category_name'
+            )
         ]
 
     def __str__(self):

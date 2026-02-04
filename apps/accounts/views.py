@@ -40,19 +40,20 @@ def signup(request):
     
     return render(request, "accounts/signup.html", {"form": form})
 
+
 def home(request):
-    """로그인 여부에 따라 다른 화면 렌더링"""
-    if request.user.is_authenticated:
-        profile = getattr(request.user, 'profile', None)
-        context = {
-            'user': request.user,
-            'profile': profile,
-            'masked_biz_num': profile.get_masked_business_number() if profile else "미등록"
-        }
-        return render(request, "accounts/home2.html", context)
-    else:
-        context = {}
-        return render(request, "accounts/home.html", context)
+     """로그인 여부에 따라 다른 화면 렌더링"""
+     if request.user.is_authenticated:
+         profile = getattr(request.user, 'profile', None)
+         context = {
+             'user': request.user,
+             'profile': profile,
+             'masked_biz_num': profile.get_masked_business_number() if profile else "미등록"
+         }
+         return render(request, "accounts/home2.html", context)
+     else:
+         context = {}
+         return render(request, "accounts/home.html", context)
     
 
 class MyPasswordChangeView(SuccessMessageMixin, PasswordChangeView):

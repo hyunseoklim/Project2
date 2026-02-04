@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ merchant.name }} - 거래처 상세{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>{{ merchant.name }}</h2>
+        <div>
+            <a href="{% url 'transactions:merchant_update' merchant.pk %}" class="btn btn-primary">수정</a>
+            <a href="{% url 'transactions:merchant_delete' merchant.pk %}" class="btn btn-danger">삭제</a>
+            <a href="{% url 'transactions:merchant_list' %}" class="btn btn-secondary">목록</a>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5>기본 정보</h5>
+        </div>
+        <div class="card-body">
+            <dl class="row">
+                <dt class="col-sm-3">거래처명</dt>
+                <dd class="col-sm-9">{{ merchant.name }}</dd>
+
+                <dt class="col-sm-3">사업자번호</dt>
+                <dd class="col-sm-9">{{ merchant.get_masked_business_number }}</dd>
+
+                <dt class="col-sm-3">연락처</dt>
+                <dd class="col-sm-9">{{ merchant.contact|default:"-" }}</dd>
+
+                <dt class="col-sm-3">카테고리</dt>
+                <dd class="col-sm-9">
+                    {% if merchant.category %}
+                        {{ merchant.category.name }}
+                    {% else %}
+                        -
+                    {% endif %}
+                </dd>
+
+                <dt class="col-sm-3">메모</dt>
+                <dd class="col-sm-9">{{ merchant.memo|default:"-"|linebreaks }}</dd>
+
+                <dt class="col-sm-3">등록일</dt>
+                <dd class="col-sm-9">{{ merchant.created_at|date:"Y년 m월 d일 H:i" }}</dd>
+            </dl>
+        </div>
+    </div>
+
+    {% if stats %}
+    <div class="card">
+        <div class="card-header">
+            <h5>거래 통계</h5>
+        </div>
+        <div class="card-body">
+            <p>총 거래 횟수: <strong>{{ stats.total_count }}건</strong></p>
+            <p>총 거래 금액: <strong>{{ stats.total_amount|default:0|floatformat:0 }}원</strong></p>
+            <p>총 부가세: <strong>{{ stats.total_vat|default:0|floatformat:0 }}원</strong></p>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
