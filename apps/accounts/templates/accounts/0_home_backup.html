@@ -1,11 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}대시보드 - 스마트 사업자 가계부{% endblock %}
-
-{% block banner_mode %}로그인 상태 토글{% endblock %}
-{% block current_status %}로그인 상태{% endblock %}
-
 {% block sidebar_nav %}
 {% endblock %}
 
@@ -15,12 +10,28 @@
 {% block content %}
 <div class="accounts-container">
    
+    {% if user.is_authenticated %}
+        {# 로그인 상태 UI #}
+        <section class="quick-menu-section">
+        <div class="section-header">
+
+            <h3 class="section-title">{{ user.username }}님 환영합니다</h3>
+        </div>
+    {% else %}
+        {# 비로그인 상태 UI #}
+        <section class="quick-menu-section">
+        <div class="section-header">
+            <h3 class="section-title">로그인하고 시작하세요</h3>
+        </div>
+    {% endif %}
 
     <!-- 빠른 메뉴 섹션 -->
     <section class="quick-menu-section">
         <div class="section-header">
             <span class="section-icon">⚡</span>
             <h3 class="section-title">빠른 메뉴</h3>
+        </div>
+        <div lass="section-header">
         </div>
 
         <div class="quick-menu-grid">

@@ -160,3 +160,28 @@ PASSWORD_CHANGE_REDIRECT_URL = 'password_change_done'
 
 # 메시지 프레임워크 (이미 설정되어 있을 것)
 MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'
+
+# 로깅 설정
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': 'logs/django.log',
+        },
+    },
+    'loggers': {
+        'accounts': {
+            'handlers': ['file'],
+            'level': 'INFO',
+        },
+    },
+}
+
+# 개발 환경: 콘솔에 이메일 출력 (실제 발송 안 함)
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# 비밀번호 재설정 링크 유효 시간 (초 단위, 기본 3일)
+PASSWORD_RESET_TIMEOUT = 3600 * 24 * 3  # 3일

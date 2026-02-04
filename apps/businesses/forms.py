@@ -138,3 +138,127 @@ class AccountSearchForm(forms.Form):
         # 사업장 선택지: 본인의 활성 사업장만
         if user:
             self.fields['business'].queryset = Business.active.filter(user=user)
+
+
+class BusinessForm(forms.ModelForm):
+    """사업장 생성/수정 폼"""
+    
+    class Meta:
+        model = Business
+        fields = ['name', 'location', 'business_type', 'branch_type', 'registration_number']
+        widgets = {
+            'name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': '사업장명 (예: 강남점)'
+            }),
+            'location': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': '주소 (예: 서울시 강남구)'
+            }),
+            'business_type': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': '업종 (예: 소매업)'
+            }),
+            'branch_type': forms.Select(attrs={
+                'class': 'form-select'
+            }),
+            'registration_number': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': '123-45-67890 형식으로 입력'
+            }),
+        }
+        labels = {
+            'name': '사업장명',
+            'location': '위치/주소',
+            'business_type': '업종',
+            'branch_type': '구분',
+            'registration_number': '사업자등록번호',
+        }
+        help_texts = {
+            'name': '사업장을 구분할 수 있는 이름을 입력하세요',
+            'registration_number': '하이픈(-)을 포함하여 입력하세요',
+        }
+    
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+        
+        # 선택 필드들
+        self.fields['location'].required = False
+        self.fields['business_type'].required = False
+        self.fields['registration_number'].required = False
+    
+    def clean_name(self):
+        """사업장명 중복 검증"""
+        name = self.cleaned_data.get('name')
+        
+        if not name:
+            raise ValidationError('사업장명은 필수입니다.')
+        
+        # 중복 검증 (동일 사용자 내)
+        if self.user:
+            queryset = Business.active.filter(user=self.user, name=name)
+            
+            # 수정 시 자기 자신 제외
+            if self.instance and self.instance.pk:
+                queryset = queryset.exclude(pk=self.instance.pk)
+            
+            if queryset.exists():
+                raise ValidationError('이미 등록된 사업장명입니다.')
+        
+        return name
+    
+    def clean_registration_number(self):
+        """사업자등록번호 형식 검증"""
+        reg_num = self.cleaned_data.get('registration_number')
+        
+        if not reg_num:
+            return reg_num
+        
+        # 하이픈 제거 후 검증
+        cleaned = reg_num.replace('-', '').replace(' ', '')
+        
+        # 숫자만 있는지 확인
+        if not cleaned.isdigit():
+            raise ValidationError('사업자등록번호는 숫자와 하이픈(-)만 입력 가능합니다.')
+        
+        # 10자리 검증
+        if len(cleaned) != 10:
+            raise ValidationError('사업자등록번호는 10자리여야 합니다.')
+        
+        return reg_num
+
+
+class BusinessSearchForm(forms.Form):
+    """사업장 검색 폼"""
+    
+    BRANCH_TYPE_CHOICES = [
+        ('', '전체'),
+        ('main', '본점'),
+        ('branch', '지점'),
+    ]
+    
+    branch_type = forms.ChoiceField(
+        choices=BRANCH_TYPE_CHOICES,
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-select'}),
+        label='구분'
+    )
+    
+    business_type = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': '업종 검색'
+        }),
+        label='업종'
+    )
+    
+    search = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': '사업장명 또는 위치 검색'
+        }),
+        label='검색'
+    )

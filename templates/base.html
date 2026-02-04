@@ -19,7 +19,9 @@
             </div>
 
             {% include 'components/sidebar.html' %}
-
+            {% block top_nav %}
+                {% include 'components/sidebar.html' %}
+            {% endblock %}
         </aside>
 
 
@@ -29,7 +31,9 @@
 
             <!-- 상단 네비게이션, 이부분 지우고 각 app의 네비로 설정 -->
             <nav class="top-nav">
-                {% include 'components/navbar.html' %}
+                {% block top_nav %}
+                    {% include 'components/navbar.html' %}
+                {% endblock %}
             </nav>
 
             <!-- 페이지 콘텐츠 -->
