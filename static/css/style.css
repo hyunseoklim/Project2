@@ -12,12 +12,12 @@
     --primary-yellow: #FFD93D;
     --primary-yellow-dark: #F5B800;
     --primary-yellow-light: #FFF8DC;
-    
+
     /* 보조 컬러 */
     --secondary-blue: #6C9BCF;
     --accent-green: #4CAF50;
     --accent-red: #FF6B6B;
-    
+
     /* 뉴트럴 컬러 */
     --white: #FFFFFF;
     --gray-50: #FAFAFA;
@@ -30,25 +30,25 @@
     --gray-700: #616161;
     --gray-800: #424242;
     --gray-900: #212121;
-    
+
     /* 그림자 */
     --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
     --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
     --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
-    
+
     /* 간격 */
     --spacing-xs: 0.5rem;
     --spacing-sm: 1rem;
     --spacing-md: 1.5rem;
     --spacing-lg: 2rem;
     --spacing-xl: 3rem;
-    
+
     /* 보더 라디우스 */
     --radius-sm: 8px;
     --radius-md: 12px;
     --radius-lg: 16px;
     --radius-xl: 24px;
-    
+
     /* 트랜지션 */
     --transition: all 0.3s ease;
 }
@@ -141,8 +141,15 @@ body {
 }
 
 @keyframes float {
-    0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-10px); }
+
+    0%,
+    100% {
+        transform: translateY(0px);
+    }
+
+    50% {
+        transform: translateY(-10px);
+    }
 }
 
 .logo-text {
@@ -332,6 +339,7 @@ body {
         opacity: 0;
         transform: translateY(20px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -352,8 +360,15 @@ body {
 }
 
 @keyframes bounce {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-15px); }
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-15px);
+    }
 }
 
 .page-title {
@@ -734,7 +749,7 @@ body {
     .sidebar {
         width: 240px;
     }
-    
+
     .content-wrapper {
         padding: var(--spacing-lg);
     }
@@ -744,35 +759,35 @@ body {
     .main-container {
         flex-direction: column;
     }
-    
+
     .sidebar {
         width: 100%;
         height: auto;
         position: static;
     }
-    
+
     .top-nav-links {
         flex-wrap: wrap;
     }
-    
+
     .summary-grid {
         grid-template-columns: 1fr;
     }
-    
+
     .button-group {
         flex-direction: column;
     }
-    
+
     .quick-menu-grid {
         grid-template-columns: 1fr;
     }
 }
 
-.form-input-field, 
-input[type="text"], 
-input[type="tel"], 
-input[type="password"], 
-input[type="email"], 
+.form-input-field,
+input[type="text"],
+input[type="tel"],
+input[type="password"],
+input[type="email"],
 select {
     width: 100%;
     height: 48px;
@@ -788,7 +803,7 @@ select {
 
 /* 포커스 시 노란색 테두리 효과 */
 .form-input-field:focus,
-input:focus, 
+input:focus,
 select:focus {
     outline: none;
     border-color: var(--primary-yellow);
@@ -814,4 +829,94 @@ select {
     padding: 5px 10px;
     font-size: 0.85rem;
     font-weight: 600;
+}
+
+/* ========================================
+   필터 폼 스타일
+   ======================================== */
+.filter-form {
+    background: white;
+    padding: 1.5rem;
+    border-radius: var(--radius-md);
+}
+
+.filter-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.filter-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.filter-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--gray-700);
+    margin-bottom: 0.5rem;
+}
+
+.filter-input,
+.filter-select {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius-sm);
+    font-size: 0.875rem;
+    transition: all 0.2s;
+}
+
+.filter-input:focus,
+.filter-select:focus {
+    outline: none;
+    border-color: var(--primary-yellow);
+    box-shadow: 0 0 0 3px rgba(255, 217, 61, 0.1);
+}
+
+.filter-actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: flex-end;
+    padding-top: 0.5rem;
+}
+
+.btn-primary,
+.btn-secondary {
+    padding: 0.625rem 1.5rem;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-primary {
+    background: var(--primary-yellow);
+    color: var(--gray-900);
+}
+
+.btn-primary:hover {
+    background: var(--primary-yellow-dark);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-secondary {
+    background: var(--gray-200);
+    color: var(--gray-700);
+}
+
+.btn-secondary:hover {
+    background: var(--gray-300);
+}
+
+@media (max-width: 768px) {
+    .filter-grid {
+        grid-template-columns: 1fr;
+    }
 }

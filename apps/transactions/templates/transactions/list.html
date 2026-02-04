@@ -2,6 +2,29 @@
 {% load static %}
 {% load humanize %}
 
+{% block top_nav %}
+<div class="top-nav-links">
+    <a href="{% url 'accounts:home' %}" class="nav-button">대시보드</a>
+    <span class="nav-divider">|</span>
+    <a href="{% url 'transactions:transaction_list' %}" class="nav-button active">거래 관리</a>
+    <span class="nav-divider">|</span>
+    <a href="{% url 'businesses:business_list' %}" class="nav-button">사업장 관리</a>
+    <span class="nav-divider">|</span>
+    <a href="{% url 'businesses:account_list' %}" class="nav-button">계좌 관리</a>
+    <span class="nav-divider">|</span>
+    <a href="{% url 'accounts:profile_detail' %}" class="nav-button">프로필</a>
+    {% if user.is_authenticated %}
+    <span class="nav-divider">|</span>
+    <span class="user-name">{{ user.username }}</span>
+    <span class="nav-divider">|</span>
+    <form method="post" action="{% url 'accounts:logout' %}" style="display:inline;">
+        {% csrf_token %}
+        <button type="submit" class="nav-button logout-btn" style="background:none;border:none;padding:0.5rem 1rem;">로그아웃</button>
+    </form>
+    {% endif %}
+</div>
+{% endblock %}
+
 {% block content %}
 <div class="content-wrapper">
     <!-- 페이지 헤더 -->
@@ -47,6 +70,115 @@
             </div>
             {% endif %}
         </div>
+    </div>
+
+    <!-- 상세 필터 섹션 (새로 추가) -->
+    <div class="dashboard-section mb-4">
+        <div class="section-header">
+            <span class="section-icon">🎛️</span>
+            <h2 class="section-title">상세 필터</h2>
+        </div>
+        
+        <form method="get" class="filter-form">
+            <!-- 기존 연도/월 파라미터 유지 -->
+            {% if selected_year %}<input type="hidden" name="year" value="{{ selected_year }}">{% endif %}
+            {% if selected_month %}<input type="hidden" name="month" value="{{ selected_month }}">{% endif %}
+            
+            <div class="filter-grid">
+                <!-- 검색어 -->
+                <div class="filter-item">
+                    <label class="filter-label">🔎 검색</label>
+                    <input type="text" name="search" class="filter-input" 
+                           placeholder="거래처명, 메모" value="{{ request.GET.search }}">
+                </div>
+                
+                <!-- 거래유형 -->
+                <div class="filter-item">
+                    <label class="filter-label">📊 거래유형</label>
+                    <select name="tx_type" class="filter-select">
+                        <option value="">전체</option>
+                        <option value="IN" {% if request.GET.tx_type == 'IN' %}selected{% endif %}>수입</option>
+                        <option value="OUT" {% if request.GET.tx_type == 'OUT' %}selected{% endif %}>지출</option>
+                    </select>
+                </div>
+                
+                <!-- 사업/개인 -->
+                <div class="filter-item">
+                    <label class="filter-label">💼 구분</label>
+                    <select name="is_business" class="filter-select">
+                        <option value="">전체</option>
+                        <option value="true" {% if request.GET.is_business == 'true' %}selected{% endif %}>사업용</option>
+                        <option value="false" {% if request.GET.is_business == 'false' %}selected{% endif %}>개인용</option>
+                    </select>
+                </div>
+                
+                <!-- 세금유형 -->
+                <div class="filter-item">
+                    <label class="filter-label">🧾 세금유형</label>
+                    <select name="tax_type" class="filter-select">
+                        <option value="">전체</option>
+                        <option value="taxable" {% if request.GET.tax_type == 'taxable' %}selected{% endif %}>과세</option>
+                        <option value="tax_free" {% if request.GET.tax_type == 'tax_free' %}selected{% endif %}>면세</option>
+                        <option value="zero_rated" {% if request.GET.tax_type == 'zero_rated' %}selected{% endif %}>영세율</option>
+                    </select>
+                </div>
+                
+                <!-- 사업장 -->
+                <div class="filter-item">
+                    <label class="filter-label">🏢 사업장</label>
+                    <select name="business" class="filter-select">
+                        <option value="">전체</option>
+                        {% for business in businesses %}
+                        <option value="{{ business.id }}" {% if request.GET.business == business.id|stringformat:"s" %}selected{% endif %}>
+                            {{ business.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <!-- 계좌 -->
+                <div class="filter-item">
+                    <label class="filter-label">💳 계좌</label>
+                    <select name="account" class="filter-select">
+                        <option value="">전체</option>
+                        {% for account in accounts %}
+                        <option value="{{ account.id }}" {% if request.GET.account == account.id|stringformat:"s" %}selected{% endif %}>
+                            {{ account.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <!-- 카테고리 -->
+                <div class="filter-item">
+                    <label class="filter-label">📁 카테고리</label>
+                    <select name="category" class="filter-select">
+                        <option value="">전체</option>
+                        {% for category in categories %}
+                        <option value="{{ category.id }}" {% if request.GET.category == category.id|stringformat:"s" %}selected{% endif %}>
+                            {{ category.name }} ({{ category.get_type_display }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <!-- 정렬 -->
+                <div class="filter-item">
+                    <label class="filter-label">🔄 정렬</label>
+                    <select name="sort" class="filter-select">
+                        <option value="-occurred_at" {% if request.GET.sort == '-occurred_at' or not request.GET.sort %}selected{% endif %}>최신순</option>
+                        <option value="occurred_at" {% if request.GET.sort == 'occurred_at' %}selected{% endif %}>과거순</option>
+                        <option value="amount" {% if request.GET.sort == 'amount' %}selected{% endif %}>금액높은순</option>
+                        <option value="-amount" {% if request.GET.sort == '-amount' %}selected{% endif %}>금액낮은순</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="filter-actions">
+                <button type="submit" class="btn-primary">🔍 검색</button>
+                <a href="?" class="btn-secondary">🔄 초기화</a>
+            </div>
+        </form>
     </div>
 
     <!-- 요약 통계 -->
@@ -294,3 +426,5 @@
 }
 </style>
 {% endblock %}
+
+이부분은 남기고 그 외에 수정사항들은 없어도 댈거같아
