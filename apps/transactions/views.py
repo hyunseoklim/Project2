@@ -13,9 +13,8 @@ from django.shortcuts import redirect, get_object_or_404
 from django.contrib import messages
 from django.db.models import Count
 from django.utils import timezone
-
 from .models import Merchant, Category
-from .forms import TransactionForm, MerchantForm
+from .forms import TransactionForm, MerchantForm, CategoryForm
 from apps.businesses.models import Account, Business
 
 
@@ -23,20 +22,143 @@ from apps.businesses.models import Account, Business
 # Category
 # ============================================================
 
+# @login_required
+# def category_list(request):
+#     categories = Category.objects.all().order_by('type', 'order', 'name')
+#     return render(request, 'transactions/category_list.html', {'categories': categories})
+
 @login_required
 def category_list(request):
-    categories = Category.objects.all().order_by('type', 'order', 'name')
-    return render(request, 'transactions/category_list.html', {'categories': categories})
+    """카테고리 목록 (시스템 + 사용자)"""
+    system_categories = Category.objects.filter(is_system=True)
+    user_categories = Category.objects.filter(user=request.user)
+    
+    # 합치기
+    from itertools import chain
+    all_categories = sorted(
+        chain(system_categories, user_categories),
+        key=lambda x: (x.type, x.order, x.name)
+    )
+    
+    return render(request, 'transactions/category_list.html', {
+        'categories': all_categories
+    })
+
+
+@login_required
+def category_create(request):
+    """사용자 카테고리 생성"""
+    if request.method == 'POST':
+        form = CategoryForm(request.POST)
+        if form.is_valid():
+            category = form.save(commit=False)
+            category.user = request.user
+            category.is_system = False
+            
+            # 같은 이름 체크
+            if Category.objects.filter(user=request.user, name=category.name).exists():
+                messages.error(request, '이미 같은 이름의 카테고리가 있습니다.')
+                return render(request, 'transactions/category_form.html', {'form': form})
+            
+            category.save()
+            messages.success(request, f"'{category.name}' 카테고리가 생성되었습니다.")
+            return redirect('transactions:category_list')
+    else:
+        form = CategoryForm(initial={'order': 99})
+    
+    return render(request, 'transactions/category_form.html', {
+        'form': form,
+        'title': '카테고리 추가',
+    })
+
+
+@login_required
+def category_update(request, pk):
+    """카테고리 수정"""
+    category = get_object_or_404(Category, pk=pk)
+    
+    # 권한 체크
+    if category.is_system:
+        messages.error(request, '기본 카테고리는 수정할 수 없습니다.')
+        return redirect('transactions:category_list')
+    
+    if category.user != request.user:
+        messages.error(request, '권한이 없습니다.')
+        return redirect('transactions:category_list')
+    
+    if request.method == 'POST':
+        form = CategoryForm(request.POST, instance=category)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f"'{category.name}' 카테고리가 수정되었습니다.")
+            return redirect('transactions:category_list')
+    else:
+        form = CategoryForm(instance=category)
+    
+    return render(request, 'transactions/category_form.html', {
+        'form': form,
+        'category': category,
+        'title': '카테고리 수정',
+    })
+
+
+@login_required
+def category_delete(request, pk):
+    """카테고리 삭제"""
+    category = get_object_or_404(Category, pk=pk)
+    
+    # 권한 체크
+    if category.is_system:
+        messages.error(request, '기본 카테고리는 삭제할 수 없습니다.')
+        return redirect('transactions:category_list')
+    
+    if category.user != request.user:
+        messages.error(request, '권한이 없습니다.')
+        return redirect('transactions:category_list')
+    
+    # 사용 중인지 체크
+    transaction_count = category.transactions.filter(is_active=True).count()
+    if transaction_count > 0:
+        messages.error(request, f'사용 중인 카테고리는 삭제할 수 없습니다. (거래 {transaction_count}건)')
+        return redirect('transactions:category_list')
+    
+    if request.method == 'POST':
+        category_name = category.name
+        category.delete()
+        messages.success(request, f"'{category_name}' 카테고리가 삭제되었습니다.")
+        return redirect('transactions:category_list')
+    
+    return render(request, 'transactions/category_confirm_delete.html', {
+        'category': category
+    })
 
 
 # ============================================================
 # Merchant CRUD
 # ============================================================
 
+# @login_required
+# def merchant_list(request):
+#     merchants = Merchant.active.filter(user=request.user)
+#     return render(request, 'transactions/merchant_list.html', {'merchants': merchants})
+
 @login_required
 def merchant_list(request):
-    merchants = Merchant.active.filter(user=request.user)
-    return render(request, 'transactions/merchant_list.html', {'merchants': merchants})
+    view_type = request.GET.get('view', 'all')  # all 또는 frequent
+    
+    base_qs = Merchant.active.filter(user=request.user).annotate(
+        transaction_count=Count('transactions', filter=Q(transactions__is_active=True))
+    )
+    
+    if view_type == 'frequent':
+        merchants = base_qs.filter(transaction_count__gt=0).order_by('-transaction_count')[:10]
+    else:
+        merchants = base_qs.order_by('-created_at')
+    
+    return render(request, 'transactions/merchant_list.html', {
+        'merchants': merchants,
+        'view_type': view_type,
+    })
 
 
 @login_required
@@ -55,10 +177,34 @@ def merchant_create(request):
     return render(request, 'transactions/merchant_form.html', {'form': form})
 
 
+# @login_required
+# def merchant_detail(request, pk):
+#     merchant = get_object_or_404(Merchant, pk=pk, user=request.user, is_active=True)
+#     return render(request, 'transactions/merchant_detail.html', {'merchant': merchant})
+
 @login_required
 def merchant_detail(request, pk):
     merchant = get_object_or_404(Merchant, pk=pk, user=request.user, is_active=True)
-    return render(request, 'transactions/merchant_detail.html', {'merchant': merchant})
+    
+    # 해당 거래처의 최근 거래 내역
+    recent_transactions = Transaction.active.filter(
+        merchant=merchant,
+        user=request.user
+    ).order_by('-occurred_at')[:20]
+    
+    # 통계
+    from django.db.models import Sum, Count
+    stats = Transaction.active.filter(merchant=merchant, user=request.user).aggregate(
+        total_count=Count('id'),
+        total_amount=Sum('amount'),
+        total_vat=Sum('vat_amount')
+    )
+    
+    return render(request, 'transactions/merchant_detail.html', {
+        'merchant': merchant,
+        'recent_transactions': recent_transactions,
+        'stats': stats,
+    })
 
 
 @login_required
@@ -90,6 +236,21 @@ def merchant_delete(request, pk):
         return redirect('transactions:merchant_list')
 
     return render(request, 'transactions/merchant_confirm_delete.html', {'merchant': merchant})
+
+@login_required
+def merchant_frequently_used(request):
+    """자주 쓰는 거래처 (거래 횟수 기준)"""
+    from django.db.models import Count
+    
+    merchants = Merchant.active.filter(user=request.user).annotate(
+        transaction_count=Count('transactions', filter=Q(transactions__is_active=True))
+    ).filter(
+        transaction_count__gt=0
+    ).order_by('-transaction_count')[:10]
+    
+    return render(request, 'transactions/merchant_frequently_used.html', {
+        'merchants': merchants
+    })
 
 
 # ============================================================
