@@ -1,0 +1,350 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block content %}
+<div class="content-wrapper">
+    <!-- 페이지 헤더 -->
+    <div class="welcome-header">
+        <div class="welcome-icon">📊</div>
+        <h1 class="page-title">{{ year }}년 {{ quarter }}분기 부가세 신고 준비</h1>
+        <p class="text-muted">{{ start_date|date:"Y-m-d" }} ~ {{ end_date|date:"Y-m-d" }}</p>
+    </div>
+
+    <!-- 세금 요약 섹션 -->
+    <div class="dashboard-section mb-4">
+        <div class="section-header">
+            <span class="section-icon">💰</span>
+            <h2 class="section-title">세금 요약</h2>
+        </div>
+        <div class="summary-card">
+            <div class="summary-grid">
+                <div class="summary-item">
+                    <span class="summary-label">매출세액 (납부)</span>
+                    <span class="summary-value income">{{ sales.total_sales_vat|default:0|floatformat:0|intcomma }}원</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">매입세액 (공제)</span>
+                    <span class="summary-value expense">{{ purchase.total_purchase_vat|default:0|floatformat:0|intcomma }}원</span>
+                </div>
+                <div class="summary-item" style="border-left: 3px solid var(--secondary-blue);">
+                    <span class="summary-label">예상 납부세액</span>
+                    <span class="summary-value profit">{{ estimated_tax|floatformat:0|intcomma }}원</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 부가세 상세 현황 섹션 -->
+    <div class="dashboard-section mb-4">
+        <div class="section-header">
+            <span class="section-icon">📅</span>
+            <h2 class="section-title">부가세 상세 현황</h2>
+        </div>
+
+        <!-- 2단 탭 네비게이션 -->
+        <div class="vat-tabs-wrapper">
+            <!-- 1단: 분기 선택 -->
+            <div class="vat-tabs quarter-tabs">
+                <a href="?year={{ year }}&quarter=1" class="vat-tab-btn {% if quarter == 1 %}active{% endif %}">
+                    <span class="tab-icon">1️⃣</span>
+                    <span class="tab-text">1분기</span>
+                </a>
+                <a href="?year={{ year }}&quarter=2" class="vat-tab-btn {% if quarter == 2 %}active{% endif %}">
+                    <span class="tab-icon">2️⃣</span>
+                    <span class="tab-text">2분기</span>
+                </a>
+                <a href="?year={{ year }}&quarter=3" class="vat-tab-btn {% if quarter == 3 %}active{% endif %}">
+                    <span class="tab-icon">3️⃣</span>
+                    <span class="tab-text">3분기</span>
+                </a>
+                <a href="?year={{ year }}&quarter=4" class="vat-tab-btn {% if quarter == 4 %}active{% endif %}">
+                    <span class="tab-icon">4️⃣</span>
+                    <span class="tab-text">4분기</span>
+                </a>
+            </div>
+
+            <!-- 2단: 월 선택 (선택된 분기의 월들) -->
+            <div class="vat-tabs month-tabs">
+                <a href="?year={{ year }}&quarter={{ quarter }}" class="vat-tab-btn {% if not month %}active{% endif %}">
+                    <span class="tab-icon">📊</span>
+                    <span class="tab-text">분기 전체</span>
+                </a>
+                {% for stat in monthly_stats %}
+                <a href="?year={{ year }}&quarter={{ quarter }}&month={{ stat.month }}" class="vat-tab-btn {% if month == stat.month %}active{% endif %}">
+                    <span class="tab-icon">📅</span>
+                    <span class="tab-text">{{ stat.month }}월</span>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- 선택된 뷰에 따른 내용 표시 -->
+        {% if not month %}
+        <!-- 분기 전체 뷰 -->
+        <div class="table-wrapper">
+            <table class="transaction-table">
+                <thead>
+                    <tr>
+                        <th>월</th>
+                        <th>매출세액(납부)</th>
+                        <th>매입세액(공제)</th>
+                        <th>예상 납부세액</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for stat in monthly_stats %}
+                    <tr>
+                        <td>{{ stat.month }}월</td>
+                        <td class="amount income">{{ stat.sales_vat|floatformat:0|intcomma }}원</td>
+                        <td class="amount expense">{{ stat.purchase_vat|floatformat:0|intcomma }}원</td>
+                        <td class="amount" style="font-weight: 700;">{{ stat.net_vat|floatformat:0|intcomma }}원</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-center" style="color: var(--gray-500);">데이터가 없습니다.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <!-- 특정 월 상세 뷰 -->
+        {% for stat in monthly_stats %}
+            {% if stat.month == month %}
+            <div class="summary-card" style="margin-bottom: var(--spacing-lg);">
+                <h3 class="summary-title">{{ stat.month }}월 요약</h3>
+                <div class="summary-grid">
+                    <div class="summary-item">
+                        <span class="summary-label">매출세액</span>
+                        <span class="summary-value income">{{ stat.sales_vat|floatformat:0|intcomma }}원</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">매입세액</span>
+                        <span class="summary-value expense">{{ stat.purchase_vat|floatformat:0|intcomma }}원</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">순세액</span>
+                        <span class="summary-value profit">{{ stat.net_vat|floatformat:0|intcomma }}원</span>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        {% endfor %}
+        {% endif %}
+    </div>
+
+    <!-- 과세 거래 상세 내역 섹션 (페이지네이션 적용) -->
+    <div class="transactions-section">
+        <div class="section-header">
+            <span class="section-icon">📝</span>
+            <h2 class="section-title">
+                과세 거래 상세 내역 
+                {% if month %}({{ month }}월){% else %}(전체){% endif %}
+            </h2>
+        </div>
+        <div class="table-wrapper">
+            <table class="transaction-table">
+                <thead>
+                    <tr>
+                        <th>날짜</th>
+                        <th>거래처</th>
+                        <th>구분</th>
+                        <th>증빙</th>
+                        <th>공급가액</th>
+                        <th>부가세</th>
+                        <th>합계</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for tx in page_obj %}
+                    <tr>
+                        <td>{{ tx.occurred_at|date:"Y-m-d" }}</td>
+                        <td>{{ tx.get_merchant_display }}</td>
+                        <td>
+                            <span class="badge {% if tx.tx_type == 'IN' %}badge-income{% else %}badge-expense{% endif %}">
+                                {{ tx.get_tx_type_display }}
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            {% if tx.has_attachment %}
+                                <a href="{{ tx.attachment.file.url }}" target="_blank" title="증빙 보기">
+                                    <span style="color: #2c3e50; font-weight: bold; cursor: pointer;">📄</span>
+                                </a>
+                            {% else %}
+                                <span style="opacity: 0.2;" title="증빙 없음">📄</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ tx.supply_value|floatformat:0|intcomma }}원</td>
+                        <td class="amount {% if tx.tx_type == 'IN' %}income{% else %}expense{% endif %}">
+                            {{ tx.vat_amount|floatformat:0|intcomma }}원
+                        </td>
+                        <td style="font-weight: 700;">{{ tx.amount|floatformat:0|intcomma }}원</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center" style="color: var(--gray-500);">
+                            해당 기간의 과세 거래 내역이 없습니다.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 페이지네이션 -->
+        {% if page_obj.has_other_pages %}
+        <div class="pagination-wrapper">
+            <div class="pagination">
+                <span class="page-current">
+                    {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+                </span>
+                
+                {% if page_obj.has_previous %}
+                <a href="?year={{ year }}&quarter={{ quarter }}{% if month %}&month={{ month }}{% endif %}&page=1" class="page-link">처음</a>
+                <a href="?year={{ year }}&quarter={{ quarter }}{% if month %}&month={{ month }}{% endif %}&page={{ page_obj.previous_page_number }}" class="page-link">이전</a>
+                {% endif %}
+
+                {% if page_obj.has_next %}
+                <a href="?year={{ year }}&quarter={{ quarter }}{% if month %}&month={{ month }}{% endif %}&page={{ page_obj.next_page_number }}" class="page-link">다음</a>
+                <a href="?year={{ year }}&quarter={{ quarter }}{% if month %}&month={{ month }}{% endif %}&page={{ page_obj.paginator.num_pages }}" class="page-link">마지막</a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+/* VAT 탭 래퍼 */
+.vat-tabs-wrapper {
+    margin-bottom: var(--spacing-lg);
+}
+
+/* 탭 공통 스타일 */
+.vat-tabs {
+    display: flex;
+    gap: var(--spacing-xs);
+    flex-wrap: wrap;
+    padding: var(--spacing-sm);
+    background: var(--gray-50);
+    border-radius: var(--radius-md);
+}
+
+/* 분기 탭 (1단) */
+.quarter-tabs {
+    margin-bottom: var(--spacing-xs);
+}
+
+/* 월 탭 (2단) */
+.month-tabs {
+    border-top: 2px solid var(--gray-200);
+    padding-top: var(--spacing-sm);
+}
+
+.vat-tab-btn {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-sm) var(--spacing-md);
+    border: 2px solid transparent;
+    background: var(--white);
+    border-radius: var(--radius-sm);
+    text-decoration: none;
+    font-weight: 600;
+    color: var(--gray-700);
+    transition: var(--transition);
+    box-shadow: var(--shadow-sm);
+}
+
+.vat-tab-btn:hover {
+    background: var(--primary-yellow-light);
+    border-color: var(--primary-yellow);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.vat-tab-btn.active {
+    background: linear-gradient(135deg, var(--primary-yellow) 0%, var(--primary-yellow-dark) 100%);
+    color: var(--gray-900);
+    font-weight: 700;
+    border-color: var(--primary-yellow-dark);
+    box-shadow: var(--shadow-md);
+}
+
+.tab-icon {
+    font-size: 1.125rem;
+}
+
+.tab-text {
+    font-size: 0.9375rem;
+}
+
+/* 페이지네이션 스타일 */
+.pagination-wrapper {
+    display: flex;
+    justify-content: center;
+    margin-top: var(--spacing-lg);
+}
+
+.pagination {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.page-link {
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: var(--white);
+    border: 2px solid var(--primary-yellow);
+    border-radius: var(--radius-sm);
+    text-decoration: none;
+    color: var(--gray-800);
+    font-weight: 600;
+    transition: var(--transition);
+}
+
+.page-link:hover {
+    background: var(--primary-yellow-light);
+    transform: translateY(-2px);
+}
+
+.page-current {
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: linear-gradient(135deg, var(--primary-yellow) 0%, var(--primary-yellow-dark) 100%);
+    border-radius: var(--radius-sm);
+    font-weight: 700;
+    color: var(--gray-900);
+}
+
+/* 추가 유틸리티 */
+.mb-4 {
+    margin-bottom: var(--spacing-xl);
+}
+
+.text-center {
+    text-align: center;
+}
+
+.text-muted {
+    color: var(--gray-500);
+    font-size: 1rem;
+}
+
+/* 반응형 */
+@media (max-width: 768px) {
+    .vat-tabs {
+        flex-direction: column;
+    }
+    
+    .vat-tab-btn {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .pagination {
+        flex-wrap: wrap;
+    }
+}
+</style>
+{% endblock %}

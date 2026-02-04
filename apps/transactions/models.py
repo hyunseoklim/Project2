@@ -126,7 +126,7 @@ class TransactionQuerySet(models.QuerySet):
     
     def with_relations(self):
         """관계 데이터 한번에 조회 (N+1 방지)"""
-        return self.select_related('account', 'merchant', 'category', 'business', 'user')
+        return self.select_related('account', 'merchant', 'category', 'business', 'user').prefetch_related('attachment')
 
 
 class TransactionManager(models.Manager):
@@ -298,6 +298,19 @@ class Transaction(SoftDeleteModel):
         
         super().delete(*args, **kwargs)
 
+    @property
+    def supply_value(self):
+        """합계에서 부가세를 뺀 공급가액을 반환"""
+        if self.amount and self.vat_amount:
+            return self.amount - self.vat_amount
+        return self.amount or 0
+    
+    @property
+    def has_attachment(self):
+        # 장고가 알려준 'attachment'라는 이름을 사용합니다.
+        # hasattr는 "너 이런 이름 가지고 있니?"라고 물어보는 안전한 방법입니다.
+        return hasattr(self, 'attachment') and self.attachment is not None
+
 
 class Attachment(TimeStampedModel):
     """첨부파일 (영수증/세금계산서)"""
@@ -355,3 +368,4 @@ def delete_file_on_attachment_delete(sender, instance, **kwargs):
             logger.info(f"파일 삭제: {instance.file.path}")
     except Exception as e:
         logger.warning(f"파일 삭제 실패 ({instance.file.name}): {e}")
+
