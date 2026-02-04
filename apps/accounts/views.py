@@ -12,6 +12,7 @@ from django.db import IntegrityError,transaction
 
 from django.contrib.messages.views import SuccessMessageMixin
 from django.contrib.auth.views import PasswordChangeView
+from apps.transactions.models import Transaction
 
 # 1. 클래스명을 조금 더 명확하게 변경
 class UserLoginView(DjangoLoginView):
@@ -43,16 +44,31 @@ def signup(request):
 def home(request):
     """로그인 여부에 따라 다른 화면 렌더링"""
     if request.user.is_authenticated:
-        profile = getattr(request.user, 'profile', None)
+        # 로그인 시 → 빠른 메뉴만 있는 홈
+        uncategorized_count = Transaction.active.filter(
+            user=request.user,
+            category__isnull=True
+        ).count()
+        
         context = {
-            'user': request.user,
-            'profile': profile,
-            'masked_biz_num': profile.get_masked_business_number() if profile else "미등록"
+            'uncategorized_count': uncategorized_count,
         }
-        return render(request, "accounts/home2.html", context)
+        return render(request, "accounts/home_loggedin.html", context)
     else:
-        context = {}
-        return render(request, "accounts/home.html", context)
+        # 로그아웃 시 → 랜딩 페이지
+        return render(request, "accounts/home.html")
+
+
+@login_required
+def dashboard(request):
+    """대시보드 (통계 + 빠른 메뉴)"""
+    profile = getattr(request.user, 'profile', None)
+    context = {
+        'user': request.user,
+        'profile': profile,
+        'masked_biz_num': profile.get_masked_business_number() if profile else "미등록"
+    }
+    return render(request, "accounts/home2.html", context)
     
 
 class MyPasswordChangeView(SuccessMessageMixin, PasswordChangeView):
