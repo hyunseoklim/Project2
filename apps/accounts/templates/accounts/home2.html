@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}대시보드 - 스마트 사업자 가계부{% endblock %}
+
+{% block banner_mode %}로그인 상태 토글{% endblock %}
+{% block current_status %}로그인 상태{% endblock %}
+
+{% block sidebar_nav %}
+    {% include "sidebar.html" with active_tab="dashboard" %}
+{% endblock %}
+
+{% block top_nav %}
+    {% include "navbar.html" with active_tab="dashboard" %}
+{% endblock %}
+
+{% block content %}
+<div class="accounts-container">
+    <section class="accounts-section" style="margin-bottom: 30px;">
+        <div class="section-header">
+            <span class="section-icon">📊</span>
+            <h3 class="section-title" style="padding: 5px 0; margin: 0;">대시보드</h3>
+        </div>
+
+        <div class="summary-card">
+            <h4 class="summary-title">2026년 1월 요약</h4>
+            <div class="summary-grid">
+                <div class="summary-item">
+                    <span class="summary-label">총 수입</span>
+                    <span class="summary-value income">5,000,000원</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">총 지출</span>
+                    <span class="summary-value expense">3,200,000원</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">순합</span>
+                    <span class="summary-value profit">+1,800,000원</span>
+                </div>
+            </div>
+            <a href="#" class="detail-link">월별 상세 보기 →</a>
+        </div>
+    </section>
+
+    <section class="transactions-section">
+    <div class="section-header">
+        <span class="section-icon">💸</span>
+        <h3 class="section-title" style="padding: 5px 0; margin: 0;">최근 거래</h3>
+    </div>
+
+        <div class="table-wrapper">
+            <table class="transaction-table">
+                <thead>
+                    <tr>
+                        <th>날짜</th>
+                        <th>구분</th>
+                        <th>거래처</th>
+                        <th>카테고리</th>
+                        <th>금액</th>
+                        <th>계좌</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>2026-01-31</td>
+                        <td><span class="badge badge-income">수입</span></td>
+                        <td>네이버광고</td>
+                        <td>광고비</td>
+                        <td class="amount income">500,000원</td>
+                        <td>사업용 계좌</td>
+                    </tr>
+                    <tr>
+                        <td>2026-01-30</td>
+                        <td><span class="badge badge-income">수입</span></td>
+                        <td>고객 A</td>
+                        <td>매출</td>
+                        <td class="amount income">+1,200,000원</td>
+                        <td>사업용 계좌</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <a href="{% url 'transactions:transaction_list' %}" class="detail-link">전체 거래 내역 보기 →</a>
+    </section>
+</div>
+{% endblock %}

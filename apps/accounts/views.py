@@ -11,12 +11,13 @@ from django.contrib.auth import login as auth_login, update_session_auth_hash
 from django.db import IntegrityError, transaction
 from django.core.exceptions import ValidationError
 import logging
-
 from .forms import ProfileForm, CustomUserCreationForm
 from .models import Profile
+from django.contrib.messages.views import SuccessMessageMixin
+from django.contrib.auth.views import PasswordChangeView
+from apps.transactions.models import Transaction
 
 logger = logging.getLogger(__name__)
-
 
 class UserLoginView(DjangoLoginView):
     """사용자 로그인"""
@@ -70,15 +71,31 @@ def home(request):
     context = {}
     
     if request.user.is_authenticated:
-        profile = getattr(request.user, 'profile', None)
-        context.update({
-            'user': request.user,
-            'profile': profile,
-            'masked_biz_num': profile.get_masked_business_number() if profile else "미등록"
-        })
-    
-    return render(request, "accounts/home.html", context)
+        # 로그인 시 → 빠른 메뉴만 있는 홈
+        uncategorized_count = Transaction.active.filter(
+            user=request.user,
+            category__isnull=True
+        ).count()
+        
+        context = {
+            'uncategorized_count': uncategorized_count,
+        }
+        return render(request, "accounts/home_loggedin.html", context)
+    else:
+        # 로그아웃 시 → 랜딩 페이지
+        return render(request, "accounts/home.html")
 
+
+@login_required
+def dashboard(request):
+    """대시보드 (통계 + 빠른 메뉴)"""
+    profile = getattr(request.user, 'profile', None)
+    context = {
+        'user': request.user,
+        'profile': profile,
+        'masked_biz_num': profile.get_masked_business_number() if profile else "미등록"
+    }
+    return render(request, "accounts/home2.html", context)
 
 class MyPasswordChangeView(SuccessMessageMixin, PasswordChangeView):
     """

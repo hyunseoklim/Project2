@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}대시보드 - 스마트 사업자 가계부{% endblock %}
+
+{% block banner_mode %}로그인 상태 토글{% endblock %}
+{% block current_status %}로그인 상태{% endblock %}
+
+{% block sidebar_nav %}
+{% endblock %}
+
+{% block top_nav %}
+{% endblock %}
+
+{% block content %}
+<div class="accounts-container">
+<section class="welcome-section" style="margin-bottom: 5px;">
+    <div class="welcome-header">
+        <h2 class="page-title">🏠 안녕하세요, {{ user.username }}님!</h2>
+        {% if uncategorized_count > 0 %}
+            <p class="description">오늘 처리할 업무를 확인해보세요.</p>
+            <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin-top: 15px; border-radius: 4px;">
+                <p style="margin: 0; color: #856404;">
+                    ⚠️ 분류가 필요한 거래내역이 <strong>{{ uncategorized_count }}건</strong> 있습니다.
+                </p>
+            </div>
+        {% else %}
+            <p class="description">처리할 업무가 없습니다. 좋은 하루 보내세요! </p>
+        {% endif %}
+    </div>
+</section>
+
+    <!-- 빠른 메뉴 섹션 -->
+    <section class="quick-menu-section" style="margin-bottom: 5px;">
+        <div class="section-header" style="margin-bottom: 10px;">
+            <span class="section-icon">⚡</span>
+            <h3 class="section-title" style="padding: 0px 0; margin: 0;">빠른 메뉴</h3>
+        </div>
+
+        <div class="quick-menu-grid">
+            <a href="{% url 'transactions:transaction_list' %}" class="quick-menu-item">
+                <span class="menu-icon">➕</span>
+                <span class="menu-text">전체 거래 내역 보기</span>
+            </a>
+            <a href="{% url 'transactions:transaction_create' %}" class="quick-menu-item">
+                <span class="menu-icon">➕</span>
+                <span class="menu-text">거래 등록</span>
+            </a>
+            <a href="#" class="quick-menu-item">
+                <span class="menu-icon">➕</span>
+                <span class="menu-text">계좌 등록</span>
+            </a>
+            <a href="{% url 'businesses:business_list' %}" class="quick-menu-item">
+                <span class="menu-icon">🏢</span>
+                <span class="menu-text">사업장 관리</span>
+            </a>
+            <a href="{% url 'businesses:business_create' %}" class="quick-menu-item">
+                <span class="menu-icon">➕</span>
+                <span class="menu-text">사업장 추가</span>
+            </a>
+        </div>
+    </section>
+</div>
+{% endblock %}

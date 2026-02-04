@@ -9,7 +9,7 @@
             </a>
         </li>
         <li class="nav-item">
-            <a href="{% url 'accounts:home' %}" class="nav-link">
+            <a href="{% url 'accounts:dashboard' %}" class="nav-link">
                 <span class="nav-icon">📊</span>
                 <span class="nav-text">대시보드</span>
             </a>
@@ -32,8 +32,9 @@
                 <span class="nav-text">프로필</span>
             </a>
         </li>
+        <li style="border-top: 1px solid #ddd; margin: 10px 0;"></li>
         <li class="nav-item">
-            <form action="{% url 'accounts:logout' %}" method="post" style="display:inline;">
+            <form action="{% url 'accounts:logout' %}" method="post">
                 {% csrf_token %}
                 <button type="submit" class="nav-link" style="background:none;border:none;padding:0;cursor:pointer;">
                     <span class="nav-icon">🔓</span>
