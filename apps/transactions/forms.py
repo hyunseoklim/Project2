@@ -4,13 +4,21 @@ from decimal import Decimal
 
 from .models import Transaction, Merchant, Category
 from apps.businesses.models import Account, Business
-
+import re
 
 class TransactionForm(forms.ModelForm):
     """거래 입력/수정 폼"""
-    
+    merchant_name = forms.CharField(
+        max_length=100, 
+        required=False,
+        widget=forms.TextInput(attrs={
+            'placeholder': '거래처명 직접 입력',
+            'list': 'merchant-list'  # datalist 활용
+        })
+    )    
     class Meta:
         model = Transaction
+        
         fields = [
             'business', 'account', 'merchant', 'merchant_name', 'category',
             'tx_type', 'tax_type', 'is_business', 'amount', 'vat_amount',
@@ -52,7 +60,7 @@ class TransactionForm(forms.ModelForm):
         self.fields['merchant_name'].required = False
         self.fields['business'].required = False
         self.fields['vat_amount'].required = False
-    
+
     def clean(self):
         cleaned_data = super().clean()
         
@@ -81,6 +89,10 @@ class MerchantForm(forms.ModelForm):
         model = Merchant
         fields = ['name', 'business_number', 'contact', 'category', 'memo']
         widgets = {
+            'business_number': forms.TextInput(attrs={
+                'placeholder': '123-45-67890',
+                'maxlength': '12'
+            }),
             'memo': forms.Textarea(attrs={'rows': 3}),
         }
         labels = {
@@ -95,8 +107,48 @@ class MerchantForm(forms.ModelForm):
         self.user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
         
+
         # 필드 선택사항 설정
         self.fields['business_number'].required = False
         self.fields['contact'].required = False
         self.fields['category'].required = False
         self.fields['memo'].required = False
+
+
+class CategoryForm(forms.ModelForm):
+    class Meta:
+        model = Category
+        fields = ['name', 'type', 'expense_type', 'order']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '카테고리명'}),
+            'type': forms.Select(attrs={'class': 'form-select'}),
+            'expense_type': forms.Select(attrs={'class': 'form-select'}),
+            'order': forms.NumberInput(attrs={'class': 'form-control', 'min': 0}),
+        }
+        labels = {
+            'name': '카테고리명',
+            'type': '유형',
+            'expense_type': '지출 세부 유형 (지출만)',
+            'order': '정렬 순서',
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # 지출이 아니면 expense_type 숨기기
+        if self.instance and self.instance.type != 'expense':
+            self.fields['expense_type'].required = False
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        cat_type = cleaned_data.get('type')
+        expense_type = cleaned_data.get('expense_type')
+        
+        # 지출 카테고리는 세부 유형 선택사항으로 (사용자 카테고리는 자유롭게)
+        if cat_type == 'expense':
+            # expense_type이 비어있어도 OK (사용자 카테고리)
+            pass
+        else:
+            # 수입 카테고리는 expense_type 제거
+            cleaned_data['expense_type'] = None
+        
+        return cleaned_data

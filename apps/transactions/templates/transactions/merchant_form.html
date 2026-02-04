@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    {% if merchant %}거래처 수정{% else %}거래처 등록{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>{% if merchant %}거래처 수정{% else %}거래처 등록{% endif %}</h2>
+
+    <div class="card mt-4">
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="mb-3">
+                    <label class="form-label">거래처명 *</label>
+                    {{ form.name }}
+                    {% if form.name.errors %}
+                        <div class="text-danger">{{ form.name.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">사업자번호</label>
+                    {{ form.business_number }}
+                    <small class="form-text text-muted">형식: 123-456-7890</small>
+                    {% if form.business_number.errors %}
+                        <div class="text-danger">{{ form.business_number.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">연락처</label>
+                    {{ form.contact }}
+                    {% if form.contact.errors %}
+                        <div class="text-danger">{{ form.contact.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">카테고리</label>
+                    {{ form.category }}
+                    {% if form.category.errors %}
+                        <div class="text-danger">{{ form.category.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">메모</label>
+                    {{ form.memo }}
+                    {% if form.memo.errors %}
+                        <div class="text-danger">{{ form.memo.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">저장</button>
+                    <a href="{% url 'transactions:merchant_list' %}" class="btn btn-secondary">취소</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

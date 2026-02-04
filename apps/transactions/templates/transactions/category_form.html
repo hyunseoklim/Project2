@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>{{ title }}</h2>
+
+    <div class="card mt-4">
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="mb-3">
+                    <label class="form-label">카테고리명 *</label>
+                    {{ form.name }}
+                    {% if form.name.errors %}
+                        <div class="text-danger">{{ form.name.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">유형 *</label>
+                    {{ form.type }}
+                    {% if form.type.errors %}
+                        <div class="text-danger">{{ form.type.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">지출 세부 유형 (선택사항)</label>
+                    {{ form.expense_type }}
+                    <small class="form-text text-muted">지출 카테고리인 경우 선택</small>
+                    {% if form.expense_type.errors %}
+                        <div class="text-danger">{{ form.expense_type.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">정렬 순서</label>
+                    {{ form.order }}
+                    <small class="form-text text-muted">숫자가 작을수록 먼저 표시됩니다</small>
+                    {% if form.order.errors %}
+                        <div class="text-danger">{{ form.order.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">저장</button>
+                    <a href="{% url 'transactions:category_list' %}" class="btn btn-secondary">취소</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block title %}거래처 삭제 확인{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>거래처 삭제 확인</h2>
+
+    <div class="alert alert-danger mt-4">
+        <h5>정말로 이 거래처를 삭제하시겠습니까?</h5>
+        <p class="mb-0">거래처명: <strong>{{ merchant.name }}</strong></p>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-danger">삭제</button>
+            <a href="{% url 'transactions:merchant_detail' merchant.pk %}" class="btn btn-secondary">취소</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
