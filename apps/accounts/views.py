@@ -75,6 +75,17 @@ def home(request):
     else:
         context = {}
         return render(request, "accounts/home.html", context)
+
+@login_required
+def dashboard(request):
+    """대시보드 (통계 + 빠른 메뉴)"""
+    profile = getattr(request.user, 'profile', None)
+    context = {
+        'user': request.user,
+        'profile': profile,
+        'masked_biz_num': profile.get_masked_business_number() if profile else "미등록"
+    }
+    return render(request, "accounts/home2.html", context)
     
 
 class MyPasswordChangeView(SuccessMessageMixin, PasswordChangeView):

@@ -18,8 +18,7 @@
                 <h1 class="logo-text">스마트 사업자<br>가계부</h1>
             </div>
 
-            {% block top_nav %}
-                {% include 'components/sidebar.html' %}
+            {% block sidebar_nav %}
             {% endblock %}
 
 
@@ -33,7 +32,6 @@
             <!-- 상단 네비게이션, 이부분 지우고 각 app의 네비로 설정 -->
             <nav class="top-nav">
                 {% block top_nav %}
-                    {% include 'components/navbar.html' %}
                 {% endblock %}
             </nav>
 
