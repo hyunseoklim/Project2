@@ -1,0 +1,58 @@
+{% load static %}
+
+<ul class="nav-list">
+    {% if user.is_authenticated %}
+        <li class="nav-item">
+            <a href="{% url 'accounts:home' %}" class="nav-link">
+                <span class="nav-icon">🏠</span>
+                <span class="nav-text">홈</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{% url 'accounts:home' %}" class="nav-link">
+                <span class="nav-icon">📊</span>
+                <span class="nav-text">대시보드</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{% url 'transactions:transaction_list' %}" class="nav-link">
+                <span class="nav-icon">💰</span>
+                <span class="nav-text">거래 관리</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{% url 'businesses:business_list' %}" class="nav-link">
+                <span class="nav-icon">🏢</span>
+                <span class="nav-text">사업장 관리</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{% url 'accounts:profile_detail' %}" class="nav-link">
+                <span class="nav-icon">👤</span>
+                <span class="nav-text">프로필</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <form action="{% url 'accounts:logout' %}" method="post" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit" class="nav-link" style="background:none;border:none;padding:0;cursor:pointer;">
+                    <span class="nav-icon">🔓</span>
+                    <span class="nav-text">로그아웃</span>
+                </button>
+            </form>
+        </li>
+    {% else %}
+        <li class="nav-item">
+            <a href="{% url 'accounts:login' %}" class="nav-link">
+                <span class="nav-icon">🔐</span>
+                <span class="nav-text">로그인</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{% url 'accounts:signup' %}" class="nav-link">
+                <span class="nav-icon">✏️</span>
+                <span class="nav-text">회원가입</span>
+            </a>
+        </li>
+    {% endif %}
+</ul>

@@ -26,14 +26,8 @@
                 </div>
                 <div style="margin-bottom: var(--spacing-md);">
                     <label class="section-title" style="font-size: 1rem; margin-bottom: 0.5rem;">업종</label>
-                    <select name="business_type" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem;">
-                        <option value="" {% if not business.business_type %}selected{% endif %}>미선택</option>
-                        <option value="카페" {% if business.business_type == '카페' %}selected{% endif %}>카페</option>
-                        <option value="빨래방" {% if business.business_type == '빨래방' %}selected{% endif %}>빨래방</option>
-                        <option value="자동판매기" {% if business.business_type == '자동판매기' %}selected{% endif %}>자동판매기</option>
-                        <option value="무인편의점" {% if business.business_type == '무인편의점' %}selected{% endif %}>무인편의점</option>
-                        <option value="기타" {% if business.business_type == '기타' %}selected{% endif %}>기타</option>
-                    </select>
+                    <input type="text" name="location" value="{{ business.business_type|default:'' }}"
+                        style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem;">
                 </div>
                 <div style="margin-bottom: var(--spacing-md);">
                     <label class="section-title" style="font-size: 1rem; margin-bottom: 0.5rem;">사업자 등록번호</label>
