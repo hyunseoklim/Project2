@@ -38,6 +38,10 @@ def signup(request):
     - 가입 즉시 로그인 처리
     - Profile 자동 생성 (signals.py에서 처리)
     """
+    
+    if request.user.is_authenticated:
+        return redirect('accounts:home')
+
     if request.method == "POST":
         form = CustomUserCreationForm(request.POST)  # 커스텀 폼으로 변경
         if form.is_valid():

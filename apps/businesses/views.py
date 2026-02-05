@@ -429,6 +429,7 @@ def business_list(request):
     branch_count = stats['branch_count']
     
     context = {
+        'businesses': businesses,
         'page_obj': page_obj,
         'search_form': search_form,
         'total_count': total_count,
