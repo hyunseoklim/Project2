@@ -3,72 +3,10 @@
 
 {% block title %}거래 관리 - 스마트 사업자 가계부{% endblock %}
 
-{% block banner_mode %}로그인 상태{% endblock %}
-{% block current_status %}로그인 상태{% endblock %}
-
-{% block sidebar_nav %}
-<ul class="nav-list">
-    <li class="nav-item">
-        <a href="{% url 'accounts:home' %}" class="nav-link">
-            <span class="nav-icon">🏠</span>
-            <span class="nav-text">홈</span>
-        </a>
-    </li>
-    <li class="nav-item">
-        <a href="{% url 'accounts:home' %}" class="nav-link">
-            <span class="nav-icon">📊</span>
-            <span class="nav-text">대시보드</span>
-        </a>
-    </li>
-    <li class="nav-item active">
-        <a href="{% url 'transactions:transaction_list' %}" class="nav-link">
-            <span class="nav-icon">💰</span>
-            <span class="nav-text">거래 관리</span>
-        </a>
-    </li>
-    <li class="nav-item">
-        <a href="{% url 'accounts:profile_detail' %}" class="nav-link">
-            <span class="nav-icon">👤</span>
-            <span class="nav-text">프로필</span>
-        </a>
-    </li>
-    <li class="nav-item logout">
-        <form action="{% url 'accounts:logout' %}" method="post" style="display:inline;">
-            {% csrf_token %}
-            <button type="submit"
-                style="background:none; border:none; color:blue; text-decoration:underline; cursor:pointer; padding:0;">
-                로그아웃
-            </button>
-        </form>
-    </li>
-</ul>
-{% endblock %}
-
-{% block top_nav %}
-<div class="top-nav-links">
-    <a href="{% url 'accounts:home' %}" class="nav-button">홈</a>
-    <a href="{% url 'accounts:home' %}" class="nav-button">대시보드</a>
-    <a href="{% url 'transactions:transaction_list' %}" class="nav-button active">거래 관리</a>
-    <a href="{% url 'businesses:account_list' %}" class="nav-button">계좌 관리</a>
-    <a href="{% url 'accounts:profile_detail' %}" class="nav-button">프로필</a>
-    <span class="nav-divider">|</span>
-    <span class="user-name">{{ user.username }} 님</span>
-    <span class="nav-divider">|</span>
-    <form action="{% url 'accounts:logout' %}" method="post" style="display:inline;">
-        {% csrf_token %}
-        <button type="submit"
-            style="background:none; border:none; color:blue; text-decoration:underline; cursor:pointer; padding:0;">
-            로그아웃
-        </button>
-    </form>
-</div>
-{% endblock %}
-
 {% block content %}
 <div class="container-fluid px-4 py-3">
-    <!-- 헤더 & 통계 -->
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h3 class="mb-0">💰 거래 관리</h3>
+       <h3 class="mb-0">💰 거래 관리</h3>
         <a href="{% url 'transactions:transaction_create' %}" class="btn btn-primary btn-sm px-4">
             + 거래 등록
         </a>

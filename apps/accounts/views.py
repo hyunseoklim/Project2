@@ -63,18 +63,28 @@ def signup(request):
 
 
 def home(request):
-    """로그인 여부에 따라 다른 화면 렌더링"""
+    """
+    홈 페이지
+    - 로그인 상태에 따라 동적 렌더링
+    - 단일 템플릿 사용 (home.html)
+    """
+    context = {}
+    
     if request.user.is_authenticated:
-        profile = getattr(request.user, 'profile', None)
+        # 로그인 시 → 빠른 메뉴만 있는 홈
+        uncategorized_count = Transaction.active.filter(
+            user=request.user,
+            category__isnull=True
+        ).count()
+        
         context = {
-            'user': request.user,
-            'profile': profile,
-            'masked_biz_num': profile.get_masked_business_number() if profile else "미등록"
+            'uncategorized_count': uncategorized_count,
         }
-        return render(request, "accounts/home2.html", context)
+        return render(request, "accounts/home_loggedin.html", context)
     else:
-        context = {}
-        return render(request, "accounts/home.html", context)
+        # 로그아웃 시 → 랜딩 페이지
+        return render(request, "accounts/home.html")
+
 
 @login_required
 def dashboard(request):

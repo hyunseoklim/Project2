@@ -1,23 +1,13 @@
 {% extends "base.html" %}
-{% load static %}
 
 {% block title %}대시보드 - 스마트 사업자 가계부{% endblock %}
 
-{% block banner_mode %}로그인 상태 토글{% endblock %}
-{% block current_status %}로그인 상태{% endblock %}
-
-{% block sidebar_nav %}
-{% endblock %}
-
-{% block top_nav %}
-{% endblock %}
-
 {% block content %}
 <div class="accounts-container">
-    <section class="accounts-section" style="margin-bottom: 30px;">
+    <section class="accounts-section" style="margin-bottom: 20px;">
         <div class="section-header">
             <span class="section-icon">📊</span>
-            <h3 class="section-title" style="padding: 5px 0; margin: 0;">대시보드</h3>
+            <h3 class="section-title" style="padding: 0px 0; margin: 0;">대시보드</h3>
         </div>
 
         <div class="summary-card">
@@ -43,7 +33,7 @@
     <section class="transactions-section">
     <div class="section-header">
         <span class="section-icon">💸</span>
-        <h3 class="section-title" style="padding: 5px 0; margin: 0;">최근 거래</h3>
+        <h3 class="section-title" style="padding: 0px 0; margin: 0;">최근 거래</h3>
     </div>
 
         <div class="table-wrapper">
