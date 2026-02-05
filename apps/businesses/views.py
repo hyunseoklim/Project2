@@ -148,10 +148,28 @@ def account_detail(request, pk):
     recent_transactions = account.transactions.filter(
         is_active=True
     ).select_related('category', 'merchant').order_by('-occurred_at')[:5]
+
+        # 통계 계산
+    stats = account.transactions.filter(is_active=True).aggregate(
+        total_count=Count('id'),
+        income_count=Count('id', filter=Q(tx_type='IN')),
+        expense_count=Count('id', filter=Q(tx_type='OUT')),
+        total_income=Sum('amount', filter=Q(tx_type='IN')),
+        total_expense=Sum('amount', filter=Q(tx_type='OUT'))
+    )
+
+    # None 값 처리
+    stats['total_count'] = stats['total_count'] or 0
+    stats['income_count'] = stats['income_count'] or 0
+    stats['expense_count'] = stats['expense_count'] or 0
+    stats['total_income'] = stats['total_income'] or 0
+    stats['total_expense'] = stats['total_expense'] or 0
+    stats['net_amount'] = stats['total_income'] - stats['total_expense']
     
     context = {
         'account': account,
         'recent_transactions': recent_transactions,
+        'stats': stats,
     }
     
     return render(request, 'businesses/account_detail.html', context)
@@ -430,6 +448,7 @@ def business_list(request):
     
     context = {
         'page_obj': page_obj,
+        'businesses': businesses,
         'search_form': search_form,
         'total_count': total_count,
         'main_count': main_count,

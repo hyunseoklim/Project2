@@ -142,22 +142,18 @@
             <div class="card-body">
                 <div class="d-flex justify-content-between mb-2">
                     <span class="text-muted">총 거래</span>
-                    <strong>{{ account.transactions.count }}건</strong>
+                    <strong>{{ stats.total_count }}건</strong>
                 </div>
                 <div class="d-flex justify-content-between mb-2">
                     <span class="text-muted">수입</span>
                     <strong class="text-success">
-                        {% with income_count=account.transactions.filter|default:"0" %}
-                            {{ income_count }}건
-                        {% endwith %}
+                        {{ stats.income_count }}건
                     </strong>
                 </div>
                 <div class="d-flex justify-content-between">
                     <span class="text-muted">지출</span>
                     <strong class="text-danger">
-                        {% with expense_count=account.transactions.filter|default:"0" %}
-                            {{ expense_count }}건
-                        {% endwith %}
+                        {{ stats.expense_count }}건
                     </strong>
                 </div>
             </div>
