@@ -1,48 +1,41 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="ko">
-
-{% include 'components/head.html' %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}스마트 사업자 가계부{% endblock %}</title>
+    
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    
+    {% include 'components/head.html' %} 
+</head>
 
 <body>
     {% include 'components/header.html' %}
-
-    
     <div class="main-container">
-    {% load static %}
-
-    <!-- 사이드바 -->
+        
         <aside class="sidebar">
             <div class="logo-section">
                 <span class="logo-icon">💼</span>
                 <h1 class="logo-text">스마트 사업자<br>가계부</h1>
             </div>
-
-            {% block top_nav %}
-                {% include 'components/sidebar.html' %}
-            {% endblock %}
-
-
+            {% include 'components/sidebar.html' %}
         </aside>
 
-
-        <!-- 메인 콘텐츠 -->
         <main class="main-content">
             {% include 'components/messages.html' %}
 
-            <!-- 상단 네비게이션, 이부분 지우고 각 app의 네비로 설정 -->
             <nav class="top-nav">
-                {% block top_nav %}
-                    {% include 'components/navbar.html' %}
-                {% endblock %}
+                {% include 'components/navbar.html' %}
             </nav>
 
-            <!-- 페이지 콘텐츠 -->
             <div class="content-wrapper">
-                {% block content %}{% endblock %}
+                {% block content %}
+                {% endblock %}
+                {% include "components/footer.html" %}
             </div>
         </main>
     </div>
 </body>
-
 </html>
