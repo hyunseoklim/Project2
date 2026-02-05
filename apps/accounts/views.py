@@ -96,6 +96,7 @@ def dashboard(request):
         'masked_biz_num': profile.get_masked_business_number() if profile else "미등록"
     }
     return render(request, "accounts/home2.html", context)
+    
 
 class MyPasswordChangeView(SuccessMessageMixin, PasswordChangeView):
     """
