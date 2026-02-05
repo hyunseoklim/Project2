@@ -471,16 +471,16 @@ class VATReportView(LoginRequiredMixin, TemplateView):
         # 데이터를 템플릿에서 쓰기 좋게 가공
         monthly_stats = []
         for m in range(start_month, end_month + 1):
-            m_sales = next((item['vat_sum'] for item in monthly_data if item['m'] == m and item['tx_type'] == 'IN'), 0)
-            m_purchase = next((item['vat_sum'] for item in monthly_data if item['m'] == m and item['tx_type'] == 'OUT'), 0)
+            # next()의 기본값인 0이 반환되더라도, item['vat_sum'] 자체가 None일 수 있으므로 마지막에 'or 0' 추가
+            m_sales = next((item['vat_sum'] for item in monthly_data if item['m'] == m and item['tx_type'] == 'IN'), 0) or 0
+            m_purchase = next((item['vat_sum'] for item in monthly_data if item['m'] == m and item['tx_type'] == 'OUT'), 0) or 0
             
             monthly_stats.append({
                 'month': m,
                 'sales_vat': m_sales,
                 'purchase_vat': m_purchase,
-                'net_vat': m_sales - m_purchase
+                'net_vat': m_sales - m_purchase  # 이제 0 - 0 = 0 으로 정상 계산됩니다.
         })
-            
         # 7. 거래 내역 필터링 (특정 월 선택 시)
         if month:
             transaction_qs = base_qs.filter(occurred_at__month=month)
