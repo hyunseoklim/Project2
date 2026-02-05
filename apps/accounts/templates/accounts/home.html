@@ -1,61 +1,66 @@
 {% extends "base.html" %}
-{% load static %}
 
-{% block sidebar_nav %}
-{% endblock %}
-
-{% block top_nav %}
-{% endblock %}
+{% block title %}환영합니다 - 스마트 사업자 가계부{% endblock %}
 
 {% block content %}
-<div class="accounts-container">
-   
-    {% if user.is_authenticated %}
-        {# 로그인 상태 UI #}
-        <section class="quick-menu-section">
-        <div class="section-header">
+<div class="welcome-section">
+    <div class="welcome-header">
+        <div class="welcome-icon">💼</div>
+        <h2 class="page-title">스마트 사업자 가계부</h2>
+    </div>
 
-            <h3 class="section-title">{{ user.username }}님 환영합니다</h3>
-        </div>
-    {% else %}
-        {# 비로그인 상태 UI #}
-        <section class="quick-menu-section">
-        <div class="section-header">
-            <h3 class="section-title">로그인하고 시작하세요</h3>
-        </div>
-    {% endif %}
+    <div class="welcome-message">
+        <h3 class="greeting">환영합니다! 👋</h3>
+        <p class="subtitle">스마트 사업자 가계부란?</p>
+        <p class="description">1인 사업자와 무인 사업자를 위한 똑똑한 재무 관리 시스템입니다.</p>
+    </div>
 
-    <!-- 빠른 메뉴 섹션 -->
-    <section class="quick-menu-section">
-        <div class="section-header">
-            <span class="section-icon">⚡</span>
-            <h3 class="section-title">빠른 메뉴</h3>
-        </div>
-        <div lass="section-header">
-        </div>
+    <div class="features-section">
+        <h4 class="section-title">주요 기능:</h4>
+        <ul class="feature-list">
+            <li class="feature-item">
+                <span class="check-icon">✅</span>
+                <span class="feature-text">부가세 자동 계산 (과세 10%, 면세, 영세율)</span>
+            </li>
+            <li class="feature-item">
+                <span class="check-icon">✅</span>
+                <span class="feature-text">계좌 잔액 실시간 추적</span>
+            </li>
+            <li class="feature-item">
+                <span class="check-icon">✅</span>
+                <span class="feature-text">결별/카테고리별 지출 분석</span>
+            </li>
+            <li class="feature-item">
+                <span class="check-icon">✅</span>
+                <span class="feature-text">영수증 첨부 및 관리</span>
+            </li>
+            <li class="feature-item">
+                <span class="check-icon">✅</span>
+                <span class="feature-text">다중 사업장 지원</span>
+            </li>
+            <li class="feature-item">
+                <span class="check-icon">✅</span>
+                <span class="feature-text">부가세 신고 준비 자료</span>
+            </li>
+        </ul>
+    </div>
 
-        <div class="quick-menu-grid">
-            <a href="{% url 'transactions:transaction_list' %}" class="quick-menu-item">
-                <span class="menu-icon">➕</span>
-                <span class="menu-text">전체 거래 내역 보기</span>
-            </a>
-            <a href="{% url 'transactions:transaction_create' %}" class="quick-menu-item">
-                <span class="menu-icon">➕</span>
-                <span class="menu-text">거래 등록</span>
-            </a>
-            <a href="#" class="quick-menu-item">
-                <span class="menu-icon">➕</span>
-                <span class="menu-text">계좌 등록</span>
-            </a>
-            <a href="{% url 'businesses:business_list' %}" class="quick-menu-item">
-                <span class="menu-icon">🏢</span>
-                <span class="menu-text">사업장 관리</span>
-            </a>
-            <a href="{% url 'businesses:business_create' %}" class="quick-menu-item">
-                <span class="menu-icon">➕</span>
-                <span class="menu-text">사업장 추가</span>
-            </a>
+    <div class="cta-section">
+        <h4 class="section-title">지금 바로 시작하세요!</h4>
+        <div class="button-group">
+            <a href="#" class="btn btn-primary">회원가입하기</a>
+            <a href="#" class="btn btn-secondary">로그인하기</a>
         </div>
-    </section>
+    </div>
+
+    <div class="target-audience">
+        <h4 class="section-title">이런 분들께 추천합니다:</h4>
+        <ul class="audience-list">
+            <li class="audience-item">💡 혼자서 사업을 운영하는 1인 사업자</li>
+            <li class="audience-item">💡 무인 카페, 무인 빨래방 등 무인 매장 운영자</li>
+            <li class="audience-item">💡 여러 지출을 관리하는 소규모 사업자</li>
+            <li class="audience-item">💡 부가세 신고와 복잡하게 느껴지는 초보 사업자</li>
+        </ul>
+    </div>
 </div>
 {% endblock %}

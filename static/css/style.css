@@ -127,6 +127,16 @@ body {
     overflow-y: auto;
 }
 
+/* 사이드바 구분선 */
+.sidebar-divider {
+    display: block;
+    height: 1px;
+    background-color: rgba(46, 46, 46, 0.15);
+    margin-top: 10px;
+    margin-bottom: 10px;
+    width: 100%;
+}
+
 .logo-section {
     padding: var(--spacing-lg);
     text-align: center;
