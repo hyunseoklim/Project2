@@ -508,69 +508,69 @@ class VATReportView(LoginRequiredMixin, TemplateView):
         return context
     
 
-@login_required
-def transaction_list1(request):
-    """거래 목록 (개선 버전)"""
-    user = request.user
+# @login_required
+# def transaction_list1(request):
+#     """거래 목록 (개선 버전)"""
+#     user = request.user
     
-    # 1. 기본 쿼리셋 (사용자별, 활성화된 거래만)
-    transactions = Transaction.active.filter(user=user).with_relations()
+#     # 1. 기본 쿼리셋 (사용자별, 활성화된 거래만)
+#     transactions = Transaction.active.filter(user=user).with_relations()
     
-    # 2. 연도/월 필터 (예외처리 추가)
-    year = request.GET.get('year')
-    month = request.GET.get('month')
+#     # 2. 연도/월 필터 (예외처리 추가)
+#     year = request.GET.get('year')
+#     month = request.GET.get('month')
     
-    if year:
-        try:
-            year_int = int(year)
-            if 2000 <= year_int <= 2100:
-                transactions = transactions.filter(occurred_at__year=year_int)
-                year = year_int  # 정상적인 값으로 변환
-        except (ValueError, TypeError):
-            year = None
+#     if year:
+#         try:
+#             year_int = int(year)
+#             if 2000 <= year_int <= 2100:
+#                 transactions = transactions.filter(occurred_at__year=year_int)
+#                 year = year_int  # 정상적인 값으로 변환
+#         except (ValueError, TypeError):
+#             year = None
     
-    if month:
-        try:
-            month_int = int(month)
-            if 1 <= month_int <= 12:
-                transactions = transactions.filter(occurred_at__month=month_int)
-                month = month_int  # 정상적인 값으로 변환
-        except (ValueError, TypeError):
-            month = None
+#     if month:
+#         try:
+#             month_int = int(month)
+#             if 1 <= month_int <= 12:
+#                 transactions = transactions.filter(occurred_at__month=month_int)
+#                 month = month_int  # 정상적인 값으로 변환
+#         except (ValueError, TypeError):
+#             month = None
     
-    # 3. 정렬
-    transactions = transactions.order_by('-occurred_at')
+#     # 3. 정렬
+#     transactions = transactions.order_by('-occurred_at')
     
-    # 4. 페이지네이션 (20개씩)
-    paginator = Paginator(transactions, 20)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
+#     # 4. 페이지네이션 (20개씩)
+#     paginator = Paginator(transactions, 20)
+#     page_number = request.GET.get('page')
+#     page_obj = paginator.get_page(page_number)
     
-    # 5. 연도 선택지 (DB에서 실제 존재하는 연도만)
-    year_list = Transaction.active.filter(user=user).dates('occurred_at', 'year', order='DESC')
-    year_list = [d.year for d in year_list]
+#     # 5. 연도 선택지 (DB에서 실제 존재하는 연도만)
+#     year_list = Transaction.active.filter(user=user).dates('occurred_at', 'year', order='DESC')
+#     year_list = [d.year for d in year_list]
     
 
-    # 6. 통계 (선택적)
-    from django.db.models import Sum, Count
+#     # 6. 통계 (선택적)
+#     from django.db.models import Sum, Count
 
-    stats = transactions.aggregate(
-    total_count=Count('id'),
-    total_income=Sum('amount', filter=Q(tx_type='IN')),
-    total_expense=Sum('amount', filter=Q(tx_type='OUT'))
-)
+#     stats = transactions.aggregate(
+#     total_count=Count('id'),
+#     total_income=Sum('amount', filter=Q(tx_type='IN')),
+#     total_expense=Sum('amount', filter=Q(tx_type='OUT'))
+# )
 
-    # None 값 처리 (데이터가 없을 경우 0으로 변환)
-    stats['total_income'] = stats['total_income'] or 0
-    stats['total_expense'] = stats['total_expense'] or 0
-    stats['net_profit'] = stats['total_income'] - stats['total_expense']
+#     # None 값 처리 (데이터가 없을 경우 0으로 변환)
+#     stats['total_income'] = stats['total_income'] or 0
+#     stats['total_expense'] = stats['total_expense'] or 0
+#     stats['net_profit'] = stats['total_income'] - stats['total_expense']
         
-    context = {
-        'page_obj': page_obj,
-        'year_list': year_list,
-        'selected_year': year,
-        'selected_month': month,
-        'stats': stats,
-    }
+#     context = {
+#         'page_obj': page_obj,
+#         'year_list': year_list,
+#         'selected_year': year,
+#         'selected_month': month,
+#         'stats': stats,
+#     }
     
-    return render(request, 'transactions/list.html', context)
+#     return render(request, 'transactions/list.html', context)
