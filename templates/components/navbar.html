@@ -13,13 +13,18 @@
         </a>
 
         <a href="{% url 'transactions:transaction_list' %}" 
-           class="nav-button {% if request.resolver_match.app_name == 'transactions' %}active{% endif %}">
+           class="nav-button {% if request.resolver_match.url_name|slice:":11" == 'transaction' or request.resolver_match.url_name|slice:":8" == 'category' %}active{% endif %}">
            거래 관리
         </a>
 
         <a href="{% url 'businesses:business_list' %}" 
            class="nav-button {% if 'business' in request.resolver_match.url_name %}active{% endif %}">
            사업장 관리
+        </a>
+
+        <a href="{% url 'transactions:merchant_list' %}" 
+           class="nav-button {% if 'merchant' in request.resolver_match.url_name %}active{% endif %}">
+           거래처 관리
         </a>
 
         <a href="{% url 'businesses:account_list' %}" 

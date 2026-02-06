@@ -1,5 +1,6 @@
 from django import forms
 from django.core.exceptions import ValidationError
+from django.db.models import Q
 from decimal import Decimal
 
 from .models import Transaction, Merchant, Category
@@ -89,11 +90,27 @@ class MerchantForm(forms.ModelForm):
         model = Merchant
         fields = ['name', 'business_number', 'contact', 'category', 'memo']
         widgets = {
-            'business_number': forms.TextInput(attrs={
-                'placeholder': '123-45-67890',
-                'maxlength': '12'
+            'name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': '거래처명 (예: 네이버)',
             }),
-            'memo': forms.Textarea(attrs={'rows': 3}),
+            'business_number': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': '123-45-67890',
+                'maxlength': '12',
+            }),
+            'contact': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': '연락처 (예: 010-1234-5678)',
+            }),
+            'category': forms.Select(attrs={
+                'class': 'form-select',
+            }),
+            'memo': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': '메모 (선택)',
+            }),
         }
         labels = {
             'name': '거래처명',
@@ -106,7 +123,12 @@ class MerchantForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
-        
+
+        if self.user:
+            self.fields['category'].queryset = Category.objects.filter(
+                Q(is_system=True) | Q(user=self.user)
+            ).order_by('type', 'name')
+        self.fields['category'].empty_label = '미지정(기타)'
 
         # 필드 선택사항 설정
         self.fields['business_number'].required = False
@@ -114,26 +136,54 @@ class MerchantForm(forms.ModelForm):
         self.fields['category'].required = False
         self.fields['memo'].required = False
 
+        # 유효성 검사 실패 시 필드 강조 표시
+        if self.is_bound and self.errors:
+            for field_name in self.errors:
+                field = self.fields.get(field_name)
+                if not field:
+                    continue
+                existing = field.widget.attrs.get('class', '')
+                if 'is-invalid' not in existing:
+                    field.widget.attrs['class'] = f"{existing} is-invalid".strip()
+
+    def clean_business_number(self):
+        """사업자등록번호 형식 검증 및 정규화"""
+        reg_num = self.cleaned_data.get('business_number')
+
+        if not reg_num:
+            return reg_num
+
+        cleaned = reg_num.replace('-', '').replace(' ', '')
+
+        if not cleaned.isdigit():
+            raise ValidationError('사업자등록번호는 숫자와 하이픈(-)만 입력 가능합니다.')
+
+        if len(cleaned) != 10:
+            raise ValidationError('사업자등록번호는 10자리여야 합니다.')
+
+        return f"{cleaned[:3]}-{cleaned[3:5]}-{cleaned[5:]}"
+
 
 class CategoryForm(forms.ModelForm):
     class Meta:
         model = Category
-        fields = ['name', 'type', 'expense_type', 'order']
+        fields = ['name', 'type', 'expense_type']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '카테고리명'}),
             'type': forms.Select(attrs={'class': 'form-select'}),
             'expense_type': forms.Select(attrs={'class': 'form-select'}),
-            'order': forms.NumberInput(attrs={'class': 'form-control', 'min': 0}),
         }
         labels = {
             'name': '카테고리명',
             'type': '유형',
             'expense_type': '지출 세부 유형 (지출만)',
-            'order': '정렬 순서',
         }
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields['type'].choices = [('', '수입 또는 지출 선택')] + list(self.fields['type'].choices)
+        self.fields['expense_type'].choices = [('', '없음')] + list(self.fields['expense_type'].choices)
+        self.fields['expense_type'].required = False
         # 지출이 아니면 expense_type 숨기기
         if self.instance and self.instance.type != 'expense':
             self.fields['expense_type'].required = False

@@ -694,6 +694,19 @@ body {
     font-weight: 600;
 }
 
+/* Bootstrap 5 does not define .badge-primary/.badge-secondary */
+.badge-primary {
+    background-color: #E3F2FD !important;
+    color: #1E4FA1 !important;
+    border: 1px solid #B6DAFF !important;
+}
+
+.badge-secondary {
+    background-color: #F1F3F5 !important;
+    color: var(--gray-700) !important;
+    border: 1px solid var(--gray-300) !important;
+}
+
 .badge-income {
     background-color: #E8F5E9;
     color: var(--accent-green);
