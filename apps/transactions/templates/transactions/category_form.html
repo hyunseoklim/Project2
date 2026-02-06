@@ -1,56 +1,112 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ title }}{% endblock %}
+{% block title %}카테고리 추가{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
-    <h2>{{ title }}</h2>
-
-    <div class="card mt-4">
-        <div class="card-body">
-            <form method="post">
-                {% csrf_token %}
-                
-                <div class="mb-3">
-                    <label class="form-label">카테고리명 *</label>
-                    {{ form.name }}
-                    {% if form.name.errors %}
-                        <div class="text-danger">{{ form.name.errors }}</div>
-                    {% endif %}
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label">유형 *</label>
-                    {{ form.type }}
-                    {% if form.type.errors %}
-                        <div class="text-danger">{{ form.type.errors }}</div>
-                    {% endif %}
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label">지출 세부 유형 (선택사항)</label>
-                    {{ form.expense_type }}
-                    <small class="form-text text-muted">지출 카테고리인 경우 선택</small>
-                    {% if form.expense_type.errors %}
-                        <div class="text-danger">{{ form.expense_type.errors }}</div>
-                    {% endif %}
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label">정렬 순서</label>
-                    {{ form.order }}
-                    <small class="form-text text-muted">숫자가 작을수록 먼저 표시됩니다</small>
-                    {% if form.order.errors %}
-                        <div class="text-danger">{{ form.order.errors }}</div>
-                    {% endif %}
-                </div>
-
-                <div class="d-flex gap-2">
-                    <button type="submit" class="btn btn-primary">저장</button>
-                    <a href="{% url 'transactions:category_list' %}" class="btn btn-secondary">취소</a>
-                </div>
-            </form>
+    <h2>카테고리 추가</h2>
+    
+    <form method="post" class="mt-4">
+        {% csrf_token %}
+        
+        <div class="mb-3">
+            <label class="form-label">{{ form.name.label }}</label>
+            {{ form.name }}
+            {% if form.name.errors %}
+                <div class="text-danger">{{ form.name.errors }}</div>
+            {% endif %}
         </div>
-    </div>
+        
+        <div class="mb-3">
+            <label class="form-label">{{ form.type.label }}</label>
+            {{ form.type }}
+            {% if form.type.errors %}
+                <div class="text-danger">{{ form.type.errors }}</div>
+            {% endif %}
+        </div>
+        
+        <!-- 수입 세부 유형 (수입일 때만 표시) -->
+        <div class="mb-3" id="income-type-container" style="display: none;">
+            <label class="form-label">{{ form.income_type.label }}</label>
+            {{ form.income_type }}
+            
+            <div class="mt-2">
+                <label class="form-label">{{ form.custom_income_type.label }}</label>
+                {{ form.custom_income_type }}
+            </div>
+            
+            <small class="form-text text-muted">위 목록에서 선택하거나 직접 입력하세요</small>
+            
+            {% if form.income_type.errors %}
+                <div class="text-danger">{{ form.income_type.errors }}</div>
+            {% endif %}
+            {% if form.custom_income_type.errors %}
+                <div class="text-danger">{{ form.custom_income_type.errors }}</div>
+            {% endif %}
+        </div>
+        
+        <!-- 지출 세부 유형 (지출일 때만 표시) -->
+        <div class="mb-3" id="expense-type-container" style="display: none;">
+            <label class="form-label">{{ form.expense_type.label }}</label>
+            {{ form.expense_type }}
+            
+            <div class="mt-2">
+                <label class="form-label">{{ form.custom_expense_type.label }}</label>
+                {{ form.custom_expense_type }}
+            </div>
+            
+            <small class="form-text text-muted">위 목록에서 선택하거나 직접 입력하세요</small>
+            
+            {% if form.expense_type.errors %}
+                <div class="text-danger">{{ form.expense_type.errors }}</div>
+            {% endif %}
+            {% if form.custom_expense_type.errors %}
+                <div class="text-danger">{{ form.custom_expense_type.errors }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="mb-3">
+            <label class="form-label">{{ form.order.label }}</label>
+            {{ form.order }}
+            <small class="form-text text-muted">숫자가 작을수록 먼저 표시됩니다</small>
+            {% if form.order.errors %}
+                <div class="text-danger">{{ form.order.errors }}</div>
+            {% endif %}
+        </div>
+        
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+                {{ form.non_field_errors }}
+            </div>
+        {% endif %}
+        
+        <div class="mt-4">
+            <button type="submit" class="btn btn-primary">저장</button>
+            <a href="{% url 'transactions:category_list' %}" class="btn btn-secondary">취소</a>
+        </div>
+    </form>
 </div>
+
+<script>
+    // 유형 선택에 따라 세부 유형 필드 표시/숨김
+    const typeSelect = document.querySelector('#id_type');
+    const incomeTypeContainer = document.querySelector('#income-type-container');
+    const expenseTypeContainer = document.querySelector('#expense-type-container');
+    
+    function toggleTypeFields() {
+        if (typeSelect.value === 'income') {
+            incomeTypeContainer.style.display = 'block';
+            expenseTypeContainer.style.display = 'none';
+        } else if (typeSelect.value === 'expense') {
+            incomeTypeContainer.style.display = 'none';
+            expenseTypeContainer.style.display = 'block';
+        } else {
+            incomeTypeContainer.style.display = 'none';
+            expenseTypeContainer.style.display = 'none';
+        }
+    }
+    
+    typeSelect.addEventListener('change', toggleTypeFields);
+    toggleTypeFields(); // 페이지 로드 시 실행
+</script>
 {% endblock %}

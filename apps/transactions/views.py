@@ -432,7 +432,7 @@ class VATReportView(LoginRequiredMixin, TemplateView):
 
         # 2. 날짜 범위 계산
         start_month = (quarter - 1) * 3 + 1
-        end_month = quarter * 3
+        end_month = quarter * 3 
         last_day = calendar.monthrange(year, end_month)[1]
         
         start_date = date(year, start_month, 1)

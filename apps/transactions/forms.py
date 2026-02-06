@@ -1,7 +1,7 @@
 from django import forms
 from django.core.exceptions import ValidationError
 from decimal import Decimal
-
+from django.db import models
 from .models import Transaction, Merchant, Category
 from apps.businesses.models import Account, Business
 import re
@@ -54,7 +54,10 @@ class TransactionForm(forms.ModelForm):
             self.fields['business'].queryset = Business.objects.filter(user=self.user, is_active=True)
             self.fields['account'].queryset = Account.objects.filter(user=self.user, is_active=True)
             self.fields['merchant'].queryset = Merchant.objects.filter(user=self.user, is_active=True)
-        
+             # 카테고리 필터링: 시스템 카테고리 + 사용자가 만든 카테고리
+            self.fields['category'].queryset = Category.objects.filter(models.Q(is_system=True) | models.Q(user=self.user)).order_by('type', 'order', 'name')
+
+
         # 필드 선택사항 설정
         self.fields['merchant'].required = False
         self.fields['merchant_name'].required = False
@@ -114,45 +117,101 @@ class MerchantForm(forms.ModelForm):
         self.fields['category'].required = False
         self.fields['memo'].required = False
 
-
 class CategoryForm(forms.ModelForm):
+    # 수입 직접 입력 필드
+    custom_income_type = forms.CharField(
+        max_length=50,
+        required=False,
+        label='직접 입력',
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': '또는 직접 입력하세요'
+        })
+    )
+    
+    # 지출 직접 입력 필드
+    custom_expense_type = forms.CharField(
+        max_length=50,
+        required=False,
+        label='직접 입력',
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': '또는 직접 입력하세요'
+        })
+    )
+    
     class Meta:
         model = Category
-        fields = ['name', 'type', 'expense_type', 'order']
+        fields = ['name', 'type', 'income_type', 'expense_type', 'order']
         widgets = {
-            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '카테고리명'}),
-            'type': forms.Select(attrs={'class': 'form-select'}),
-            'expense_type': forms.Select(attrs={'class': 'form-select'}),
-            'order': forms.NumberInput(attrs={'class': 'form-control', 'min': 0}),
+            'name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': '카테고리 이름 입력'
+            }),
+            'type': forms.Select(attrs={
+                'class': 'form-select'
+            }),
+            'income_type': forms.Select(attrs={
+                'class': 'form-select'
+            }, choices=[('', '-- 선택하세요 --')] + list(Category.INCOME_TYPE_CHOICES)),
+            'expense_type': forms.Select(attrs={
+                'class': 'form-select'
+            }, choices=[('', '-- 선택하세요 --')] + list(Category.EXPENSE_TYPE_CHOICES)),
+            'order': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'value': '99'
+            }),
         }
         labels = {
             'name': '카테고리명',
             'type': '유형',
-            'expense_type': '지출 세부 유형 (지출만)',
+            'income_type': '수입 세부 유형',
+            'expense_type': '지출 세부 유형',
             'order': '정렬 순서',
         }
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # 지출이 아니면 expense_type 숨기기
-        if self.instance and self.instance.type != 'expense':
-            self.fields['expense_type'].required = False
+        self.fields['income_type'].required = False
+        self.fields['expense_type'].required = False
+        self.fields['type'].empty_label = None
     
     def clean(self):
         cleaned_data = super().clean()
-        cat_type = cleaned_data.get('type')
+        tx_type = cleaned_data.get('type')
+        income_type = cleaned_data.get('income_type')
         expense_type = cleaned_data.get('expense_type')
+        custom_income_type = cleaned_data.get('custom_income_type')
+        custom_expense_type = cleaned_data.get('custom_expense_type')
         
-        # 지출 카테고리는 세부 유형 선택사항으로 (사용자 카테고리는 자유롭게)
-        if cat_type == 'expense':
-            # expense_type이 비어있어도 OK (사용자 카테고리)
-            pass
-        else:
-            # 수입 카테고리는 expense_type 제거
+        # 수입 카테고리인 경우
+        if tx_type == 'income':
+            # 선택과 직접입력 둘 다 없으면 에러
+            if not income_type and not custom_income_type:
+                raise forms.ValidationError('수입 카테고리는 세부 유형을 선택하거나 직접 입력해야 합니다.')
+            
+            # 직접 입력한 경우
+            if custom_income_type:
+                cleaned_data['income_type'] = 'other'
+            
+            # 지출 타입 제거
             cleaned_data['expense_type'] = None
+    
+        # 지출 카테고리인 경우
+        elif tx_type == 'expense':
+            # 선택과 직접입력 둘 다 없으면 에러
+            if not expense_type and not custom_expense_type:
+                raise forms.ValidationError('지출 카테고리는 세부 유형을 선택하거나 직접 입력해야 합니다.')
+            
+            # 직접 입력한 경우
+            if custom_expense_type:
+                cleaned_data['expense_type'] = 'other'
+            
+            # 수입 타입 제거
+            cleaned_data['income_type'] = None
         
         return cleaned_data
-    
+
 class ExcelUploadForm(forms.Form):
     excel_file = forms.FileField(
         label="엑셀 파일 선택",

@@ -5,11 +5,20 @@
 
 {% block content %}
 <div class="container-fluid px-4 py-3">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-       <h3 class="mb-0">💰 거래 관리</h3>
-        <a href="{% url 'transactions:transaction_create' %}" class="btn btn-primary btn-sm px-4">
-            + 거래 등록
-        </a>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+       <h2>💰 거래 관리</h2>
+       <div class="d-flex gap-2">
+            <a href="{% url 'transactions:transaction_create' %}" class="btn btn-primary btn-sm px-4">
+                + 거래 등록
+            </a>
+                    <a href="{% url 'transactions:category_list' %}" class="btn btn-primary btn-sm px-4">
+                + 카테고리 수정
+            </a>
+            </a>
+                    <a href="{% url 'transactions:merchant_list' %}" class="btn btn-primary btn-sm px-4">
+                + 거래처 관리
+            </a>            
+        </div>    
     </div>
 
     <!-- 통계 카드 (간결하게) -->
