@@ -162,17 +162,16 @@
         <!-- 빠른 링크 -->
         <div class="card">
             <div class="card-header">
-                <h6 class="mb-0">🔗 빠른 링크</h6>
+                <h6 class="mb-0">🔗 빠른 링크</h6>  
             </div>
             <div class="card-body">
-                <a href="#" class="btn btn-outline-primary mb-2" style="width: 100%;">
+                <a href="{% url 'transactions:transaction_create' %}" class="btn btn-outline-secondary" style="width: 100%;">
                     ➕ 거래 등록
                 </a>
-                <a href="#" class="btn btn-outline-primary mb-2" style="width: 100%;">
+                <a href="{% url 'transactions:transaction_list' %}" class="btn btn-outline-secondary" style="width: 100%;">
                     📊 전체 거래 내역
                 </a>
-                <a href="{% url 'businesses:account_list' %}" 
-                   class="btn btn-outline-secondary" style="width: 100%;">
+                <a href="{% url 'businesses:account_list' %}" class="btn btn-outline-secondary" style="width: 100%;">
                     💳 다른 계좌 보기
                 </a>
             </div>
