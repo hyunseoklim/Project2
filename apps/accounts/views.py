@@ -9,6 +9,8 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login as auth_login, update_session_auth_hash
 from django.db import IntegrityError, transaction
+from django.db.models import Sum
+from django.utils import timezone
 from django.core.exceptions import ValidationError
 import logging
 from .forms import ProfileForm, CustomUserCreationForm
@@ -92,14 +94,45 @@ def home(request):
 @login_required
 def dashboard(request):
     """대시보드 (통계 + 빠른 메뉴)"""
+    
     profile = getattr(request.user, 'profile', None)
+
+    # 1. 날짜 설정
+    now = timezone.now()
+    year = now.year
+    month = now.month
+
+    # 2. 필터링 (필드명 수정됨: occurred_at)
+    monthly_qs = Transaction.objects.filter(
+        user=request.user,
+        occurred_at__year=year,
+        occurred_at__month=month
+    )
+
+    # 3. 합계 계산 (필드명 수정됨: tx_type)
+    # 주의: DB에 저장된 값이 'INCOME'/'EXPENSE'가 맞는지 확인 필요 (일단 기존 코드 따름)
+    total_income = monthly_qs.filter(tx_type='INCOME').aggregate(Sum('amount'))['amount__sum'] or 0
+    total_expense = monthly_qs.filter(tx_type='EXPENSE').aggregate(Sum('amount'))['amount__sum'] or 0
+    
+    net_profit = total_income - total_expense
+
+    # 4. 최근 거래 (필드명 수정됨: occurred_at)
+    recent_transactions = Transaction.objects.filter(user=request.user).order_by('-occurred_at', '-id')[:5]
+
     context = {
         'user': request.user,
         'profile': profile,
-        'masked_biz_num': profile.get_masked_business_number() if profile else "미등록"
+        'masked_biz_num': profile.get_masked_business_number() if profile else "미등록",
+        
+        'year': year,
+        'month': month,
+        'total_income': total_income,
+        'total_expense': total_expense,
+        'net_profit': net_profit,
+        'recent_transactions': recent_transactions,
     }
+
     return render(request, "accounts/home2.html", context)
-    
 
 class MyPasswordChangeView(SuccessMessageMixin, PasswordChangeView):
     """

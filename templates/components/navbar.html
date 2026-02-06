@@ -7,25 +7,29 @@
            홈
         </a>
 
-        <a href="{% url 'accounts:dashboard' %}" 
-           class="nav-button {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
-           대시보드
-        </a>
+        {% if user.is_authenticated %}
+            <span class="nav-divider">|</span>
 
-        <a href="{% url 'transactions:transaction_list' %}" 
-           class="nav-button {% if request.resolver_match.app_name == 'transactions' %}active{% endif %}">
-           거래 관리
-        </a>
+            <a href="{% url 'accounts:dashboard' %}" 
+               class="nav-button {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+               대시보드
+            </a>
 
-        <a href="{% url 'businesses:business_list' %}" 
-           class="nav-button {% if 'business' in request.resolver_match.url_name %}active{% endif %}">
-           사업장 관리
-        </a>
+            <a href="{% url 'transactions:transaction_list' %}" 
+               class="nav-button {% if request.resolver_match.app_name == 'transactions' %}active{% endif %}">
+               거래 관리
+            </a>
 
-        <a href="{% url 'businesses:account_list' %}" 
-           class="nav-button {% if 'account' in request.resolver_match.url_name %}active{% endif %}">
-           계좌 관리
-        </a>
+            <a href="{% url 'businesses:business_list' %}" 
+               class="nav-button {% if 'business' in request.resolver_match.url_name %}active{% endif %}">
+               사업장 관리
+            </a>
+
+            <a href="{% url 'businesses:account_list' %}" 
+               class="nav-button {% if 'account' in request.resolver_match.url_name %}active{% endif %}">
+               계좌 관리
+            </a>
+        {% endif %}
     </div>
 
     <div class="nav-right">
@@ -43,17 +47,18 @@
         
         <span class="nav-divider">|</span>
         
-        <form action="{% url 'accounts:logout' %}" method="post" style="display:inline;">
+        <form action="{% url 'accounts:logout' %}" method="post" class="form-inline">
             {% csrf_token %}
             <button type="submit" class="logout-btn">로그아웃</button>
         </form>
+
       {% else %}
         <a href="{% url 'accounts:login' %}" class="nav-button">
-                로그인
+             로그인
         </a>
             
-        <a href="{% url 'accounts:signup' %}" class="nav-button">
-                회원가입
+        <a href="{% url 'accounts:signup' %}" class="nav-button active">
+             회원가입
         </a>
       {% endif %}
     </div>
