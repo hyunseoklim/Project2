@@ -152,3 +152,17 @@ class CategoryForm(forms.ModelForm):
             cleaned_data['expense_type'] = None
         
         return cleaned_data
+    
+class ExcelUploadForm(forms.Form):
+    excel_file = forms.FileField(
+        label="엑셀 파일 선택",
+        help_text=".xlsx 형식의 파일만 업로드 가능합니다."
+    )
+
+    def clean_excel_file(self):
+        file = self.cleaned_data.get('excel_file')
+        if file:
+            # 확장자 검사
+            if not file.name.endswith('.xlsx'):
+                raise ValidationError("에러: .xlsx 확장자 파일만 올릴 수 있습니다.")
+        return file
