@@ -1,75 +1,131 @@
 {% extends "base.html" %}
+{% load humanize %}
 
 {% block title %}대시보드 - 스마트 사업자 가계부{% endblock %}
 
 {% block content %}
-<div class="accounts-container">
-    <section class="accounts-section" style="margin-bottom: 20px;">
-        <div class="section-header">
-            <span class="section-icon">📊</span>
-            <h3 class="section-title" style="padding: 0px 0; margin: 0;">대시보드</h3>
-        </div>
+<div class="container mt-3">
 
-        <div class="summary-card">
-            <h4 class="summary-title">2026년 1월 요약</h4>
-            <div class="summary-grid">
-                <div class="summary-item">
-                    <span class="summary-label">총 수입</span>
-                    <span class="summary-value income">5,000,000원</span>
+{% comment %}
+    <div class="mb-4">
+        <h3 class="fw-bold d-flex align-items-center">
+            <span class="me-2">📊</span> 
+            <span class="vertical-bar bg-warning me-3"></span>
+            대시보드
+        </h3>
+    </div>
+{% endcomment %}
+
+    <div class="card border-warning border-2 shadow-sm rounded-4 mb-5 bg-custom-light">
+        <div class="card-body p-5">
+            <h5 class="fw-bold mb-4">{{ year }}년 {{ month }}월 요약</h5>
+            
+            <div class="row g-0 text-center">
+                <div class="col-md-4 border-end"> <div class="py-3">
+                        <p class="text-secondary fw-bold mb-1">총 수입</p>
+                        <h2 class="fw-bold text-success mb-0">{{ total_income|intcomma }}원</h2>
+                    </div>
                 </div>
-                <div class="summary-item">
-                    <span class="summary-label">총 지출</span>
-                    <span class="summary-value expense">3,200,000원</span>
+                <div class="col-md-4 border-end">
+                    <div class="py-3">
+                        <p class="text-secondary fw-bold mb-1">총 지출</p>
+                        <h2 class="fw-bold text-danger mb-0">{{ total_expense|intcomma }}원</h2>
+                    </div>
                 </div>
-                <div class="summary-item">
-                    <span class="summary-label">순합</span>
-                    <span class="summary-value profit">+1,800,000원</span>
+                <div class="col-md-4">
+                    <div class="py-3">
+                        <p class="text-secondary fw-bold mb-1">순합</p> <h2 class="fw-bold text-primary mb-0">
+                            {% if net_profit > 0 %}+{% endif %}{{ net_profit|intcomma }}원
+                        </h2>
+                    </div>
                 </div>
             </div>
-            <a href="#" class="detail-link">월별 상세 보기 →</a>
+            
+            <div class="mt-4">
+                <a href="#" class="text-decoration-none fw-bold small">월별 상세 보기 →</a>
+            </div>
         </div>
-    </section>
-
-    <section class="transactions-section">
-    <div class="section-header">
-        <span class="section-icon">💸</span>
-        <h3 class="section-title" style="padding: 0px 0; margin: 0;">최근 거래</h3>
     </div>
 
-        <div class="table-wrapper">
-            <table class="transaction-table">
-                <thead>
-                    <tr>
-                        <th>날짜</th>
-                        <th>구분</th>
-                        <th>거래처</th>
-                        <th>카테고리</th>
-                        <th>금액</th>
-                        <th>계좌</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>2026-01-31</td>
-                        <td><span class="badge badge-income">수입</span></td>
-                        <td>네이버광고</td>
-                        <td>광고비</td>
-                        <td class="amount income">500,000원</td>
-                        <td>사업용 계좌</td>
-                    </tr>
-                    <tr>
-                        <td>2026-01-30</td>
-                        <td><span class="badge badge-income">수입</span></td>
-                        <td>고객 A</td>
-                        <td>매출</td>
-                        <td class="amount income">+1,200,000원</td>
-                        <td>사업용 계좌</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+    <div class="mb-4">
+        <h3 class="fw-bold d-flex align-items-center">
+            <span class="fs-2 me-2">💸</span>
+            <span class="vertical-bar bg-warning me-3"></span>
+            최근 거래
+        </h3>
+    </div>
 
-        <a href="{% url 'transactions:transaction_list' %}" class="detail-link">전체 거래 내역 보기 →</a>
-    </section>
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" style="min-width: 600px;">
+                    <thead class="bg-light" style="border-top: 2px solid #ffc107; border-bottom: 2px solid #ffc107;">
+                        <tr>
+                            <th class="py-3 ps-4 text-secondary">날짜</th>
+                            <th class="py-3 text-secondary">구분</th>
+                            <th class="py-3 text-secondary">거래처</th>
+                            <th class="py-3 text-secondary">카테고리</th>
+                            <th class="py-3 text-secondary">금액</th>
+                            <th class="py-3 pe-4 text-secondary">계좌</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if recent_transactions %}
+                            {% for transaction in recent_transactions %}
+                            <tr>
+                                <td class="ps-4 fw-bold text-secondary">{{ transaction.occurred_at|date:"Y-m-d" }}</td>
+                                <td>
+                                    {% if transaction.tx_type == 'INCOME' %}
+                                        <span class="badge rounded-pill bg-success-subtle text-success px-3">수입</span>
+                                    {% else %}
+                                        <span class="badge rounded-pill bg-danger-subtle text-danger px-3">지출</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-secondary">{{ transaction.merchant_name }}</td>
+                                <td class="text-secondary">{{ transaction.category.name }}</td>
+                                <td class="fw-bold {% if transaction.tx_type == 'INCOME' %}text-success{% else %}text-danger{% endif %}">
+                                    {{ transaction.amount|intcomma }}원
+                                </td>
+                                <td class="pe-4 text-secondary">{{ transaction.account.account_name }}</td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center py-5 text-muted">
+                                    거래 내역이 없습니다.
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
 </div>
+
+<style>
+    /* 공통으로 쓸 연한 배경색 (요약 박스 & 테이블 헤더) */
+    .bg-custom-light {
+        background-color: #fffcf5 !important;
+    }
+
+    /* 제목 옆 세로 막대 스타일 */
+    .vertical-bar {
+        width: 6px;
+        height: 28px;
+        display: inline-block;
+        border-radius: 2px;
+    }
+    
+    /* 카드 둥글기 */
+    .rounded-4 {
+        border-radius: 1rem !important;
+    }
+    
+    /* 테이블 헤더 배경 살짝 연하게 */
+    thead th {
+        background-color: #fffcf5 !important; /* 아주 연한 노란색 배경 */
+    }
+</style>
 {% endblock %}

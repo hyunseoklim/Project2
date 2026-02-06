@@ -71,6 +71,15 @@ class Category(TimeStampedModel):
         ('income', '수입'),
         ('expense', '지출'),
     ]
+
+    INCOME_TYPE_CHOICES = [
+        ('sales', '매출'),
+        ('service', '용역수입'),
+        ('interest', '이자수입'),
+        ('rental', '임대수입'),
+        ('investment', '투자수익'),
+        ('other', '기타 수입'),
+    ]
     
     EXPENSE_TYPE_CHOICES = [
         ('salary', '인건비'),
@@ -89,6 +98,7 @@ class Category(TimeStampedModel):
     
     name = models.CharField(max_length=50)
     type = models.CharField(max_length=20, choices=TYPE_CHOICES, db_index=True)
+    income_type = models.CharField(max_length=30, choices=INCOME_TYPE_CHOICES, blank=True, null=True, db_index=True)  # 이 줄 추가
     expense_type = models.CharField(max_length=30, choices=EXPENSE_TYPE_CHOICES, blank=True, null=True, db_index=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name='custom_categories')
     order = models.IntegerField(default=0, db_index=True)
@@ -123,11 +133,11 @@ class Category(TimeStampedModel):
         """카테고리 타입 검증"""
         errors = {}
         
-        if self.type != 'expense' and self.expense_type:
-            errors['expense_type'] = '지출 카테고리만 세부 유형을 설정할 수 있습니다'
+        if self.type == 'income' and self.expense_type:
+            errors['expense_type'] = '수입 카테고리는 지출 세부 유형을 설정할 수 없습니다'
         
-        if self.type == 'expense' and not self.expense_type:
-            errors['expense_type'] = '지출 카테고리는 세부 유형이 필수입니다'
+        if self.type == 'expense' and self.income_type:
+            errors['income_type'] = '지출 카테고리는 수입 세부 유형을 설정할 수 없습니다'
         
         if errors:
             raise ValidationError(errors)

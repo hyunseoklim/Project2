@@ -2,7 +2,6 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.db.models import Q
 from decimal import Decimal
-
 from .models import Transaction, Merchant, Category
 from apps.businesses.models import Account, Business
 import re
@@ -55,7 +54,12 @@ class TransactionForm(forms.ModelForm):
             self.fields['business'].queryset = Business.objects.filter(user=self.user, is_active=True)
             self.fields['account'].queryset = Account.objects.filter(user=self.user, is_active=True)
             self.fields['merchant'].queryset = Merchant.objects.filter(user=self.user, is_active=True)
-        
+            # 카테고리 필터링: 시스템 카테고리 + 사용자가 만든 카테고리
+            self.fields['category'].queryset = Category.objects.filter(
+                Q(is_system=True) | Q(user=self.user)
+            ).order_by('type', 'name')
+
+
         # 필드 선택사항 설정
         self.fields['merchant'].required = False
         self.fields['merchant_name'].required = False
@@ -162,8 +166,6 @@ class MerchantForm(forms.ModelForm):
             raise ValidationError('사업자등록번호는 10자리여야 합니다.')
 
         return f"{cleaned[:3]}-{cleaned[3:5]}-{cleaned[5:]}"
-
-
 class CategoryForm(forms.ModelForm):
     class Meta:
         model = Category
@@ -178,7 +180,7 @@ class CategoryForm(forms.ModelForm):
             'type': '유형',
             'expense_type': '지출 세부 유형 (지출만)',
         }
-    
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['type'].choices = [('', '수입 또는 지출 선택')] + list(self.fields['type'].choices)
@@ -187,18 +189,43 @@ class CategoryForm(forms.ModelForm):
         # 지출이 아니면 expense_type 숨기기
         if self.instance and self.instance.type != 'expense':
             self.fields['expense_type'].required = False
-    
+
     def clean(self):
         cleaned_data = super().clean()
         cat_type = cleaned_data.get('type')
         expense_type = cleaned_data.get('expense_type')
-        
+
         # 지출 카테고리는 세부 유형 선택사항으로 (사용자 카테고리는 자유롭게)
         if cat_type == 'expense':
-            # expense_type이 비어있어도 OK (사용자 카테고리)
             pass
         else:
-            # 수입 카테고리는 expense_type 제거
             cleaned_data['expense_type'] = None
+
+        return cleaned_data
+        # 수입 카테고리인 경우
+        if tx_type == 'income':
+            # 선택과 직접입력 둘 다 없으면 에러
+            if not income_type and not custom_income_type:
+                raise forms.ValidationError('수입 카테고리는 세부 유형을 선택하거나 직접 입력해야 합니다.')
+            
+            # 직접 입력한 경우
+            if custom_income_type:
+                cleaned_data['income_type'] = 'other'
+            
+            # 지출 타입 제거
+            cleaned_data['expense_type'] = None
+        
+        # 지출 카테고리인 경우
+        elif tx_type == 'expense':
+            # 선택과 직접입력 둘 다 없으면 에러
+            if not expense_type and not custom_expense_type:
+                raise forms.ValidationError('지출 카테고리는 세부 유형을 선택하거나 직접 입력해야 합니다.')
+            
+            # 직접 입력한 경우
+            if custom_expense_type:
+                cleaned_data['expense_type'] = 'other'
+            
+            # 수입 타입 제거
+            cleaned_data['income_type'] = None
         
         return cleaned_data

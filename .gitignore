@@ -21,3 +21,7 @@ media/*
 # 환경 변수
 .env
 .env.local
+
+# macOS 자동 생성되는 거니까 지우지 말아주세요!
+.DS_Store
+**/.DS_Store

@@ -20,80 +20,74 @@
         {% endfor %}
     {% endif %}
 
-    <div class="row">
-        <!-- 수입 카테고리 -->
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header bg-success text-white">
-                    <h5 class="mb-0">수입 카테고리</h5>
-                </div>
-                <div class="card-body">
-                    <ul class="list-group list-group-flush">
-                        {% for cat in categories %}
-                            {% if cat.type == 'income' %}
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <span>
-                                    {{ cat.name }}
-                                    {% if cat.is_system %}
-                                        <span class="badge bg-secondary">기본</span>
-                                    {% else %}
-                                        <span class="badge bg-primary">내 카테고리</span>
-                                    {% endif %}
-                                </span>
-                                
-                                {% if not cat.is_system and cat.user == request.user %}
-                                <div>
-                                    <a href="{% url 'transactions:category_update' cat.pk %}" 
-                                       class="btn btn-sm btn-outline-primary">수정</a>
-                                    <a href="{% url 'transactions:category_delete' cat.pk %}" 
-                                       class="btn btn-sm btn-outline-danger">삭제</a>
-                                </div>
-                                {% endif %}
-                            </li>
-                            {% endif %}
-                        {% endfor %}
-                    </ul>
-                </div>
-            </div>
+    <!-- 수입 카테고리 -->
+    <div class="card mb-4">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0">수입 카테고리</h5>
         </div>
-
-        <!-- 지출 카테고리 -->
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header bg-danger text-white">
-                    <h5 class="mb-0">지출 카테고리</h5>
-                </div>
-                <div class="card-body">
-                    <ul class="list-group list-group-flush">
-                        {% for cat in categories %}
-                            {% if cat.type == 'expense' %}
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <span>
-                                    {{ cat.name }}
-                                    {% if cat.expense_type %}
-                                        <span class="badge bg-secondary">{{ cat.get_expense_type_display }}</span>
-                                    {% endif %}
-                                    {% if cat.is_system %}
-                                        <span class="badge bg-info">기본</span>
-                                    {% else %}
-                                        <span class="badge bg-primary">내 카테고리</span>
-                                    {% endif %}
-                                </span>
-                                
-                                {% if not cat.is_system and cat.user == request.user %}
-                                <div>
-                                    <a href="{% url 'transactions:category_update' cat.pk %}" 
-                                       class="btn btn-sm btn-outline-primary">수정</a>
-                                    <a href="{% url 'transactions:category_delete' cat.pk %}" 
-                                       class="btn btn-sm btn-outline-danger">삭제</a>
-                                </div>
-                                {% endif %}
-                            </li>
+        <div class="card-body">
+            <ul class="list-group list-group-flush">
+                {% for cat in categories %}
+                    {% if cat.type == 'income' %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span>
+                            {{ cat.name }}
+                            {% if cat.is_system %}
+                                <span class="badge bg-secondary">기본</span>
+                            {% else %}
+                                <span class="badge bg-primary">내 카테고리</span>
                             {% endif %}
-                        {% endfor %}
-                    </ul>
-                </div>
-            </div>
+                        </span>
+                        
+                        {% if not cat.is_system and cat.user == request.user %}
+                        <div>
+                            <a href="{% url 'transactions:category_update' cat.pk %}" 
+                               class="btn btn-sm btn-outline-primary">수정</a>
+                            <a href="{% url 'transactions:category_delete' cat.pk %}" 
+                               class="btn btn-sm btn-outline-danger">삭제</a>
+                        </div>
+                        {% endif %}
+                    </li>
+                    {% endif %}
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <!-- 지출 카테고리 -->
+    <div class="card mb-4">
+        <div class="card-header bg-danger text-white">
+            <h5 class="mb-0">지출 카테고리</h5>
+        </div>
+        <div class="card-body">
+            <ul class="list-group list-group-flush">
+                {% for cat in categories %}
+                    {% if cat.type == 'expense' %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span>
+                            {{ cat.name }}
+                            {% if cat.expense_type %}
+                                <span class="badge bg-secondary">{{ cat.get_expense_type_display }}</span>
+                            {% endif %}
+                            {% if cat.is_system %}
+                                <span class="badge bg-info">기본</span>
+                            {% else %}
+                                <span class="badge bg-primary">내 카테고리</span>
+                            {% endif %}
+                        </span>
+                        
+                        {% if not cat.is_system and cat.user == request.user %}
+                        <div>
+                            <a href="{% url 'transactions:category_update' cat.pk %}" 
+                               class="btn btn-sm btn-outline-primary">수정</a>
+                            <a href="{% url 'transactions:category_delete' cat.pk %}" 
+                               class="btn btn-sm btn-outline-danger">삭제</a>
+                        </div>
+                        {% endif %}
+                    </li>
+                    {% endif %}
+                {% endfor %}
+            </ul>
         </div>
     </div>
 </div>

@@ -9,6 +9,9 @@ class Command(BaseCommand):
             # 수입
             {'name': '매출', 'type': 'income', 'order': 1},
             {'name': '기타수입', 'type': 'income', 'order': 2},
+            {'name': '이자수입', 'type': 'income', 'income_type': 'interest', 'order': 3},
+            {'name': '임대수입', 'type': 'income', 'income_type': 'rental', 'order': 4},
+            {'name': '투자수익', 'type': 'income', 'income_type': 'investment', 'order': 5},
             
             # 지출
             {'name': '인건비', 'type': 'expense', 'expense_type': 'salary', 'order': 1},
