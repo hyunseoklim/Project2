@@ -1,66 +1,126 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}환영합니다 - 스마트 사업자 가계부{% endblock %}
 
 {% block content %}
-<div class="welcome-section">
-    <div class="welcome-header">
-        <div class="welcome-icon">💼</div>
-        <h2 class="page-title">스마트 사업자 가계부</h2>
-    </div>
 
-    <div class="welcome-message">
-        <h3 class="greeting">환영합니다! 👋</h3>
-        <p class="subtitle">스마트 사업자 가계부란?</p>
-        <p class="description">1인 사업자와 무인 사업자를 위한 똑똑한 재무 관리 시스템입니다.</p>
-    </div>
+<style>
+    /* 1. 리스트 마우스 오버 효과 (붕 뜨기) */
+    .hover-float {
+        transition: all 0.3s ease;
+        cursor: default;
+    }
+    .hover-float:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+        background-color: white !important;
+    }
 
-    <div class="features-section">
-        <h4 class="section-title">주요 기능:</h4>
-        <ul class="feature-list">
-            <li class="feature-item">
-                <span class="check-icon">✅</span>
-                <span class="feature-text">부가세 자동 계산 (과세 10%, 면세, 영세율)</span>
-            </li>
-            <li class="feature-item">
-                <span class="check-icon">✅</span>
-                <span class="feature-text">계좌 잔액 실시간 추적</span>
-            </li>
-            <li class="feature-item">
-                <span class="check-icon">✅</span>
-                <span class="feature-text">결별/카테고리별 지출 분석</span>
-            </li>
-            <li class="feature-item">
-                <span class="check-icon">✅</span>
-                <span class="feature-text">영수증 첨부 및 관리</span>
-            </li>
-            <li class="feature-item">
-                <span class="check-icon">✅</span>
-                <span class="feature-text">다중 사업장 지원</span>
-            </li>
-            <li class="feature-item">
-                <span class="check-icon">✅</span>
-                <span class="feature-text">부가세 신고 준비 자료</span>
-            </li>
-        </ul>
-    </div>
+    /* 2. 버튼 마우스 오버 효과 (살짝 커짐) */
+    .btn-hover-scale {
+        transition: transform 0.2s ease;
+    }
+    .btn-hover-scale:hover {
+        transform: scale(1.05); 
+    }
+</style>
 
-    <div class="cta-section">
-        <h4 class="section-title">지금 바로 시작하세요!</h4>
-        <div class="button-group">
-            <a href="#" class="btn btn-primary">회원가입하기</a>
-            <a href="#" class="btn btn-secondary">로그인하기</a>
+<div class="container my-5" style="max-width: 700px;">
+
+    <div class="card shadow border-0 p-4 p-md-5">
+        
+        <div class="text-center mb-2">
+            <div class="display-1 mb-2">💼</div>
+            <h2 class="fw-bold text-dark">스마트 사업자 가계부</h2>
         </div>
-    </div>
 
-    <div class="target-audience">
-        <h4 class="section-title">이런 분들께 추천합니다:</h4>
-        <ul class="audience-list">
-            <li class="audience-item">💡 혼자서 사업을 운영하는 1인 사업자</li>
-            <li class="audience-item">💡 무인 카페, 무인 빨래방 등 무인 매장 운영자</li>
-            <li class="audience-item">💡 여러 지출을 관리하는 소규모 사업자</li>
-            <li class="audience-item">💡 부가세 신고와 복잡하게 느껴지는 초보 사업자</li>
-        </ul>
+        <hr class="border-warning border-3 opacity-75 my-4">
+
+        <div class="card border-0 mb-5 shadow-sm" style="background-color: #FFFDE7;">
+            <div class="card-body p-4 border-start border-4 border-warning">
+                <h3 class="fw-bold mb-3 text-dark">환영합니다! 👋</h3>
+                <p class="fs-5 fw-bold text-secondary mb-1">스마트 사업자 가계부란?</p>
+                <p class="text-muted mb-0">
+                    1인 사업자와 무인 사업자를 위한 똑똑한 재무 관리 시스템입니다.
+                </p>
+            </div>
+        </div>
+
+        <div class="mb-5">
+            <h4 class="fw-bold mb-3 border-start border-4 border-warning ps-3 text-dark">
+                | 주요 기능:
+            </h4>
+            
+            <ul class="list-unstyled mb-0 d-grid gap-3 ps-2">
+                <li class="d-flex align-items-center bg-light p-3 rounded shadow-sm hover-float">
+                    <span class="text-success fs-4 me-3 ms-2">✅</span>
+                    <span class="text-secondary fw-bold fs-5">부가세 자동 계산</span>
+                    <span class="text-muted small ms-2">(과세, 면세, 영세율)</span>
+                </li>
+                <li class="d-flex align-items-center bg-light p-3 rounded shadow-sm hover-float">
+                    <span class="text-success fs-4 me-3 ms-2">✅</span>
+                    <span class="text-secondary fw-bold fs-5">계좌 잔액 실시간 추적</span>
+                </li>
+                <li class="d-flex align-items-center bg-light p-3 rounded shadow-sm hover-float">
+                    <span class="text-success fs-4 me-3 ms-2">✅</span>
+                    <span class="text-secondary fw-bold fs-5">월별/카테고리별 지출 분석</span>
+                </li>
+                <li class="d-flex align-items-center bg-light p-3 rounded shadow-sm hover-float">
+                    <span class="text-success fs-4 me-3 ms-2">✅</span>
+                    <span class="text-secondary fw-bold fs-5">영수증 첨부 및 관리</span>
+                </li>
+                <li class="d-flex align-items-center bg-light p-3 rounded shadow-sm hover-float">
+                    <span class="text-success fs-4 me-3 ms-2">✅</span>
+                    <span class="text-secondary fw-bold fs-5">다중 사업장 지원</span>
+                </li>
+                <li class="d-flex align-items-center bg-light p-3 rounded shadow-sm hover-float">
+                    <span class="text-success fs-4 me-3 ms-2">✅</span>
+                    <span class="text-secondary fw-bold fs-5">부가세 신고 준비 자료</span>
+                </li>
+            </ul>
+        </div>
+
+        <div class="mb-4">
+            <h4 class="fw-bold mb-3 border-start border-4 border-warning ps-3 text-dark">
+                | 이런 분들께 추천합니다:
+            </h4>
+            <div class="bg-light p-4 rounded-4 shadow-sm">
+                <ul class="list-unstyled mb-0 d-grid gap-2 text-dark">
+                    <li class="d-flex align-items-center">
+                        <span class="me-2">💡</span> 
+                        <span>혼자서 사업을 운영하는 <b>1인 사업자</b></span>
+                    </li>
+                    <li class="d-flex align-items-center">
+                        <span class="me-2">💡</span> 
+                        <span>무인 카페, 빨래방 등 <b>무인 매장 운영자</b></span>
+                    </li>
+                    <li class="d-flex align-items-center">
+                        <span class="me-2">💡</span> 
+                        <span>여러 지출을 관리하는 <b>소규모 사업자</b></span>
+                    </li>
+                    <li class="d-flex align-items-center">
+                        <span class="me-2">💡</span> 
+                        <span>부가세 신고가 복잡한 <b>초보 사장님</b></span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="text-center mt-3 p-5 rounded-4 bg-light shadow-sm">
+            <h4 class="fw-bold mb-4">🚀 지금 바로 시작하세요!</h4>
+            
+            <div class="d-flex justify-content-center gap-3 flex-wrap">
+                <a href="{% url 'accounts:signup' %}" class="btn btn-primary btn-lg px-5 fw-bold shadow-sm btn-hover-scale">
+                    회원가입하기
+                </a>
+                
+                <a href="{% url 'accounts:login' %}" class="btn btn-light border btn-lg px-5 fw-bold shadow-sm btn-hover-scale">
+                    로그인하기
+                </a>
+            </div>
+        </div>
+
     </div>
 </div>
 {% endblock %}

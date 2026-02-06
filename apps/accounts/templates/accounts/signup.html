@@ -1,57 +1,118 @@
 {% extends "base.html" %}
+{% load static %}
+
+{% block title %}회원가입 - 스마트 사업자 가계부{% endblock %}
 
 {% block content %}
-<div class="content-wrapper">
-    <section class="welcome-section" style="max-width: 800px; margin: 40px auto;">
-        <div class="welcome-header">
-            <span class="welcome-icon">👋</span>
-            <h2 class="page-title">회원가입</h2>
-            <p class="description">스마트 사업자 가계부에 오신 것을 환영합니다!</p>
+<style>
+    /* 버튼 호버 효과 (살짝 커짐) */
+    .btn-hover-scale {
+        transition: transform 0.2s ease;
+    }
+    .btn-hover-scale:hover {
+        transform: scale(1.02);
+    }
+</style>
+
+<div class="container my-5" style="max-width: 700px;">
+
+    <div class="card shadow border-0 p-4 p-md-5">
+        
+        <div class="text-center mb-4">
+            <div class="display-1 mb-2">👋</div>
+            <h2 class="fw-bold text-dark">회원가입</h2>
+            <p class="text-secondary mt-2">
+                스마트 사업자 가계부에 오신 것을 환영합니다!
+            </p>
         </div>
- 
-        <div class="welcome-message">
-            <form method="post" novalidate>
-                {% csrf_token %}
+
+        <hr class="border-warning border-3 opacity-75 mb-5">
+
+        <div class="card border-warning shadow-sm" style="background-color: #FFFDE7;">
+            <div class="card-body p-4">
                 
-                {% for field in form %}
-                    <div style="margin-bottom: var(--spacing-md);">
-                        <label class="section-title" style="font-size: 1rem; margin-bottom: 0.5rem; display: block;">
-                            {{ field.label }}
-                        </label>
-                        
-                        {# 뷰에서 클래스를 주입하거나, CSS 선택자로 스타일링됩니다 #}
-                        {{ field }}
-                        
-                        {% if field.help_text %}
-                            <div class="description" style="font-size: 0.8rem; margin-top: 0.4rem; color: var(--gray-500);">
-                                {{ field.help_text|safe }}
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger" role="alert">
+                        {% for error in form.non_field_errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <div class="mb-4">
+                        <label for="id_username" class="form-label fw-bold text-dark">아이디</label>
+                        <input type="text" name="username" id="id_username" 
+                               class="form-control p-3 border-0 shadow-sm" 
+                               placeholder="사용할 아이디를 입력하세요" required>
+                        <div class="form-text text-muted ms-1">
+                            * 150자 이하의 문자, 숫자, @/./+/-/_ 만 가능합니다.
+                        </div>
+                        {% if form.username.errors %}
+                            <div class="text-danger small mt-1 ms-1">
+                                {{ form.username.errors.0 }}
                             </div>
                         {% endif %}
-                        
-                        {% if field.errors %}
-                            {% for error in field.errors %}
-                                <div class="error-message">
-                                    <strong>!</strong> {{ error }}
-                                </div>
-                            {% endfor %}
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="id_email" class="form-label fw-bold text-dark">이메일</label>
+                        <input type="email" name="email" id="id_email" 
+                               class="form-control p-3 border-0 shadow-sm" 
+                               placeholder="example@email.com">
+                        <div class="form-text text-muted ms-1">
+                            * 비밀번호 찾기에 사용됩니다.
+                        </div>
+                        {% if form.email.errors %}
+                            <div class="text-danger small mt-1 ms-1">
+                                {{ form.email.errors.0 }}
+                            </div>
                         {% endif %}
                     </div>
-                {% endfor %}
 
-                <div class="cta-section" style="border: none; padding: var(--spacing-md) 0 0 0; background: none;">
-                    <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center;">
-                        무료로 시작하기
+                    <div class="mb-4">
+                        <label for="id_password1" class="form-label fw-bold text-dark">비밀번호</label>
+                        <input type="password" name="password1" id="id_password1" 
+                               class="form-control p-3 border-0 shadow-sm" 
+                               placeholder="비밀번호를 입력하세요" required>
+                         {% if form.password1.errors %}
+                            <div class="text-danger small mt-1 ms-1">
+                                {{ form.password1.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-5">
+                        <label for="id_password2" class="form-label fw-bold text-dark">비밀번호 확인</label>
+                        <input type="password" name="password2" id="id_password2" 
+                               class="form-control p-3 border-0 shadow-sm" 
+                               placeholder="비밀번호를 한번 더 입력하세요" required>
+                        <div class="form-text text-muted ms-1">
+                            * 비밀번호를 잊어버리지 않게 주의하세요!
+                        </div>
+                        {% if form.password2.errors %}
+                            <div class="text-danger small mt-1 ms-1">
+                                {{ form.password2.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 py-3 fw-bold fs-5 shadow-sm btn-hover-scale">
+                        회원가입 완료
                     </button>
-                </div>
-            </form>
-
-            <div style="margin-top: var(--spacing-lg); text-align: center; border-top: 1px solid var(--gray-100); padding-top: var(--spacing-md);">
-                <p class="description">
-                    이미 계정이 있나요? 
-                    <a href="{% url 'accounts:login' %}" style="color: var(--secondary-blue); font-weight: 600; text-decoration: none;">로그인하기</a>
-                </p>
+                </form>
             </div>
         </div>
-    </section>
+
+        <div class="text-center mt-4">
+            <p class="text-secondary mb-0">
+                이미 계정이 있으신가요? 
+                <a href="{% url 'accounts:login' %}" class="text-decoration-none fw-bold ms-1">로그인하기</a>
+            </p>
+        </div>
+
+    </div>
 </div>
 {% endblock %}
