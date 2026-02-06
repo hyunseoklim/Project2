@@ -27,4 +27,9 @@ urlpatterns = [
     path('<int:pk>/update/', views.transaction_update, name='transaction_update'),
     path('<int:pk>/delete/', views.transaction_delete, name='transaction_delete'),
 
+    # excel
+    path('download-template/', views.download_excel_template, name='download_template'),
+    path('upload-excel/', views.upload_transactions_excel, name='upload_excel'),
+    path('export/', views.transaction_export_view, name='transaction_export'),
+
 ]   
