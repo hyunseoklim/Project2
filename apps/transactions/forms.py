@@ -2,7 +2,9 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.db.models import Q
 from decimal import Decimal
-from .models import Transaction, Merchant, Category
+
+from apps.accounts import models
+from .models import Transaction, Merchant, Category, MerchantCategory
 from apps.businesses.models import Account, Business
 import re
 
@@ -48,16 +50,14 @@ class TransactionForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
-        
-        # 사용자별 필터링
+
         if self.user:
-            self.fields['business'].queryset = Business.objects.filter(user=self.user, is_active=True)
-            self.fields['account'].queryset = Account.objects.filter(user=self.user, is_active=True)
-            self.fields['merchant'].queryset = Merchant.objects.filter(user=self.user, is_active=True)
-            # 카테고리 필터링: 시스템 카테고리 + 사용자가 만든 카테고리
-            self.fields['category'].queryset = Category.objects.filter(
-                Q(is_system=True) | Q(user=self.user)
-            ).order_by('type', 'name')
+            # [수정 완료] is_system 대신 user__isnull=True를 사용합니다.
+            self.fields['category'].queryset = MerchantCategory.objects.filter(
+                Q(user__isnull=True) | Q(user=self.user)
+            ).order_by('name')
+        
+        self.fields['category'].empty_label = '미지정(기타)'
 
 
         # 필드 선택사항 설정
@@ -129,9 +129,14 @@ class MerchantForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
 
         if self.user:
-            self.fields['category'].queryset = Category.objects.filter(
-                Q(is_system=True) | Q(user=self.user)
-            ).order_by('type', 'name')
+            # [수정 완료] MerchantCategory에는 is_system이 없으므로 user__isnull=True를 사용합니다.
+            self.fields['category'].queryset = MerchantCategory.objects.filter(
+                Q(user__isnull=True) | Q(user=self.user)
+            ).order_by('name')
+        else:
+            # user 정보가 없는 경우 공용 카테고리만 노출
+            self.fields['category'].queryset = MerchantCategory.objects.filter(user__isnull=True).order_by('name')
+            
         self.fields['category'].empty_label = '미지정(기타)'
 
         # 필드 선택사항 설정

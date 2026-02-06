@@ -1,50 +1,93 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="content-wrapper">
-    <section class="welcome-section">
-        <div class="welcome-header">
-            <span class="welcome-icon">📝</span>
-            <h2 class="page-title">사업자 프로필 설정</h2>
-            <p class="description">세무 증빙과 가계부 관리를 위해 정확한 정보를 입력해주세요.</p>
-        </div>
-
-        <div class="welcome-message">
-            <form method="post">
-                {% csrf_token %}
-                
-                {% for field in form %}
-                    <div style="margin-bottom: var(--spacing-md);">
-                        <label class="section-title" style="font-size: 1rem; margin-bottom: 0.5rem; display: block;">
-                            {{ field.label }}
-                        </label>
-                        
-                        {{ field }}
-                        
-                        {% if field.help_text %}
-                            <div class="description" style="font-size: 0.85rem; margin-top: 0.5rem; color: var(--gray-600);">
-                                {{ field.help_text|safe }}
-                            </div>
-                        {% endif %}
-                        
-                        {% if field.errors %}
-                            {% for error in field.errors %}
-                                <div class="badge-expense" style="display: inline-block; margin-top: 5px; border-radius: 4px; padding: 5px 10px; font-size: 0.85rem;">
-                                    <strong>!</strong> {{ error }}
-                                </div>
-                            {% endfor %}
-                        {% endif %}
-                    </div>
-                {% endfor %}
-
-                <div class="cta-section" style="border: none; padding-top: var(--spacing-lg); background: none;">
-                    <div class="button-group">
-                        <button type="submit" class="btn btn-primary">프로필 저장하기</button>
-                        <a href="{% url 'accounts:home' %}" class="btn btn-secondary">취소</a>
-                    </div>
+<div class="container-fluid py-5" style="font-family: 'Pretendard', sans-serif; background-color: #f8f9fa; min-height: 100vh;">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-xl-6">
+            
+            <div class="text-center mb-5">
+                <div class="d-inline-block p-3 bg-white shadow-sm rounded-circle mb-3">
+                    <span style="font-size: 2.5rem;">📝</span>
                 </div>
-            </form>
+                <h2 class="fw-bold text-dark mb-2">사업자 프로필 설정</h2>
+                <p class="text-muted">세무 증빙과 가계부 관리를 위해 정확한 정보를 입력해주세요.</p>
+            </div>
+
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="bg-primary" style="height: 6px;"></div>
+                <div class="card-body p-4 p-md-5">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        
+                        {% for field in form %}
+                            <div class="mb-4">
+                                <label for="{{ field.id_for_label }}" class="form-label fw-bold text-dark mb-2">
+                                    {{ field.label }}
+                                </label>
+                                
+                                <div class="input-group">
+                                    {{ field }}
+                                </div>
+                                
+                                {% if field.help_text %}
+                                    <div class="form-text text-muted mt-2" style="font-size: 0.85rem;">
+                                        {{ field.help_text|safe }}
+                                    </div>
+                                {% endif %}
+                                
+                                {% if field.errors %}
+                                    {% for error in field.errors %}
+                                        <div class="text-danger mt-1 small fw-bold">
+                                            <i class="bi bi-exclamation-circle"></i> {{ error }}
+                                        </div>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+
+                        <div class="d-flex flex-column flex-md-row gap-3 justify-content-end mt-5">
+                            <a href="{% url 'accounts:profile_detail' %}" class="btn btn-light btn-lg px-4 fw-bold border">
+                                취소
+                            </a>
+                            <button type="submit" class="btn btn-primary btn-lg px-5 fw-bold shadow-sm">
+                                프로필 저장
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <p class="text-center text-muted small mt-4">
+                💡 정보 입력 시 사업자 등록증의 내용과 일치하는지 확인해주세요.
+            </p>
         </div>
-    </section>
+    </div>
 </div>
+
+<style>
+    /* 입력창(Input, Select) 세련되게 만들기 */
+    input, select, textarea {
+        display: block;
+        width: 100%;
+        padding: 0.75rem 1rem;
+        font-size: 1rem;
+        font-weight: 400;
+        line-height: 1.5;
+        color: #212529;
+        background-color: #fff;
+        background-clip: padding-box;
+        border: 1px solid #dee2e6;
+        appearance: none;
+        border-radius: 0.75rem !important;
+        transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out;
+    }
+    input:focus, select:focus {
+        border-color: #86b7fe;
+        outline: 0;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+    .rounded-4 { border-radius: 1rem !important; }
+    .btn { border-radius: 0.75rem; transition: all 0.2s; }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3); }
+</style>
 {% endblock %}

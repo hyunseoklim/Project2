@@ -1,4 +1,3 @@
-"""거래 내역 관리 (핵심 모델)"""
 from django.db import models, transaction
 from django.contrib.auth.models import User
 from django.core.validators import FileExtensionValidator, MinValueValidator
@@ -18,6 +17,30 @@ logger = logging.getLogger(__name__)
 # 상수
 ATTACHMENT_MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB
 
+class MerchantCategory(TimeStampedModel):
+    """거래처 분류 (도매처, 소매처, 고정지출처 등)"""
+    # [수정] null=True, blank=True를 추가하여 공통 카테고리 생성이 가능하게 변경
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='merchant_categories', null=True, blank=True)
+    name = models.CharField(max_length=50)
+    
+    class Meta:
+        db_table = 'merchant_categories'
+        constraints = [
+            # 이름 중복 방지
+            models.UniqueConstraint(
+                fields=['user', 'name'], 
+                condition=models.Q(user__isnull=False), 
+                name='unique_merchant_category_per_user'
+            ),
+            models.UniqueConstraint(
+                fields=['name'], 
+                condition=models.Q(user__isnull=True), 
+                name='unique_global_merchant_category_name'
+            )
+        ]
+
+    def __str__(self):
+        return self.name
 
 class Merchant(SoftDeleteModel):
     """거래처/공급업체"""
@@ -26,7 +49,7 @@ class Merchant(SoftDeleteModel):
     name = models.CharField(max_length=100, db_index=True)
     business_number = models.CharField(max_length=12, blank=True, db_index=True)
     contact = models.CharField(max_length=50, blank=True)
-    category = models.ForeignKey('Category', on_delete=models.SET_NULL, null=True, blank=True, related_name='merchants')
+    category = models.ForeignKey('MerchantCategory', on_delete=models.SET_NULL, null=True, blank=True, related_name='merchants')
     memo = models.TextField(blank=True)
 
     class Meta:
@@ -98,7 +121,7 @@ class Category(TimeStampedModel):
     
     name = models.CharField(max_length=50)
     type = models.CharField(max_length=20, choices=TYPE_CHOICES, db_index=True)
-    income_type = models.CharField(max_length=30, choices=INCOME_TYPE_CHOICES, blank=True, null=True, db_index=True)  # 이 줄 추가
+    income_type = models.CharField(max_length=30, choices=INCOME_TYPE_CHOICES, blank=True, null=True, db_index=True)
     expense_type = models.CharField(max_length=30, choices=EXPENSE_TYPE_CHOICES, blank=True, null=True, db_index=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name='custom_categories')
     order = models.IntegerField(default=0, db_index=True)
@@ -112,13 +135,11 @@ class Category(TimeStampedModel):
             models.Index(fields=['user', 'type']),
         ]
         constraints = [
-            # 사용자별 이름 중복 방지
             models.UniqueConstraint(
                 fields=['user', 'name'],
                 condition=models.Q(user__isnull=False),
                 name='unique_user_category_name'
             ),
-            # 시스템 카테고리 이름 중복 방지
             models.UniqueConstraint(
                 fields=['name'],
                 condition=models.Q(is_system=True),
@@ -132,86 +153,38 @@ class Category(TimeStampedModel):
     def clean(self):
         """카테고리 타입 검증"""
         errors = {}
-        
         if self.type == 'income' and self.expense_type:
             errors['expense_type'] = '수입 카테고리는 지출 세부 유형을 설정할 수 없습니다'
-        
         if self.type == 'expense' and self.income_type:
             errors['income_type'] = '지출 카테고리는 수입 세부 유형을 설정할 수 없습니다'
-        
         if errors:
             raise ValidationError(errors)
 
 
 class TransactionQuerySet(models.QuerySet):
     """Transaction 전용 QuerySet (헬퍼 메서드)"""
-    
-    def income(self):
-        """수입만 필터"""
-        return self.filter(tx_type='IN')
-    
-    def expense(self):
-        """지출만 필터"""
-        return self.filter(tx_type='OUT')
-    
-    def business_only(self):
-        """사업용만 필터"""
-        return self.filter(is_business=True)
-    
-    def by_month(self, year, month):
-        """월별 필터"""
-        return self.filter(occurred_at__year=year, occurred_at__month=month)
-    
-    def by_date_range(self, start_date, end_date):
-        """날짜 범위 필터"""
-        return self.filter(occurred_at__gte=start_date, occurred_at__lte=end_date)
-    
-    def with_relations(self):
-        """관계 데이터 한번에 조회 (N+1 방지)"""
-        return self.select_related('account', 'merchant', 'category', 'business', 'user').prefetch_related('attachment')
+    def income(self): return self.filter(tx_type='IN')
+    def expense(self): return self.filter(tx_type='OUT')
+    def business_only(self): return self.filter(is_business=True)
+    def by_month(self, year, month): return self.filter(occurred_at__year=year, occurred_at__month=month)
+    def by_date_range(self, start_date, end_date): return self.filter(occurred_at__gte=start_date, occurred_at__lte=end_date)
+    def with_relations(self): return self.select_related('account', 'merchant', 'category', 'business', 'user').prefetch_related('attachment')
 
 
 class TransactionManager(models.Manager):
     """Transaction Manager (active + QuerySet 결합)"""
-    
-    def get_queryset(self):
-        return TransactionQuerySet(self.model, using=self._db).filter(is_active=True)
-    
-    def income(self):
-        return self.get_queryset().income()
-    
-    def expense(self):
-        return self.get_queryset().expense()
-    
-    def business_only(self):
-        return self.get_queryset().business_only()
-    
-    def by_month(self, year, month):
-        return self.get_queryset().by_month(year, month)
-    
-    def with_relations(self):
-        return self.get_queryset().with_relations()
+    def get_queryset(self): return TransactionQuerySet(self.model, using=self._db).filter(is_active=True)
+    def income(self): return self.get_queryset().income()
+    def expense(self): return self.get_queryset().expense()
+    def business_only(self): return self.get_queryset().business_only()
+    def by_month(self, year, month): return self.get_queryset().by_month(year, month)
+    def with_relations(self): return self.get_queryset().with_relations()
 
 
 class Transaction(SoftDeleteModel):
-    """
-    거래 내역 (핵심 모델)
-    
-    - 부가세 자동 계산
-    - 계좌 잔액 자동 동기화
-    - 소프트 삭제 지원
-    """
-    
-    TX_TYPE_CHOICES = [
-        ('IN', '수입'),
-        ('OUT', '지출'),
-    ]
-    
-    TAX_TYPE_CHOICES = [
-        ('taxable', '과세 (부가세 10%)'),
-        ('tax_free', '면세'),
-        ('zero_rated', '영세율 (수출)'),
-    ]
+    """거래 내역 (핵심 모델)"""
+    TX_TYPE_CHOICES = [('IN', '수입'), ('OUT', '지출')]
+    TAX_TYPE_CHOICES = [('taxable', '과세 (부가세 10%)'), ('tax_free', '면세'), ('zero_rated', '영세율 (수출)')]
     
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='transactions', db_index=True)
     business = models.ForeignKey(Business, on_delete=models.SET_NULL, null=True, blank=True, related_name='transactions', db_index=True)
@@ -229,8 +202,8 @@ class Transaction(SoftDeleteModel):
     merchant_name = models.CharField(max_length=100, blank=True)
     memo = models.TextField(blank=True)
     
-    objects = models.Manager()  # 전체 조회 (Admin용)
-    active = TransactionManager()  # 활성만 + 헬퍼 메서드
+    objects = models.Manager()
+    active = TransactionManager()
 
     class Meta:
         db_table = 'transactions'
@@ -256,50 +229,32 @@ class Transaction(SoftDeleteModel):
         return f"{self.get_tx_type_display()} {self.amount:,.0f}원 ({self.occurred_at.date()})"
     
     def get_merchant_display(self):
-        """거래처명 반환 (FK 또는 직접 입력)"""
         return self.merchant.name if self.merchant else (self.merchant_name or '(미지정)')
     
     def clean(self):
-        """거래 데이터 검증"""
         errors = {}
-        
-        # 거래처 필수
         if not self.merchant and not self.merchant_name:
             errors['merchant'] = '거래처를 선택하거나 직접 입력하세요'
-        
-        # 부가세 검증
         if self.is_business and self.tax_type == 'taxable' and not self.vat_amount:
             errors['vat_amount'] = '과세 거래는 부가세 금액이 필수입니다'
-        
         if self.tax_type in ['tax_free', 'zero_rated'] and self.vat_amount:
             errors['vat_amount'] = '면세/영세율 거래는 부가세가 없어야 합니다'
-        
-        # 카테고리 타입 일치
         if self.category:
             if self.tx_type == 'IN' and self.category.type != 'income':
                 errors['category'] = '수입 거래는 수입 카테고리를 사용해야 합니다'
             elif self.tx_type == 'OUT' and self.category.type != 'expense':
                 errors['category'] = '지출 거래는 지출 카테고리를 사용해야 합니다'
-        
-        if errors:
-            raise ValidationError(errors)
+        if errors: raise ValidationError(errors)
+
     @transaction.atomic
     def save(self, *args, **kwargs):
-        """부가세 자동 계산 및 잔액 업데이트"""
-        
-        # 부가세 자동 계산 (과세 거래만)
         if self.is_business and self.tax_type == 'taxable' and not self.vat_amount:
             self.vat_amount = (self.amount * Decimal('0.1')).quantize(Decimal('0.01'))
-        
-        # 검증 실행
         self.full_clean()
-        
-        # 신규/수정 판별
         is_new = self.pk is None
         old_amount = None
         old_tx_type = None
         old_account = None
-        
         if not is_new:
             try:
                 old_tx = Transaction.objects.get(pk=self.pk)
@@ -308,68 +263,46 @@ class Transaction(SoftDeleteModel):
                 old_account = old_tx.account
             except Transaction.DoesNotExist:
                 is_new = True
-        
-        # 저장
         super().save(*args, **kwargs)
-        
-        # 계좌 잔액 업데이트
         try:
             if is_new:
-                # 신규 거래: 현재 계좌에 반영
                 self.account.update_balance(self.amount, self.tx_type)
             else:
-                # 수정: 변경사항이 있을 때만
                 if old_account != self.account or old_amount != self.amount or old_tx_type != self.tx_type:
-                    # 이전 계좌에서 취소
                     reverse_type = 'OUT' if old_tx_type == 'IN' else 'IN'
                     old_account.update_balance(old_amount, reverse_type)
-                    # 새 계좌에 반영
                     self.account.update_balance(self.amount, self.tx_type)
         except Exception as e:
             logger.error(f"잔액 업데이트 실패: {e}")
             raise
     
     def delete(self, *args, **kwargs):
-        """삭제 시 잔액 되돌리기"""
         try:
             reverse_type = 'OUT' if self.tx_type == 'IN' else 'IN'
             self.account.update_balance(self.amount, reverse_type)
         except Exception as e:
             logger.error(f"잔액 복구 실패: {e}")
             raise
-        
         super().delete(*args, **kwargs)
 
     @property
     def supply_value(self):
-        """합계에서 부가세를 뺀 공급가액을 반환"""
         if self.amount and self.vat_amount:
             return self.amount - self.vat_amount
         return self.amount or 0
     
     @property
     def has_attachment(self):
-        # 장고가 알려준 'attachment'라는 이름을 사용합니다.
-        # hasattr는 "너 이런 이름 가지고 있니?"라고 물어보는 안전한 방법입니다.
         return hasattr(self, 'attachment') and self.attachment is not None
 
 
 class Attachment(TimeStampedModel):
     """첨부파일 (영수증/세금계산서)"""
-    
-    ATTACHMENT_TYPE_CHOICES = [
-        ('receipt', '영수증'),
-        ('tax_invoice', '세금계산서'),
-        ('simple_receipt', '간이영수증'),
-    ]
-    
+    ATTACHMENT_TYPE_CHOICES = [('receipt', '영수증'), ('tax_invoice', '세금계산서'), ('simple_receipt', '간이영수증')]
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='attachments', db_index=True)
     transaction = models.OneToOneField(Transaction, on_delete=models.CASCADE, related_name='attachment')
     attachment_type = models.CharField(max_length=20, choices=ATTACHMENT_TYPE_CHOICES, default='receipt')
-    file = models.FileField(
-        upload_to='attachments/%Y/%m/',
-        validators=[FileExtensionValidator(allowed_extensions=['jpg', 'jpeg', 'png', 'pdf'])]
-    )
+    file = models.FileField(upload_to='attachments/%Y/%m/', validators=[FileExtensionValidator(allowed_extensions=['jpg', 'jpeg', 'png', 'pdf'])])
     original_name = models.CharField(max_length=255)
     size = models.IntegerField()
     content_type = models.CharField(max_length=100)
@@ -378,36 +311,20 @@ class Attachment(TimeStampedModel):
     class Meta:
         db_table = 'attachments'
         ordering = ['-uploaded_at']
-        indexes = [
-            models.Index(fields=['user', '-uploaded_at']),
-            models.Index(fields=['transaction']),
-        ]
-        constraints = [
-            models.CheckConstraint(
-                condition=models.Q(size__lte=ATTACHMENT_MAX_FILE_SIZE),
-                name='attachment_file_size_limit'
-            )
-        ]
+        indexes = [models.Index(fields=['user', '-uploaded_at']), models.Index(fields=['transaction'])]
+        constraints = [models.CheckConstraint(condition=models.Q(size__lte=ATTACHMENT_MAX_FILE_SIZE), name='attachment_file_size_limit')]
 
-    def __str__(self):
-        return f"{self.get_attachment_type_display()} - {self.original_name}"
+    def __str__(self): return f"{self.get_attachment_type_display()} - {self.original_name}"
     
     def clean(self):
-        """파일 크기 검증"""
         if self.file and hasattr(self.file, 'size') and self.file.size > ATTACHMENT_MAX_FILE_SIZE:
             raise ValidationError({'file': f'파일 크기는 {ATTACHMENT_MAX_FILE_SIZE // (1024*1024)}MB를 초과할 수 없습니다'})
 
-
 @receiver(post_delete, sender=Attachment)
 def delete_file_on_attachment_delete(sender, instance, **kwargs):
-    """첨부파일 삭제 시 물리적 파일도 삭제"""
-    if not instance.file:
-        return
-    
+    if not instance.file: return
     try:
         if os.path.isfile(instance.file.path):
             os.remove(instance.file.path)
-            logger.info(f"파일 삭제: {instance.file.path}")
     except Exception as e:
-        logger.warning(f"파일 삭제 실패 ({instance.file.name}): {e}")
-
+        logger.warning(f"파일 삭제 실패: {e}")

@@ -1,50 +1,95 @@
 {% extends 'base.html' %}
 
-{% block title %}카테고리 추가{% endblock %}
+{% block title %}{{ title }} - 스마트 사업자 가계부{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-<<<<<<< HEAD
-    <h2>{{ title }}</h2>
-<div class="container mt-4">
-    <h2>{{ title }}</h2>
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            
+            <div class="text-center mb-4">
+                <h3 class="fw-bold text-dark">{{ title }}</h3>
+                <p class="text-muted small">사업장 특성에 맞는 이름을 붙여주세요.</p>
+            </div>
 
-    <div class="card mt-4">
-        <div class="card-body">
-            <form method="post">
-                {% csrf_token %}
-                
-                <div class="mb-3">
-                    <label class="form-label">카테고리명 *</label>
-                    {{ form.name }}
-                    {% if form.name.errors %}
-                        <div class="text-danger">{{ form.name.errors }}</div>
-                    {% endif %}
-                </div>
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-4 p-md-5">
+                    <form method="post" id="categoryForm">
+                        {% csrf_token %}
+                        
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">카테고리 이름 *</label>
+                            {{ form.name }}
+                            <div class="form-text mt-1 text-muted">예: 가게 월세, 직원 점심식사, 포장 용기 구매</div>
+                            {% if form.name.errors %}
+                                <div class="text-danger small mt-1">{{ form.name.errors.0 }}</div>
+                            {% endif %}
+                        </div>
 
-                <div class="mb-3">
-                    <label class="form-label">유형 *</label>
-                    {{ form.type }}
-                    {% if form.type.errors %}
-                        <div class="text-danger">{{ form.type.errors }}</div>
-                    {% endif %}
-                </div>
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">거래 유형 *</label>
+                            {{ form.type }}
+                            {% if form.type.errors %}
+                                <div class="text-danger small mt-1">{{ form.type.errors.0 }}</div>
+                            {% endif %}
+                        </div>
 
-                <div class="mb-3">
-                    <label class="form-label">지출 세부 유형 (선택사항)</label>
-                    {{ form.expense_type }}
-                    <small class="form-text text-muted">지출 카테고리인 경우 선택</small>
-                    {% if form.expense_type.errors %}
-                        <div class="text-danger">{{ form.expense_type.errors }}</div>
-                    {% endif %}
-                </div>
+                        <div id="expense_type_wrapper" class="mb-4 p-3 bg-light rounded-3 border" style="display: none;">
+                            <label class="form-label fw-bold text-primary">세무 분류 (지출 전용)</label>
+                            {{ form.expense_type }}
+                            <div class="form-text mt-1">세무 신고 시 분류될 정식 명칭입니다.</div>
+                            {% if form.expense_type.errors %}
+                                <div class="text-danger small mt-1">{{ form.expense_type.errors.0 }}</div>
+                            {% endif %}
+                        </div>
 
-                <div class="d-flex gap-2">
-                    <button type="submit" class="btn btn-primary">저장</button>
-                    <a href="{% url 'transactions:category_list' %}" class="btn btn-secondary">취소</a>
+                        <div class="d-grid gap-2 mt-5">
+                            <button type="submit" class="btn btn-primary py-3 fw-bold rounded-3 shadow-sm">
+                                <i class="bi bi-check-lg me-1"></i> 카테고리 저장하기
+                            </button>
+                            <a href="{% url 'transactions:category_list' %}" class="btn btn-link text-muted fw-bold">
+                                취소하고 돌아가기
+                            </a>
+                        </div>
+                    </form>
                 </div>
-            </form>
+            </div>
+
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // 1. 기본 스타일 적용
+        const formInputs = document.querySelectorAll('input, select, textarea');
+        formInputs.forEach(input => {
+            input.classList.add('form-control', 'py-2');
+        });
+
+        // 2. 수입/지출 선택에 따른 세부 유형 칸 보여주기/숨기기
+        const typeSelect = document.querySelector('[name="type"]');
+        const expenseWrapper = document.getElementById('expense_type_wrapper');
+
+        function toggleExpenseType() {
+            if (typeSelect.value === 'expense') {
+                expenseWrapper.style.display = 'block';
+            } else {
+                expenseWrapper.style.display = 'none';
+            }
+        }
+
+        typeSelect.addEventListener('change', toggleExpenseType);
+        toggleExpenseType(); // 초기 실행
+    });
+</script>
+
+<style>
+    body { background-color: #f8f9fa; }
+    .card { transition: all 0.3s ease; }
+    .form-control:focus { 
+        border-color: #0d6efd; 
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.1); 
+    }
+</style>
 {% endblock %}

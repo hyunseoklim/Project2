@@ -1,47 +1,121 @@
 {% extends "base.html" %}
+{% load static %}
+{% load humanize %}
 
-{% block title %}{{ business.name }} - 스마트 사업자 가계부{% endblock %}
+{% block title %}{{ business.name }} - 상세 정보{% endblock %}
 
 {% block content %}
-<div class="content-wrapper">
-    <section class="welcome-section">
-        <div class="welcome-header">
-            <span class="welcome-icon">🏢</span>
-            <h2 class="page-title">{{ business.name }}</h2>
-        </div>
+<div class="container py-5">
+    <div class="d-flex align-items-center mb-4">
+        <a href="{% url 'businesses:business_list' %}" class="btn btn-outline-secondary btn-sm me-3 shadow-sm px-3">
+            <span class="me-1">←</span> 목록
+        </a>
+        <h3 class="mb-0 fw-bold text-dark">{{ business.name }}</h3>
+    </div>
 
-        <div class="welcome-message">
-            <div class="dashboard-container">
-                <div class="summary-grid" style="grid-template-columns: 1fr;">
-                    <div class="summary-item">
-                        <span class="summary-label">위치</span>
-                        <span class="summary-value">{{ business.location|default:"미등록" }}</span>
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm mb-4" style="border-radius: 15px;">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
+                    <h5 class="fw-bold mb-0 text-dark">기본 정보</h5>
+                    <span class="badge {% if business.branch_type == 'main' %}bg-success-subtle text-success{% else %}bg-info-subtle text-info{% endif %} rounded-pill px-3">
+                        {{ business.get_branch_type_display }}
+                    </span>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row py-2 border-bottom border-light-subtle">
+                        <div class="col-sm-4 text-muted">사업장명</div>
+                        <div class="col-sm-8 fw-bold">{{ business.name }}</div>
                     </div>
-                    <div class="summary-item">
-                        <span class="summary-label">업종</span>
-                        <span class="summary-value">{{ business.business_type|default:"미등록" }}</span>
+                    <div class="row py-2 border-bottom border-light-subtle">
+                        <div class="col-sm-4 text-muted">사업자 등록번호</div>
+                        <div class="col-sm-8">{{ business.registration_number|default:"미등록" }}</div>
                     </div>
-                    <div class="summary-item">
-                        <span class="summary-label">사업자 등록번호</span>
-                        <span class="summary-value">{{ business.registration_number|default:"미등록" }}</span>
+                    <div class="row py-2 border-bottom border-light-subtle">
+                        <div class="col-sm-4 text-muted">업종</div>
+                        <div class="col-sm-8">{{ business.business_type|default:"-" }}</div>
                     </div>
-                    <div class="summary-item">
-                        <span class="summary-label">본점/지점</span>
-                        <span class="summary-value" style="color: {% if business.branch_type == 'main' %}#27ae60{% else %}#3498db{% endif %};">
-                            {{ business.get_branch_type_display }}
-                        </span>
+                    <div class="row py-2 border-bottom border-light-subtle">
+                        <div class="col-sm-4 text-muted">사업장 위치</div>
+                        <div class="col-sm-8">{{ business.location|default:"등록된 주소가 없습니다." }}</div>
                     </div>
+                    <div class="row py-2">
+                        <div class="col-sm-4 text-muted">등록일</div>
+                        <div class="col-sm-8">{{ business.created_at|date:"Y-m-d" }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm" style="border-radius: 15px;">
+                <div class="card-header bg-white py-3 border-bottom">
+                    <h5 class="fw-bold mb-0 text-dark">사업장 메모 / 설명</h5>
+                </div>
+                <div class="card-body p-4" style="min-height: 120px;">
+                    <p class="text-secondary mb-0">
+                        {{ business.description|default:"추가된 설명이 없습니다."|linebreaks }}
+                    </p>
                 </div>
             </div>
         </div>
 
-        <div class="cta-section" style="border: none; background: none;">
-            <div class="button-group">
-                <a href="{% url 'businesses:business_update' business.pk %}" class="btn btn-primary">✏️ 수정</a>
-                <a href="{% url 'businesses:business_delete' business.pk %}" class="btn btn-secondary">🗑️ 삭제</a>
-                <a href="{% url 'businesses:business_list' %}" class="btn btn-secondary">목록으로</a>
+        <div class="col-lg-4">
+            <div class="d-flex flex-column h-100">
+                
+                <div class="card border-0 shadow-sm text-center p-4 mb-3" style="border-radius: 15px;">
+                    <div class="mb-3">
+                        <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                            <span class="fs-1">🏢</span>
+                        </div>
+                    </div>
+                    <h5 class="fw-bold">사업장 관리</h5>
+                    <p class="small text-muted mb-4">정보를 수정하거나 사업장을<br>목록에서 삭제할 수 있습니다.</p>
+                    
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'businesses:business_update' business.pk %}" class="btn btn-warning fw-bold py-2 shadow-sm">
+                            정보 수정하기
+                        </a>
+                        <button type="button" class="btn btn-outline-danger btn-sm border-0 mt-2" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                            사업장 삭제
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm" style="background-color: #f8faff; border: 1px solid #eef2ff; border-radius: 15px;">
+                    <div class="card-body p-4 text-center">
+                        <h6 class="text-muted small fw-bold mb-2 text-uppercase" style="letter-spacing: 0.5px;">누적 거래 건수</h6>
+                        <div class="d-flex align-items-baseline justify-content-center">
+                            <h2 class="mb-0 fw-bold text-primary">{{ business.transactions.count|intcomma }}</h2>
+                            <span class="ms-2 text-muted fw-bold">건</span>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
-    </section>
+    </div>
+</div>
+
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header border-bottom-0 pt-4 px-4">
+                <h5 class="modal-title fw-bold">사업장 삭제 확인</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body px-4 pb-4">
+                <p class="mb-0 text-secondary">
+                    <strong class="text-dark">{{ business.name }}</strong>을(를) 삭제하시겠습니까?<br>
+                    연결된 모든 데이터가 삭제되며, 복구할 수 없습니다.
+                </p>
+            </div>
+            <div class="modal-footer border-top-0 px-4 pb-4">
+                <button type="button" class="btn btn-light fw-bold px-4" data-bs-modal="modal">취소</button>
+                <form action="{% url 'businesses:business_delete' business.pk %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger fw-bold px-4">삭제 확정</button>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}

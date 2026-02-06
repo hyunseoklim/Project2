@@ -1,49 +1,105 @@
 {% extends "base.html" %}
+{% load static %}
 
-{% block title %}{% if business %}사업장 수정{% else %}사업장 추가{% endif %} - 스마트 사업자 가계부{% endblock %}
+{% block title %}{% if form.instance.pk %}사업장 정보 수정{% else %}새 사업장 등록{% endif %} - 스마트 사업자 가계부{% endblock %}
 
 {% block content %}
-<div class="content-wrapper">
-    <section class="welcome-section">
-        <div class="welcome-header">
-            <span class="welcome-icon">🏢</span>
-            <h2 class="page-title">{% if business %}사업장 수정{% else %}사업장 추가{% endif %}</h2>
-            <p class="description">사업장 정보를 입력해주세요.</p>
-        </div>
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            
+            <div class="d-flex align-items-center mb-4 pb-2 border-bottom">
+                <a href="{% url 'businesses:business_list' %}" class="btn btn-outline-secondary btn-sm me-3 d-flex align-items-center">
+                    <span class="me-1">←</span> 목록
+                </a>
+                <h3 class="mb-0 fw-bold text-dark">
+                    {% if form.instance.pk %}🏢 사업장 정보 수정{% else %}🏢 새 사업장 등록{% endif %}
+                </h3>
+            </div>
 
-        <div class="welcome-message">
-            <form method="post">
-                {% csrf_token %}
-                {% for field in form %}
-                    <div style="margin-bottom: var(--spacing-md);">
-                        <label class="section-title" style="font-size: 1rem; margin-bottom: 0.5rem;">
-                            {{ field.label }} {% if field.field.required %}*{% endif %}
-                        </label>
-                        
-                        {# forms.py에서 설정한 widget이 여기서 렌더링됩니다 #}
-                        {{ field }}
-                        
-                        {% if field.help_text %}
-                            <small style="color: #666;">{{ field.help_text }}</small>
-                        {% endif %}
-                        
-                        {% if field.errors %}
-                            <div style="color: var(--danger-color); font-size: 0.8rem;">
-                                {{ field.errors }}
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4 p-md-5">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+
+                        <div class="row g-4">
+                            <div class="col-12">
+                                <label class="form-label fw-bold">사업장명 *</label>
+                                {{ form.name }}
+                                {% if form.name.errors %}<div class="text-danger small mt-1">{{ form.name.errors }}</div>{% endif %}
                             </div>
-                        {% endif %}
-                    </div>
-                {% endfor %}
-                <div class="cta-section" style="border: none; background: none; padding-top: var(--spacing-lg);">
-                    <div class="button-group">
-                        <button type="submit" class="btn btn-primary">
-                            {% if form.instance.pk %}수정 저장{% else %}생성{% endif %}
-                        </button>
-                        <a href="{% url 'businesses:business_list' %}" class="btn btn-secondary">취소</a>
-                    </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">사업자 등록번호</label>
+                                {{ form.registration_number }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">구분 (본점/지점) *</label>
+                                {{ form.branch_type }}
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label fw-bold">업종</label>
+                                {{ form.business_type }}
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label fw-bold">사업장 위치</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><i class="bi bi-geo-alt"></i></span>
+                                    {{ form.location }}
+                                </div>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label fw-bold">사업장 설명 (메모)</label>
+                                {% if form.description %}
+                                    {# 장고 폼에 필드가 있다면 그대로 출력 #}
+                                    {{ form.description }}
+                                {% else %}
+                                    {# 필드가 안 나타날 경우를 대비한 수동 textarea 생성 #}
+                                    <textarea name="description" class="form-control" rows="5" placeholder="사업장에 대한 추가 메모를 입력하세요.">{{ form.instance.description }}</textarea>
+                                {% endif %}
+                                {% if form.description.errors %}<div class="text-danger small mt-1">{{ form.description.errors }}</div>{% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mt-5">
+                            <div class="col-6">
+                                <a href="javascript:history.back()" class="btn btn-light w-100 py-2 fw-bold text-muted border">취소</a>
+                            </div>
+                            <div class="col-6">
+                                <button type="submit" class="btn btn-primary w-100 py-2 fw-bold shadow-sm">
+                                    {% if form.instance.pk %}수정 완료{% else %}등록 완료{% endif %}
+                                </button>
+                            </div>
+                        </div>
+                    </form>
                 </div>
-            </form>
+            </div>
         </div>
-    </section>
+    </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // 모든 input, select, textarea에 부트스트랩 클래스 적용
+        const formInputs = document.querySelectorAll('input:not([type="hidden"]), select, textarea');
+        formInputs.forEach(input => {
+            input.classList.add('form-control');
+        });
+    });
+</script>
+
+<style>
+    .form-control:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.1);
+    }
+    /* 메모 입력칸 강제 스타일링 */
+    textarea.form-control {
+        min-height: 150px !important;
+        display: block !important; /* 가끔 숨겨지는 현상 방지 */
+    }
+</style>
 {% endblock %}

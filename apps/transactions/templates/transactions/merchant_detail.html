@@ -1,62 +1,95 @@
 {% extends 'base.html' %}
+{% load humanize %}
 
-{% block title %}{{ merchant.name }} - 거래처 상세{% endblock %}
+{% block title %}{{ merchant.name }} - 상세 정보{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>{{ merchant.name }}</h2>
-        <div>
-            <a href="{% url 'transactions:merchant_update' merchant.pk %}" class="btn btn-primary">수정</a>
-            <a href="{% url 'transactions:merchant_delete' merchant.pk %}" class="btn btn-danger">삭제</a>
-            <a href="{% url 'transactions:merchant_list' %}" class="btn btn-secondary">목록</a>
-        </div>
+<div class="container py-5">
+    <div class="d-flex align-items-center mb-4">
+        <a href="{% url 'transactions:merchant_list' %}" class="btn btn-outline-secondary btn-sm me-3 shadow-sm px-3">
+            <span class="me-1">←</span> 목록
+        </a>
+        <h3 class="mb-0 fw-bold text-dark">{{ merchant.name }}</h3>
     </div>
 
-    <div class="card mb-4">
-        <div class="card-header">
-            <h5>기본 정보</h5>
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
+                    <h5 class="fw-bold mb-0 text-dark">기본 정보</h5>
+                    <span class="badge bg-info-subtle text-info rounded-pill px-3">거래처</span>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row py-2 border-bottom border-light-subtle">
+                        <div class="col-sm-4 text-muted">거래처명</div>
+                        <div class="col-sm-8 fw-bold">{{ merchant.name }}</div>
+                    </div>
+                    <div class="row py-2 border-bottom border-light-subtle">
+                        <div class="col-sm-4 text-muted">사업자 등록번호</div>
+                        <div class="col-sm-8">{{ merchant.get_masked_business_number|default:"미등록" }}</div>
+                    </div>
+                    <div class="row py-2 border-bottom border-light-subtle">
+                        <div class="col-sm-4 text-muted">업종 / 카테고리</div>
+                        <div class="col-sm-8">{{ merchant.category.name|default:"-" }}</div>
+                    </div>
+                    <div class="row py-2 border-bottom border-light-subtle">
+                        <div class="col-sm-4 text-muted">연락처</div>
+                        <div class="col-sm-8">{{ merchant.contact|default:"-" }}</div>
+                    </div>
+                    <div class="row py-2">
+                        <div class="col-sm-4 text-muted">등록일</div>
+                        <div class="col-sm-8">{{ merchant.created_at|date:"Y-m-d" }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3 border-bottom">
+                    <h5 class="fw-bold mb-0 text-dark">거래처 메모 / 설명</h5>
+                </div>
+                <div class="card-body p-4" style="min-height: 120px;">
+                    <p class="text-secondary mb-0">
+                        {{ merchant.memo|default:"추가된 설명이 없습니다."|linebreaks }}
+                    </p>
+                </div>
+            </div>
         </div>
-        <div class="card-body">
-            <dl class="row">
-                <dt class="col-sm-3">거래처명</dt>
-                <dd class="col-sm-9">{{ merchant.name }}</dd>
 
-                <dt class="col-sm-3">사업자번호</dt>
-                <dd class="col-sm-9">{{ merchant.get_masked_business_number }}</dd>
+        <div class="col-lg-4">
+            <div class="d-flex flex-column h-100">
+                <div class="card border-0 shadow-sm text-center p-4 mb-3">
+                    <div class="mb-3">
+                        <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                            <span class="fs-1">🤝</span>
+                        </div>
+                    </div>
+                    <h5 class="fw-bold">거래처 관리</h5>
+                    <p class="small text-muted mb-4">정보를 수정하거나 거래처를<br>목록에서 삭제할 수 있습니다.</p>
+                    
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'transactions:merchant_update' merchant.pk %}" class="btn btn-warning fw-bold py-2 shadow-sm">
+                            정보 수정하기
+                        </a>
+                        <form action="{% url 'transactions:merchant_delete' merchant.pk %}" method="post" onsubmit="return confirm('정말 삭제하시겠습니까?');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-outline-danger btn-sm border-0 mt-2">
+                                거래처 삭제
+                            </button>
+                        </form>
+                    </div>
+                </div>
 
-                <dt class="col-sm-3">연락처</dt>
-                <dd class="col-sm-9">{{ merchant.contact|default:"-" }}</dd>
-
-                <dt class="col-sm-3">카테고리</dt>
-                <dd class="col-sm-9">
-                    {% if merchant.category %}
-                        {{ merchant.category.name }}
-                    {% else %}
-                        -
-                    {% endif %}
-                </dd>
-
-                <dt class="col-sm-3">메모</dt>
-                <dd class="col-sm-9">{{ merchant.memo|default:"-"|linebreaks }}</dd>
-
-                <dt class="col-sm-3">등록일</dt>
-                <dd class="col-sm-9">{{ merchant.created_at|date:"Y년 m월 d일 H:i" }}</dd>
-            </dl>
+                <div class="card border-0 shadow-sm mb-3" style="background-color: #f8faff; border: 1px solid #eef2ff;">
+                    <div class="card-body p-4 text-center">
+                        <h6 class="text-muted small fw-bold mb-2 text-uppercase" style="letter-spacing: 0.5px;">누적 거래 건수</h6>
+                        <div class="d-flex align-items-baseline justify-content-center">
+                            <h2 class="mb-0 fw-bold text-primary">{{ stats.total_count|default:0|intcomma }}</h2>
+                            <span class="ms-2 text-muted fw-bold">건</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-
-    {% if stats %}
-    <div class="card">
-        <div class="card-header">
-            <h5>거래 통계</h5>
-        </div>
-        <div class="card-body">
-            <p>총 거래 횟수: <strong>{{ stats.total_count }}건</strong></p>
-            <p>총 거래 금액: <strong>{{ stats.total_amount|default:0|floatformat:0 }}원</strong></p>
-            <p>총 부가세: <strong>{{ stats.total_vat|default:0|floatformat:0 }}원</strong></p>
-        </div>
-    </div>
-    {% endif %}
 </div>
 {% endblock %}
