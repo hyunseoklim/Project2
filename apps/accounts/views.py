@@ -102,21 +102,21 @@ def dashboard(request):
     year = now.year
     month = now.month
 
-    # 2. 필터링 (필드명 수정됨: occurred_at)
+    # 2. 이번 달 거래 필터링
     monthly_qs = Transaction.objects.filter(
         user=request.user,
         occurred_at__year=year,
         occurred_at__month=month
     )
 
-    # 3. 합계 계산 (필드명 수정됨: tx_type)
-    # 주의: DB에 저장된 값이 'INCOME'/'EXPENSE'가 맞는지 확인 필요 (일단 기존 코드 따름)
-    total_income = monthly_qs.filter(tx_type='INCOME').aggregate(Sum('amount'))['amount__sum'] or 0
-    total_expense = monthly_qs.filter(tx_type='EXPENSE').aggregate(Sum('amount'))['amount__sum'] or 0
+    # 3. 합계 계산 (대소문자 이슈 방지를 위해 __iexact 사용)
+    # DB의 tx_type이 'income', 'INCOME' 무엇이든 상관없이 가져옵니다.
+    total_income = monthly_qs.filter(tx_type__iexact='IN').aggregate(Sum('amount'))['amount__sum'] or 0
+    total_expense = monthly_qs.filter(tx_type__iexact='OUT').aggregate(Sum('amount'))['amount__sum'] or 0
     
     net_profit = total_income - total_expense
 
-    # 4. 최근 거래 (필드명 수정됨: occurred_at)
+    # 4. 최근 거래 (상위 5개)
     recent_transactions = Transaction.objects.filter(user=request.user).order_by('-occurred_at', '-id')[:5]
 
     context = {

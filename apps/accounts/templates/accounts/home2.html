@@ -6,43 +6,33 @@
 {% block content %}
 <div class="container mt-3">
 
-{% comment %}
-    <div class="mb-4">
-        <h3 class="fw-bold d-flex align-items-center">
-            <span class="me-2">📊</span> 
-            <span class="vertical-bar bg-warning me-3"></span>
-            대시보드
-        </h3>
-    </div>
-{% endcomment %}
-
     <div class="card border-warning border-2 shadow-sm rounded-4 mb-5 bg-custom-light">
         <div class="card-body p-5">
-            <h5 class="fw-bold mb-4">{{ year }}년 {{ month }}월 요약</h5>
+            <h5 class="fw-bold mb-4">📊 {{ year }}년 {{ month }}월 요약</h5>
             
             <div class="row g-0 text-center">
                 <div class="col-md-4 border-end"> <div class="py-3">
                         <p class="text-secondary fw-bold mb-1">총 수입</p>
-                        <h2 class="fw-bold text-success mb-0">{{ total_income|intcomma }}원</h2>
+                        <h2 class="fw-bold text-success mb-0">{{ total_income|floatformat:0|intcomma }}원</h2>
                     </div>
                 </div>
                 <div class="col-md-4 border-end">
                     <div class="py-3">
                         <p class="text-secondary fw-bold mb-1">총 지출</p>
-                        <h2 class="fw-bold text-danger mb-0">{{ total_expense|intcomma }}원</h2>
+                        <h2 class="fw-bold text-danger mb-0">{{ total_expense|floatformat:0|intcomma }}원</h2>
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="py-3">
                         <p class="text-secondary fw-bold mb-1">순합</p> <h2 class="fw-bold text-primary mb-0">
-                            {% if net_profit > 0 %}+{% endif %}{{ net_profit|intcomma }}원
+                            {% if net_profit > 0 %}+{% endif %}{{ net_profit|floatformat:0|intcomma }}원
                         </h2>
                     </div>
                 </div>
             </div>
             
             <div class="mt-4">
-                <a href="#" class="text-decoration-none fw-bold small">월별 상세 보기 →</a>
+                <a href="#" class="text-decoration-none fw-bold small">월별 상세 보기: 월별 요약 페이지 만들어지면 연결 예정 →</a>
             </div>
         </div>
     </div>
@@ -72,19 +62,30 @@
                     <tbody>
                         {% if recent_transactions %}
                             {% for transaction in recent_transactions %}
-                            <tr>
+                            <tr onclick="location.href='{% url 'transactions:transaction_detail' transaction.id %}'" 
+                                style="cursor: pointer;" 
+                                class="hover-row">
+            
                                 <td class="ps-4 fw-bold text-secondary">{{ transaction.occurred_at|date:"Y-m-d" }}</td>
                                 <td>
-                                    {% if transaction.tx_type == 'INCOME' %}
+                                    {% if transaction.tx_type|upper == 'IN' %}
                                         <span class="badge rounded-pill bg-success-subtle text-success px-3">수입</span>
                                     {% else %}
                                         <span class="badge rounded-pill bg-danger-subtle text-danger px-3">지출</span>
                                     {% endif %}
                                 </td>
-                                <td class="text-secondary">{{ transaction.merchant_name }}</td>
+                                <td class="text-secondary">
+                                    {% if transaction.merchant %}
+                                        {{ transaction.merchant.name }}
+                                    {% elif transaction.merchant_name %}
+                                        {{ transaction.merchant_name }}
+                                    {% else %}
+                                        <span class="text-muted">미지정</span>
+                                    {% endif %}
+                                </td>
                                 <td class="text-secondary">{{ transaction.category.name }}</td>
-                                <td class="fw-bold {% if transaction.tx_type == 'INCOME' %}text-success{% else %}text-danger{% endif %}">
-                                    {{ transaction.amount|intcomma }}원
+                                <td class="fw-bold {% if transaction.tx_type|upper == 'IN' %}text-success{% else %}text-danger{% endif %}">
+                                    {{ transaction.amount|floatformat:0|intcomma }}원
                                 </td>
                                 <td class="pe-4 text-secondary">{{ transaction.account.account_name }}</td>
                             </tr>
@@ -92,7 +93,7 @@
                         {% else %}
                             <tr>
                                 <td colspan="6" class="text-center py-5 text-muted">
-                                    거래 내역이 없습니다.
+                거래 내역이 없습니다.
                                 </td>
                             </tr>
                         {% endif %}
