@@ -22,9 +22,9 @@
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label">사업자번호</label>
+                    <label class="form-label">사업자등록번호</label>
                     {{ form.business_number }}
-                    <small class="form-text text-muted">형식: 123-456-7890</small>
+                    <small class="form-text text-muted">형식: 123-45-67890</small>
                     {% if form.business_number.errors %}
                         <div class="text-danger">{{ form.business_number.errors }}</div>
                     {% endif %}
@@ -41,6 +41,7 @@
                 <div class="mb-3">
                     <label class="form-label">카테고리</label>
                     {{ form.category }}
+                    <small class="form-text text-muted">미지정(기타)을 선택할 수 있습니다.</small>
                     {% if form.category.errors %}
                         <div class="text-danger">{{ form.category.errors }}</div>
                     {% endif %}

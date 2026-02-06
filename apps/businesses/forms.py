@@ -50,9 +50,20 @@ class AccountForm(forms.ModelForm):
         # 사업장 선택지: 본인의 활성 사업장만
         if self.user:
             self.fields['business'].queryset = Business.active.filter(user=self.user)
+        self.fields['business'].empty_label = '개인용이면 선택 안 함'
         
         # 사업장 선택 필수 아님
         self.fields['business'].required = False
+
+        # 유효성 검사 실패 시 필드 강조 표시
+        if self.is_bound and self.errors:
+            for field_name in self.errors:
+                field = self.fields.get(field_name)
+                if not field:
+                    continue
+                existing = field.widget.attrs.get('class', '')
+                if 'is-invalid' not in existing:
+                    field.widget.attrs['class'] = f"{existing} is-invalid".strip()
     
     def clean_account_number(self):
         """계좌번호 형식 및 중복 검증"""
@@ -187,6 +198,16 @@ class BusinessForm(forms.ModelForm):
         self.fields['location'].required = False
         self.fields['business_type'].required = False
         self.fields['registration_number'].required = False
+
+        # 유효성 검사 실패 시 필드 강조 표시
+        if self.is_bound and self.errors:
+            for field_name in self.errors:
+                field = self.fields.get(field_name)
+                if not field:
+                    continue
+                existing = field.widget.attrs.get('class', '')
+                if 'is-invalid' not in existing:
+                    field.widget.attrs['class'] = f"{existing} is-invalid".strip()
     
     def clean_name(self):
         """사업장명 중복 검증"""
@@ -215,7 +236,7 @@ class BusinessForm(forms.ModelForm):
         if not reg_num:
             return reg_num
         
-        # 하이픈 제거 후 검증
+        # 하이픈/공백 제거 후 검증
         cleaned = reg_num.replace('-', '').replace(' ', '')
         
         # 숫자만 있는지 확인
@@ -226,7 +247,8 @@ class BusinessForm(forms.ModelForm):
         if len(cleaned) != 10:
             raise ValidationError('사업자등록번호는 10자리여야 합니다.')
         
-        return reg_num
+        # 3-2-5 형식으로 정규화해 저장
+        return f"{cleaned[:3]}-{cleaned[3:5]}-{cleaned[5:]}"
 
 
 class BusinessSearchForm(forms.Form):

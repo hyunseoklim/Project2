@@ -39,7 +39,7 @@ def category_list(request):
     from itertools import chain
     all_categories = sorted(
         chain(system_categories, user_categories),
-        key=lambda x: (x.type, x.order, x.name)
+        key=lambda x: (x.type, x.name)
     )
     
     return render(request, 'transactions/category_list.html', {
@@ -66,7 +66,7 @@ def category_create(request):
             messages.success(request, f"'{category.name}' 카테고리가 생성되었습니다.")
             return redirect('transactions:category_list')
     else:
-        form = CategoryForm(initial={'order': 99})
+        form = CategoryForm()
     
     return render(request, 'transactions/category_form.html', {
         'form': form,
