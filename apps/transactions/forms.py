@@ -1,7 +1,7 @@
 from django import forms
 from django.core.exceptions import ValidationError
+from django.db.models import Q
 from decimal import Decimal
-from django.db import models
 from .models import Transaction, Merchant, Category
 from apps.businesses.models import Account, Business
 import re
@@ -54,8 +54,10 @@ class TransactionForm(forms.ModelForm):
             self.fields['business'].queryset = Business.objects.filter(user=self.user, is_active=True)
             self.fields['account'].queryset = Account.objects.filter(user=self.user, is_active=True)
             self.fields['merchant'].queryset = Merchant.objects.filter(user=self.user, is_active=True)
-             # 카테고리 필터링: 시스템 카테고리 + 사용자가 만든 카테고리
-            self.fields['category'].queryset = Category.objects.filter(models.Q(is_system=True) | models.Q(user=self.user)).order_by('type', 'order', 'name')
+            # 카테고리 필터링: 시스템 카테고리 + 사용자가 만든 카테고리
+            self.fields['category'].queryset = Category.objects.filter(
+                Q(is_system=True) | Q(user=self.user)
+            ).order_by('type', 'name')
 
 
         # 필드 선택사항 설정
@@ -92,11 +94,27 @@ class MerchantForm(forms.ModelForm):
         model = Merchant
         fields = ['name', 'business_number', 'contact', 'category', 'memo']
         widgets = {
-            'business_number': forms.TextInput(attrs={
-                'placeholder': '123-45-67890',
-                'maxlength': '12'
+            'name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': '거래처명 (예: 네이버)',
             }),
-            'memo': forms.Textarea(attrs={'rows': 3}),
+            'business_number': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': '123-45-67890',
+                'maxlength': '12',
+            }),
+            'contact': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': '연락처 (예: 010-1234-5678)',
+            }),
+            'category': forms.Select(attrs={
+                'class': 'form-select',
+            }),
+            'memo': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': '메모 (선택)',
+            }),
         }
         labels = {
             'name': '거래처명',
@@ -109,7 +127,12 @@ class MerchantForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
-        
+
+        if self.user:
+            self.fields['category'].queryset = Category.objects.filter(
+                Q(is_system=True) | Q(user=self.user)
+            ).order_by('type', 'name')
+        self.fields['category'].empty_label = '미지정(기타)'
 
         # 필드 선택사항 설정
         self.fields['business_number'].required = False
@@ -117,73 +140,68 @@ class MerchantForm(forms.ModelForm):
         self.fields['category'].required = False
         self.fields['memo'].required = False
 
+        # 유효성 검사 실패 시 필드 강조 표시
+        if self.is_bound and self.errors:
+            for field_name in self.errors:
+                field = self.fields.get(field_name)
+                if not field:
+                    continue
+                existing = field.widget.attrs.get('class', '')
+                if 'is-invalid' not in existing:
+                    field.widget.attrs['class'] = f"{existing} is-invalid".strip()
+
+    def clean_business_number(self):
+        """사업자등록번호 형식 검증 및 정규화"""
+        reg_num = self.cleaned_data.get('business_number')
+
+        if not reg_num:
+            return reg_num
+
+        cleaned = reg_num.replace('-', '').replace(' ', '')
+
+        if not cleaned.isdigit():
+            raise ValidationError('사업자등록번호는 숫자와 하이픈(-)만 입력 가능합니다.')
+
+        if len(cleaned) != 10:
+            raise ValidationError('사업자등록번호는 10자리여야 합니다.')
+
+        return f"{cleaned[:3]}-{cleaned[3:5]}-{cleaned[5:]}"
 class CategoryForm(forms.ModelForm):
-    # 수입 직접 입력 필드
-    custom_income_type = forms.CharField(
-        max_length=50,
-        required=False,
-        label='직접 입력',
-        widget=forms.TextInput(attrs={
-            'class': 'form-control',
-            'placeholder': '또는 직접 입력하세요'
-        })
-    )
-    
-    # 지출 직접 입력 필드
-    custom_expense_type = forms.CharField(
-        max_length=50,
-        required=False,
-        label='직접 입력',
-        widget=forms.TextInput(attrs={
-            'class': 'form-control',
-            'placeholder': '또는 직접 입력하세요'
-        })
-    )
-    
     class Meta:
         model = Category
-        fields = ['name', 'type', 'income_type', 'expense_type', 'order']
+        fields = ['name', 'type', 'expense_type']
         widgets = {
-            'name': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': '카테고리 이름 입력'
-            }),
-            'type': forms.Select(attrs={
-                'class': 'form-select'
-            }),
-            'income_type': forms.Select(attrs={
-                'class': 'form-select'
-            }, choices=[('', '-- 선택하세요 --')] + list(Category.INCOME_TYPE_CHOICES)),
-            'expense_type': forms.Select(attrs={
-                'class': 'form-select'
-            }, choices=[('', '-- 선택하세요 --')] + list(Category.EXPENSE_TYPE_CHOICES)),
-            'order': forms.NumberInput(attrs={
-                'class': 'form-control',
-                'value': '99'
-            }),
+            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '카테고리명'}),
+            'type': forms.Select(attrs={'class': 'form-select'}),
+            'expense_type': forms.Select(attrs={'class': 'form-select'}),
         }
         labels = {
             'name': '카테고리명',
             'type': '유형',
-            'income_type': '수입 세부 유형',
-            'expense_type': '지출 세부 유형',
-            'order': '정렬 순서',
+            'expense_type': '지출 세부 유형 (지출만)',
         }
-    
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['income_type'].required = False
+        self.fields['type'].choices = [('', '수입 또는 지출 선택')] + list(self.fields['type'].choices)
+        self.fields['expense_type'].choices = [('', '없음')] + list(self.fields['expense_type'].choices)
         self.fields['expense_type'].required = False
-        self.fields['type'].empty_label = None
-    
+        # 지출이 아니면 expense_type 숨기기
+        if self.instance and self.instance.type != 'expense':
+            self.fields['expense_type'].required = False
+
     def clean(self):
         cleaned_data = super().clean()
-        tx_type = cleaned_data.get('type')
-        income_type = cleaned_data.get('income_type')
+        cat_type = cleaned_data.get('type')
         expense_type = cleaned_data.get('expense_type')
-        custom_income_type = cleaned_data.get('custom_income_type')
-        custom_expense_type = cleaned_data.get('custom_expense_type')
-        
+
+        # 지출 카테고리는 세부 유형 선택사항으로 (사용자 카테고리는 자유롭게)
+        if cat_type == 'expense':
+            pass
+        else:
+            cleaned_data['expense_type'] = None
+
+        return cleaned_data
         # 수입 카테고리인 경우
         if tx_type == 'income':
             # 선택과 직접입력 둘 다 없으면 에러
