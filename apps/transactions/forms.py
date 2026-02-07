@@ -2,7 +2,7 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.db.models import Q
 from decimal import Decimal
-from .models import Transaction, Merchant, Category
+from .models import Transaction, Merchant, Category, Attachment
 from apps.businesses.models import Account, Business
 import re
 
@@ -242,4 +242,27 @@ class ExcelUploadForm(forms.Form):
             # 확장자 검사
             if not file.name.endswith('.xlsx'):
                 raise ValidationError("에러: .xlsx 확장자 파일만 올릴 수 있습니다.")
+        return file
+    
+class AttachmentForm(forms.ModelForm):
+    """영수증 첨부 파일 업로드 폼"""
+    
+    class Meta:
+        model = Attachment
+        fields = ['attachment_type', 'file']
+        widgets = {
+            'attachment_type': forms.Select(attrs={'class': 'form-control'}),
+            'file': forms.FileInput(attrs={'class': 'form-control', 'accept': '.jpg,.jpeg,.png,.pdf'}),
+        }
+        labels = {
+            'attachment_type': '영수증 유형',
+            'file': '파일 선택',
+        }
+    
+    def clean_file(self):
+        """파일 크기 검증"""
+        file = self.cleaned_data.get('file')
+        if file:
+            if file.size > 5 * 1024 * 1024:  # 5MB
+                raise forms.ValidationError('파일 크기는 5MB를 초과할 수 없습니다.')
         return file

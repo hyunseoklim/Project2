@@ -97,6 +97,45 @@
                             </tr>
                         </tbody>
                     </table>
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h5 class="mb-0">📎 첨부파일</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if transaction.has_attachment %}
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <p class="mb-1"><strong>{{ transaction.attachment.original_name }}</strong></p>
+                                        <small class="text-muted">
+                                            {{ transaction.attachment.get_attachment_type_display }} · 
+                                            {{ transaction.attachment.size|filesizeformat }} · 
+                                            {{ transaction.attachment.uploaded_at|date:"Y-m-d H:i" }}
+                                        </small>
+                                    </div>
+                                    <div>
+                                        <a href="{% url 'transactions:attachment_download' transaction.attachment.pk %}" 
+                                        class="btn btn-primary btn-sm">
+                                            📥 다운로드
+                                        </a>
+                                        <a href="{% url 'transactions:attachment_upload' transaction.pk %}" 
+                                        class="btn btn-secondary btn-sm">
+                                            수정
+                                        </a>
+                                        <a href="{% url 'transactions:attachment_delete' transaction.attachment.pk %}" 
+                                        class="btn btn-danger btn-sm">
+                                            삭제
+                                        </a>
+                                    </div>
+                                </div>
+                            {% else %}
+                                <p class="text-muted mb-2">첨부파일이 없습니다.</p>
+                                <a href="{% url 'transactions:attachment_upload' transaction.pk %}" 
+                                class="btn btn-primary btn-sm">
+                                    📎 첨부파일 업로드
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
 
                     <div class="d-flex justify-content-between mt-4">
                         <a href="{% url 'transactions:transaction_list' %}" class="btn btn-secondary">

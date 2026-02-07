@@ -17,8 +17,17 @@ from .models import Merchant, Category
 from .forms import TransactionForm, MerchantForm, CategoryForm, ExcelUploadForm
 from apps.businesses.models import Account, Business
 
+from django.http import FileResponse, Http404
+from .models import Attachment
+from .forms import AttachmentForm
+import mimetypes
+
+
 from django.http import HttpResponse
 from .utils import generate_transaction_template, process_transaction_excel, export_transactions_to_excel
+import logging
+
+logger = logging.getLogger(__name__)
 
 # ============================================================
 # Category
@@ -582,6 +591,111 @@ def transaction_export_view(request):
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
     
     return response
+
+@login_required
+def attachment_upload(request, transaction_id):
+    """영수증 첨부파일 업로드"""
+    transaction_obj = get_object_or_404(Transaction, pk=transaction_id, user=request.user)
+    
+    # 이미 첨부파일이 있으면 수정
+    try:
+        attachment = transaction_obj.attachment
+        is_update = True
+    except Attachment.DoesNotExist:
+        attachment = None
+        is_update = False
+    
+    if request.method == 'POST':
+        form = AttachmentForm(request.POST, request.FILES, instance=attachment)
+        
+        if form.is_valid():
+            try:
+                attachment = form.save(commit=False)
+                attachment.user = request.user
+                attachment.transaction = transaction_obj
+                
+                # 파일 정보 저장
+                uploaded_file = request.FILES['file']
+                attachment.original_name = uploaded_file.name
+                attachment.size = uploaded_file.size
+                attachment.content_type = uploaded_file.content_type
+                
+                attachment.save()
+                
+                messages.success(request, '영수증이 업로드되었습니다.')
+                return redirect('transactions:transaction_detail', pk=transaction_id)
+                
+            except Exception as e:
+                logger.error(f"파일 업로드 실패: {e}")
+                messages.error(request, '파일 업로드 중 오류가 발생했습니다.')
+        else:
+            messages.error(request, '파일 업로드에 실패했습니다. 입력 내용을 확인해주세요.')
+    else:
+        form = AttachmentForm(instance=attachment)
+    
+    context = {
+        'form': form,
+        'transaction': transaction_obj,
+        'is_update': is_update,
+    }
+    
+    return render(request, 'transactions/attachment_form.html', context)
+
+
+@login_required
+def attachment_download(request, pk):
+    """첨부파일 다운로드"""
+    attachment = get_object_or_404(
+        Attachment, 
+        pk=pk, 
+        user=request.user
+    )
+    
+    try:
+        # 파일 응답
+        response = FileResponse(attachment.file.open('rb'))
+        
+        # Content-Type 설정
+        content_type = attachment.content_type or mimetypes.guess_type(attachment.original_name)[0] or 'application/octet-stream'
+        response['Content-Type'] = content_type
+        
+        # 파일명 설정 (한글 지원)
+        from django.utils.encoding import escape_uri_path
+        encoded_filename = escape_uri_path(attachment.original_name)
+        response['Content-Disposition'] = f'attachment; filename="{encoded_filename}"; filename*=UTF-8\'\'{encoded_filename}'
+        
+        return response
+        
+    except Exception as e:
+        logger.error(f"파일 다운로드 실패: {e}")
+        raise Http404("파일을 찾을 수 없습니다.")
+
+
+@login_required
+def attachment_delete(request, pk):
+    """첨부파일 삭제"""
+    attachment = get_object_or_404(
+        Attachment, 
+        pk=pk, 
+        user=request.user
+    )
+    
+    transaction_id = attachment.transaction.pk
+    
+    if request.method == 'POST':
+        attachment_name = attachment.original_name
+        attachment.delete()  # Signal이 물리 파일도 자동 삭제
+        
+        logger.info(f"첨부파일 삭제: {attachment_name} (ID: {pk})")
+        messages.success(request, f'첨부파일 "{attachment_name}"이 삭제되었습니다.')
+        
+        return redirect('transactions:transaction_detail', pk=transaction_id)
+    
+    context = {
+        'attachment': attachment,
+    }
+    
+    return render(request, 'transactions/attachment_confirm_delete.html', context)
 
 # @login_required
 # def transaction_list(request):
