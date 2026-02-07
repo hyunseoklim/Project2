@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+
+{% block title %}삭제된 사업장{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- 페이지 헤더 -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2>🗑️ 삭제된 사업장</h2>
+            <p class="text-muted">소프트 삭제된 사업장을 복구할 수 있습니다.</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'businesses:business_list' %}" class="btn btn-outline-primary btn-sm">
+                ← 활성 사업장 목록
+            </a>
+        </div>
+    </div>
+
+    <!-- 통계 -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="mb-0">삭제된 사업장 수</h5>
+                            <small class="text-muted">복구하거나 영구 삭제할 수 있습니다</small>
+                        </div>
+                        <h3 class="mb-0 text-danger">{{ deleted_count }}개</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 삭제된 사업장 목록 -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">📋 삭제된 사업장 목록</h5>
+        </div>
+        {% if page_obj %}
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>사업장명</th>
+                            <th>구분</th>
+                            <th>위치</th>
+                            <th>업종</th>
+                            <th>삭제일</th>
+                            <th class="text-center">관리</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for business in page_obj %}
+                        <tr style="opacity: 0.7;">
+                            <td>
+                                <strong>{{ business.name }}</strong>
+                                <span class="badge badge-danger">삭제됨</span>
+                            </td>
+                            <td>
+                                {% if business.branch_type == 'main' %}
+                                    <span class="badge badge-success">본점</span>
+                                {% else %}
+                                    <span class="badge badge-info">지점</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <small>{{ business.location|default:"미등록" }}</small>
+                            </td>
+                            <td>
+                                <small>{{ business.business_type|default:"미등록" }}</small>
+                            </td>
+                            <td>
+                                <small class="text-muted">{{ business.updated_at|date:"Y-m-d H:i" }}</small>
+                            </td>
+                            <td class="text-center">
+                                <a href="{% url 'businesses:business_restore' business.pk %}" 
+                                   class="btn btn-success btn-sm">
+                                    🔄 복구
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 페이지네이션 -->
+            {% if page_obj.has_other_pages %}
+            <div class="card-footer">
+                <ul class="pagination">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1">처음</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">이전</a>
+                        </li>
+                    {% endif %}
+
+                    <li class="page-item active">
+                        <span class="page-link">
+                            {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+                        </span>
+                    </li>
+
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}">다음</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">마지막</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+            {% endif %}
+        {% else %}
+            <div class="card-body text-center py-5">
+                <p class="text-muted mb-3">✅ 삭제된 사업장이 없습니다.</p>
+                <a href="{% url 'businesses:business_list' %}" class="btn btn-primary">
+                    사업장 목록으로 돌아가기
+                </a>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- 안내 메시지 -->
+    <div class="card mt-3">
+        <div class="card-header bg-warning">
+            <h6 class="mb-0">💡 안내</h6>
+        </div>
+        <div class="card-body">
+            <ul class="mb-0">
+                <li>삭제된 사업장은 복구 버튼을 클릭하여 다시 활성화할 수 있습니다.</li>
+                <li>복구된 사업장은 연결된 계좌와 함께 원래대로 복원됩니다.</li>
+                <li>복구 후 사업장 목록에 다시 표시됩니다.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

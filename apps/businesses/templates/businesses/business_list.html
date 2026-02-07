@@ -14,8 +14,9 @@
 
         <div class="cta-section" style="border: none; background: none; padding-bottom: 0;">
             <a href="{% url 'businesses:business_create' %}" class="btn btn-primary">+ 사업장 추가</a>
-        </div>
+            <a href="{% url 'businesses:business_deleted_list' %}" class="btn btn-outline-secondary">🗑️ 삭제된 사업장 보기</a>
 
+        </div>
         <div class="welcome-message">
             <form method="get" style="display: flex; gap: 10px; margin-bottom: var(--spacing-md); align-items: center;">
                 {% for field in search_form %}

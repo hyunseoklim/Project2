@@ -562,7 +562,7 @@ def upload_transactions_excel(request):
     
     return render(request, 'transactions/excel_upload.html', {'form': form})
 
-
+@login_required
 def transaction_export_view(request):
     # 현재 로그인한 사용자의 활성 거래 내역만 가져옴
     # (원한다면 여기서 날짜 필터링 등을 추가할 수 있습니다)
@@ -570,9 +570,11 @@ def transaction_export_view(request):
     
     # 엑셀 파일 생성
     excel_file = export_transactions_to_excel(queryset)
-    
+    now = timezone.localtime(timezone.now())
+    timestamp = timezone.localtime().strftime('%Y%m%d_%H%M%S')    
+
     # HTTP 응답 설정
-    filename = f"transactions_{datetime.now().strftime('%Y%m%d')}.xlsx"
+    filename = f"transaction_{request.user.username}_{timestamp}.xlsx"
     response = HttpResponse(
         excel_file.read(),
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
