@@ -1,62 +1,108 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}사업장 목록 - 스마트 사업자 가계부{% endblock %}
+{% block title %}사업장 관리 - 스마트 사업자 가계부{% endblock %}
 
 {% block content %}
-<div class="content-wrapper">
-    <section class="welcome-section">
-        <div class="welcome-header">
-            <span class="welcome-icon">🏢</span>
-            <h2 class="page-title">사업장 목록</h2>
-            <p class="description">등록된 사업장을 관리할 수 있습니다.</p>
+<div class="container-fluid px-4 py-3">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="mb-0 fw-bold text-dark">🏢 사업장 관리</h3>
+            <p class="text-muted small mb-0 mt-1">등록된 사업장을 효율적으로 관리하세요.</p>
         </div>
+        <a href="{% url 'businesses:business_create' %}" class="btn btn-primary btn-sm px-3 d-flex align-items-center fw-bold shadow-sm" style="height: 38px;">
+            ➕ 새 사업장 추가
+        </a>
+    </div>
 
-        <div class="cta-section" style="border: none; background: none; padding-bottom: 0;">
-            <a href="{% url 'businesses:business_create' %}" class="btn btn-primary">+ 사업장 추가</a>
-        </div>
-
-        <div class="welcome-message">
-            <form method="get" style="display: flex; gap: 10px; margin-bottom: var(--spacing-md); align-items: center;">
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-3">
+            <form method="get" class="row g-2 align-items-center">
                 {% for field in search_form %}
-                    <div class="filter-field">
-                        {# 필드 자체를 렌더링 (Select 박스가 출력됨) #}
+                <div class="col-md-3">
+                    <div class="business-filter-input">
                         {{ field }}
-                        
-                        {# 에러가 있을 경우 표시 #}
-                        {% if field.errors %}
-                            <div style="color: red; font-size: 0.7rem;">{{ field.errors }}</div>
-                        {% endif %}
                     </div>
+                </div>
                 {% endfor %}
-                
-                <button type="submit" class="btn btn-primary" style="padding: 8px 16px;">필터</button>
+                <div class="col-md-auto">
+                    <button type="submit" class="btn btn-warning fw-bold px-4 shadow-sm">필터 적용</button>
+                </div>
+                <div class="col-md-auto">
+                    <a href="{% url 'businesses:business_list' %}" class="btn btn-outline-secondary px-3">초기화</a>
+                </div>
             </form>
         </div>
+    </div>
 
-        <div class="welcome-message">
-            {% if businesses %}
-            <div class="dashboard-container">
-                <div class="summary-grid" style="grid-template-columns: 1fr;">
-                    {% for business in businesses %}
-                    <div class="summary-item">
-                        <a href="{% url 'businesses:business_detail' business.pk %}" style="text-decoration: none; color: inherit; width: 100%; display: block;">
-                            <span class="summary-label">
+    <div class="row g-3">
+        {% if businesses %}
+            {% for business in businesses %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 border-0 shadow-sm hover-shadow transition business-card" 
+                     onclick="location.href='{% url 'businesses:business_detail' business.pk %}'"
+                     style="cursor: pointer;">
+                    <div class="card-body p-4 d-flex flex-column">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <h5 class="card-title fw-bold mb-0 text-truncate" style="max-width: 70%; color: #333;">
                                 {{ business.name }}
-                                <span style="font-size: 0.8rem; color: {% if business.branch_type == 'main' %}#27ae60{% else %}#3498db{% endif %}; margin-left: 8px;">
-                                    [{{ business.get_branch_type_display }}]
-                                </span>
+                            </h5>
+                            <span class="badge {% if business.branch_type == 'main' %}bg-success-subtle text-success{% else %}bg-info-subtle text-info{% endif %} rounded-pill">
+                                {{ business.get_branch_type_display }}
                             </span>
-                            <span class="summary-value">{{ business.location|default:"위치 미등록" }} · {{ business.business_type|default:"업종 미등록" }}</span>
-                        </a>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <div class="text-muted small mb-1">
+                                📍 {{ business.location|default:"위치 미등록" }}
+                            </div>
+                            <div class="text-muted small">
+                                📁 {{ business.business_type|default:"업종 미등록" }}
+                            </div>
+                        </div>
+
+                        <div class="d-grid mt-auto">
+                            <div class="btn btn-light btn-sm fw-bold text-secondary border-0 py-2 custom-btn-hover">
+                                상세 정보 확인
+                            </div>
+                        </div>
                     </div>
-                    {% endfor %}
                 </div>
             </div>
-            {% else %}
-            <p class="description">등록된 사업장이 없습니다. 새 사업장을 추가해보세요!</p>
-            {% endif %}
-        </div>
-    </section>
+            {% endfor %}
+        {% else %}
+            <div class="col-12 text-center py-5">
+                <div class="display-1 mb-4">🏢</div>
+                <h4 class="fw-bold text-dark">조건에 맞는 사업장이 없습니다</h4>
+                <a href="{% url 'businesses:business_list' %}" class="btn btn-primary fw-bold px-5 py-2 shadow-sm">전체보기</a>
+            </div>
+        {% endif %}
+    </div>
 </div>
+
+<style>
+    .transition { transition: all 0.2s ease-in-out; }
+    
+    /* 카드 호버 효과 */
+    .hover-shadow:hover { 
+        transform: translateY(-5px);
+        box-shadow: 0 .75rem 1.5rem rgba(0,0,0,.12)!important;
+    }
+
+    /* 회색 버튼 호버 효과 (카드 호버와 연동되거나 단독으로 보일 때) */
+    .business-card:hover .custom-btn-hover {
+        background-color: #e9ecef !important;
+        color: #333 !important;
+    }
+    
+    .business-filter-input select, 
+    .business-filter-input input {
+        display: block;
+        width: 100%;
+        padding: .375rem .75rem;
+        font-size: 1rem;
+        border: 1px solid #dee2e6;
+        border-radius: .375rem;
+    }
+</style>
 {% endblock %}

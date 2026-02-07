@@ -1,112 +1,85 @@
 {% extends 'base.html' %}
 
-{% block title %}거래처 관리{% endblock %}
+{% block title %}거래처 관리 - 스마트 사업자 가계부{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
+<div class="container py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>거래처 관리</h2>
-        <a href="{% url 'transactions:merchant_create' %}" class="btn btn-primary">
-            + 거래처 추가
+        <h2 class="mb-0" style="font-weight: 700; color: #333; letter-spacing: -0.5px; line-height: 1.2;">🤝 거래처 목록</h2>
+        <a href="{% url 'transactions:merchant_create' %}" class="btn btn-primary fw-bold shadow-sm">
+            <i class="bi bi-plus-lg me-1"></i>+ 거래처 추가
         </a>
     </div>
 
-    <!-- 탭 추가 -->
-    <ul class="nav nav-tabs mb-3">
+    <ul class="nav nav-pills mb-4 gap-2">
         <li class="nav-item">
-            <a class="nav-link {% if view_type == 'all' or not view_type %}active{% endif %}" 
-               href="?view=all">
-                전체 거래처
-            </a>
+            <a class="nav-link {% if view_type == 'all' or not view_type %}active{% endif %} fw-bold px-4 py-2 border shadow-sm" 
+               style="border-radius: 10px;" href="?view=all">전체 거래처</a>
         </li>
         <li class="nav-item">
-            <a class="nav-link {% if view_type == 'frequent' %}active{% endif %}" 
-               href="?view=frequent">
-                자주 쓰는 거래처
-            </a>
+            <a class="nav-link {% if view_type == 'frequent' %}active{% endif %} fw-bold px-4 py-2 border shadow-sm" 
+               style="border-radius: 10px;" href="?view=frequent">자주 쓰는 거래처</a>
         </li>
     </ul>
 
-    {% if messages %}
-        {% for message in messages %}
-        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-            {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    {% if merchants %}
+    <div class="row g-3">
+        {% for merchant in merchants %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 border-0 shadow-sm hover-up rounded-3 overflow-hidden">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="merchant-avatar bg-primary-subtle text-primary rounded-3 d-flex align-items-center justify-content-center fw-bold" style="width: 48px; height: 48px; font-size: 1.2rem;">
+                            {{ merchant.name|slice:":1" }}
+                        </div>
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-icon text-muted border-0" data-bs-toggle="dropdown">
+                                <i class="bi bi-three-dots-vertical"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end border-0 shadow">
+                                <li><a class="dropdown-item py-2" href="{% url 'transactions:merchant_update' merchant.pk %}">수정</a></li>
+                                <li><a class="dropdown-item py-2 text-danger" href="{% url 'transactions:merchant_delete' merchant.pk %}">삭제</a></li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <h5 class="fw-bold mb-1">
+                        <a href="{% url 'transactions:merchant_detail' merchant.pk %}" class="text-decoration-none text-dark">{{ merchant.name }}</a>
+                        {% if view_type == 'frequent' %}
+                            <small class="text-warning ms-1" style="font-size: 0.8rem;"><i class="bi bi-star-fill"></i> {{ forloop.counter }}</small>
+                        {% endif %}
+                    </h5>
+                    
+                    <div class="mb-3">
+                        <span class="badge bg-light text-secondary border-0 fw-normal px-2 py-1" style="font-size: 0.75rem;">
+                            {{ merchant.category.name|default:"미분류" }}
+                        </span>
+                    </div>
+
+                    <div class="merchant-info mt-3 pt-3 border-top">
+                        <div class="d-flex align-items-center mb-1 text-muted" style="font-size: 0.85rem;">
+                            <i class="bi bi-card-text me-2"></i><span>{{ merchant.get_masked_business_number|default:"사업자번호 없음" }}</span>
+                        </div>
+                        <div class="d-flex align-items-center text-muted" style="font-size: 0.85rem;">
+                            <i class="bi bi-telephone me-2"></i><span>{{ merchant.contact|default:"연락처 없음" }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
         {% endfor %}
-    {% endif %}
-
-    <div class="card">
-        <div class="card-body">
-            {% if merchants %}
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            {% if view_type == 'frequent' %}<th>순위</th>{% endif %}
-                            <th>거래처명</th>
-                            <th>사업자번호</th>
-                            <th>연락처</th>
-                            {% if view_type == 'frequent' %}<th>거래 횟수</th>{% endif %}
-                            {% if view_type == 'all' or not view_type %}<th>카테고리</th><th>등록일</th>{% endif %}
-                            <th>관리</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for merchant in merchants %}
-                        <tr>
-                            {% if view_type == 'frequent' %}
-                            <td>{{ forloop.counter }}</td>
-                            {% endif %}
-                            <td>
-                                <a href="{% url 'transactions:merchant_detail' merchant.pk %}">
-                                    {{ merchant.name }}
-                                </a>
-                            </td>
-                            <td>{{ merchant.get_masked_business_number }}</td>
-                            <td>{{ merchant.contact|default:"-" }}</td>
-                            {% if view_type == 'frequent' %}
-                            <td>
-                                <span class="badge bg-primary">{{ merchant.transaction_count }}건</span>
-                            </td>
-                            {% endif %}
-                            {% if view_type == 'all' or not view_type %}
-                            <td>
-                                {% if merchant.category %}
-                                    <span class="badge bg-secondary">{{ merchant.category.name }}</span>
-                                {% else %}
-                                    -
-                                {% endif %}
-                            </td>
-                            <td>{{ merchant.created_at|date:"Y-m-d" }}</td>
-                            {% endif %}
-                            <td>
-                                <a href="{% url 'transactions:merchant_update' merchant.pk %}" 
-                                   class="btn btn-sm btn-outline-primary">수정</a>
-                                <a href="{% url 'transactions:merchant_delete' merchant.pk %}" 
-                                   class="btn btn-sm btn-outline-danger">삭제</a>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            {% else %}
-            <div class="text-center py-5">
-                {% if view_type == 'frequent' %}
-                    <p class="text-muted">거래 내역이 있는 거래처가 없습니다.</p>
-                    <a href="{% url 'transactions:transaction_create' %}" class="btn btn-primary">
-                        거래 등록하기
-                    </a>
-                {% else %}
-                    <p class="text-muted">등록된 거래처가 없습니다.</p>
-                    <a href="{% url 'transactions:merchant_create' %}" class="btn btn-primary">
-                        첫 거래처 등록하기
-                    </a>
-                {% endif %}
-            </div>
-            {% endif %}
-        </div>
     </div>
+    {% else %}
+    <div class="text-center py-5 bg-white rounded-3 shadow-sm border mt-3">
+        <p class="text-muted mb-0">등록된 거래처 정보가 없습니다.</p>
+    </div>
+    {% endif %}
 </div>
+
+<style>
+    .nav-pills .nav-link { background-color: #fff; color: #6c757d; border: 1px solid #dee2e6 !important; transition: 0.2s; }
+    .nav-pills .nav-link.active { background-color: #0d6efd !important; color: #fff !important; border-color: #0d6efd !important; }
+    .hover-up { transition: all 0.25s ease; }
+    .hover-up:hover { transform: translateY(-4px); box-shadow: 0 8px 20px rgba(0,0,0,0.1) !important; }
+</style>
 {% endblock %}

@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load humanize %}
 
 {% block title %}거래 상세 - 스마트 사업자 가계부{% endblock %}
 
@@ -54,8 +55,7 @@
                             </tr>
                             <tr>
                                 <th class="bg-light">금액</th>
-                                <td class="fw-bold fs-5">{{ transaction.amount|floatformat:0 }}원</td>
-                            </tr>
+                                <td class="fw-bold">{{ transaction.amount|floatformat:0|intcomma }}원</td>
                             <tr>
                                 <th class="bg-light">부가세 유형</th>
                                 <td>{{ transaction.get_tax_type_display }}</td>
@@ -63,11 +63,11 @@
                             {% if transaction.vat_amount %}
                             <tr>
                                 <th class="bg-light">부가세</th>
-                                <td>{{ transaction.vat_amount|floatformat:0 }}원</td>
+                                <td>{{ transaction.vat_amount|floatformat:0|intcomma|default:"0" }}원</td>
                             </tr>
                             <tr>
                                 <th class="bg-light">총액 (금액 + 부가세)</th>
-                                <td class="fw-bold">{{ transaction.amount|add:transaction.vat_amount|floatformat:0 }}원
+                                <td class="fw-bold">{{ transaction.amount|add:transaction.vat_amount|floatformat:0|intcomma }}원
                                 </td>
                             </tr>
                             {% endif %}

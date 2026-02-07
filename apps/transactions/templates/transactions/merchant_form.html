@@ -1,66 +1,103 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
+{% load static %}
 
-{% block title %}
-    {% if merchant %}거래처 수정{% else %}거래처 등록{% endif %}
-{% endblock %}
+{% block title %}{% if form.instance.pk %}거래처 정보 수정{% else %}새 거래처 등록{% endif %} - 스마트 사업자 가계부{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <h2>{% if merchant %}거래처 수정{% else %}거래처 등록{% endif %}</h2>
+<div class="container py-5" style="max-width: 900px; margin: 0 auto;">
+    <div class="row justify-content-center">
+        <div class="col-12">
+            
+            <div class="d-flex align-items-center mb-4 pb-2 border-bottom" style="border-color: #dee2e6 !important;">
+                <a href="{% url 'transactions:merchant_list' %}" class="btn btn-outline-secondary btn-sm me-3 d-flex align-items-center text-decoration-none px-3">
+                    <span class="me-1">←</span> 목록
+                </a>
+                <h3 class="mb-0 fw-bold text-dark" style="font-size: 1.5rem; letter-spacing: -0.5px;">
+                    {% if form.instance.pk %}🤝 거래처 정보 수정{% else %}🤝 새 거래처 등록{% endif %}
+                </h3>
+            </div>
 
-    <div class="card mt-4">
-        <div class="card-body">
-            <form method="post">
-                {% csrf_token %}
-                
-                <div class="mb-3">
-                    <label class="form-label">거래처명 *</label>
-                    {{ form.name }}
-                    {% if form.name.errors %}
-                        <div class="text-danger">{{ form.name.errors }}</div>
+            <div class="card border-0 shadow-sm rounded-3">
+                <div class="card-body p-4 p-md-5">
+                    <form method="post" novalidate id="merchantForm">
+                        {% csrf_token %}
+
+                        <div class="row g-4">
+                            <div class="col-12">
+                                <label class="form-label fw-bold" style="color: #444;">거래처 이름 *</label>
+                                {{ form.name }}
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold" style="color: #444;">사업자 등록번호</label>
+                                {{ form.business_number }}
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold" style="color: #444;">주요 카테고리</label>
+                                {{ form.category }}
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label fw-bold" style="color: #444;">연락처</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0"><i class="bi bi-telephone"></i></span>
+                                    {{ form.contact }}
+                                </div>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label fw-bold" style="color: #444;">거래처 메모</label>
+                                {% if form.description %}
+                                    {{ form.description }}
+                                {% else %}
+                                    <textarea name="description" class="form-control" rows="4" placeholder="메모를 입력하세요.">{{ form.instance.description }}</textarea>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mt-5">
+                            <div class="col-6">
+                                <a href="javascript:history.back()" class="btn btn-light w-100 py-3 fw-bold text-muted border text-decoration-none text-center" style="border-radius: 10px;">취소</a>
+                            </div>
+                            <div class="col-6">
+                                <button type="submit" class="btn btn-primary w-100 py-3 fw-bold shadow-sm" style="border-radius: 10px;">
+                                    {% if form.instance.pk %}수정 완료{% else %}등록 완료{% endif %}
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+
+                    {% if form.instance.pk %}
+                    <div class="mt-4 pt-4 border-top text-center">
+                        <form action="{% url 'transactions:merchant_delete' form.instance.pk %}" method="post" onsubmit="return confirm('이 거래처를 삭제하시겠습니까? 연결된 거래 내역에 영향이 있을 수 있습니다.');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-link text-danger text-decoration-none small fw-bold">
+                                <i class="bi bi-trash me-1"></i> 이 거래처 정보를 완전히 삭제하기
+                            </button>
+                        </form>
+                    </div>
                     {% endif %}
                 </div>
-
-                <div class="mb-3">
-                    <label class="form-label">사업자등록번호</label>
-                    {{ form.business_number }}
-                    <small class="form-text text-muted">형식: 123-45-67890</small>
-                    {% if form.business_number.errors %}
-                        <div class="text-danger">{{ form.business_number.errors }}</div>
-                    {% endif %}
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label">연락처</label>
-                    {{ form.contact }}
-                    {% if form.contact.errors %}
-                        <div class="text-danger">{{ form.contact.errors }}</div>
-                    {% endif %}
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label">카테고리</label>
-                    {{ form.category }}
-                    <small class="form-text text-muted">미지정(기타)을 선택할 수 있습니다.</small>
-                    {% if form.category.errors %}
-                        <div class="text-danger">{{ form.category.errors }}</div>
-                    {% endif %}
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label">메모</label>
-                    {{ form.memo }}
-                    {% if form.memo.errors %}
-                        <div class="text-danger">{{ form.memo.errors }}</div>
-                    {% endif %}
-                </div>
-
-                <div class="d-flex gap-2">
-                    <button type="submit" class="btn btn-primary">저장</button>
-                    <a href="{% url 'transactions:merchant_list' %}" class="btn btn-secondary">취소</a>
-                </div>
-            </form>
+            </div>
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const formInputs = document.querySelectorAll('input:not([type="hidden"]), select, textarea');
+        formInputs.forEach(input => {
+            input.classList.add('form-control');
+            input.style.padding = "0.7rem 1rem";
+            input.style.borderRadius = "8px";
+        });
+    });
+</script>
+
+<style>
+    body { background-color: #f8f9fa !important; }
+    .form-control:focus { border-color: #0d6efd; box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.1); }
+    textarea.form-control { min-height: 120px !important; }
+</style>
 {% endblock %}
