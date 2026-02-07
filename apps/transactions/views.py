@@ -556,16 +556,33 @@ def upload_transactions_excel(request):
         form = ExcelUploadForm(request.POST, request.FILES)
         if form.is_valid():
             try:
-                count = process_transaction_excel(request.FILES['excel_file'], request.user)
+                result = process_transaction_excel(request.FILES['excel_file'], request.user)
+                
+                # 성공 메시지 생성
+                msg = f"✅ {result['success_count']}건의 거래가 등록되었습니다."
+                
+                # 자동 생성 항목 알림
+                auto = result['auto_created']
+                if any([auto['accounts'], auto['businesses'], auto['merchants'], auto['categories_matched']]):
+                    msg += "\n\n📝 자동 생성/매칭된 항목:"
+                    
+                    if auto['accounts']:
+                        msg += f"\n• 계좌: {len(auto['accounts'])}개"
+                    if auto['businesses']:
+                        msg += f"\n• 사업장: {len(auto['businesses'])}개"
+                    if auto['merchants']:
+                        msg += f"\n• 거래처: {len(auto['merchants'])}개"
+                    if auto['categories_matched']:
+                        msg += f"\n• 카테고리 매칭: {len(auto['categories_matched'])}건"
+                
+                messages.success(request, msg)
                 return redirect('transactions:transaction_list')
+                
             except Exception as e:
-                # 여기에 print를 넣으면 터미널 로그(ROLLBACK 근처)에 에러 내용이 찍힙니다.
-                print("\n" + "!"*30)
-                print(f"실제 에러 내용: {e}")
-                print("!"*30 + "\n")
-                messages.error(request, f"저장 실패: {e}")
+                print(f"\n{'!'*30}\n실제 에러: {e}\n{'!'*30}\n")
+                messages.error(request, f"업로드 실패: {str(e)}")
         else:
-            print(f"폼 에러: {form.errors}")
+            messages.error(request, f"폼 에러: {form.errors}")
     else:
         form = ExcelUploadForm()
     
