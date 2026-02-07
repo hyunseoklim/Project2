@@ -14,9 +14,11 @@ from django.contrib import messages
 from django.db.models import Count
 from django.utils import timezone
 from .models import Merchant, Category
-from .forms import TransactionForm, MerchantForm, CategoryForm
+from .forms import TransactionForm, MerchantForm, CategoryForm, ExcelUploadForm
 from apps.businesses.models import Account, Business
 
+from django.http import HttpResponse
+from .utils import generate_transaction_template, process_transaction_excel, export_transactions_to_excel
 
 # ============================================================
 # Category
@@ -507,6 +509,77 @@ class VATReportView(LoginRequiredMixin, TemplateView):
         })
         return context
     
+
+@login_required
+def download_transactions(request):
+    # 다운로드할 데이터 필터링
+    queryset = Transaction.active.filter(user=request.user).order_by('-occurred_at')
+    
+    # utils.py의 함수 호출
+    excel_file = process_transaction_excel(queryset)
+    
+    response = HttpResponse(
+        excel_file.read(),
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = 'attachment; filename="transactions.xlsx"'
+    return response
+
+@login_required
+def download_excel_template(request):
+    """
+    엑셀 업로드 양식을 다운로드하는 뷰
+    """
+    excel_file = generate_transaction_template()
+    
+    response = HttpResponse(
+        excel_file.read(),
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    # 파일명 설정
+    response['Content-Disposition'] = 'attachment; filename="transaction_template.xlsx"'
+    
+    return response
+
+@login_required
+def upload_transactions_excel(request):
+    if request.method == 'POST':
+        form = ExcelUploadForm(request.POST, request.FILES)
+        if form.is_valid():
+            try:
+                count = process_transaction_excel(request.FILES['excel_file'], request.user)
+                return redirect('transactions:transaction_list')
+            except Exception as e:
+                # 여기에 print를 넣으면 터미널 로그(ROLLBACK 근처)에 에러 내용이 찍힙니다.
+                print("\n" + "!"*30)
+                print(f"실제 에러 내용: {e}")
+                print("!"*30 + "\n")
+                messages.error(request, f"저장 실패: {e}")
+        else:
+            print(f"폼 에러: {form.errors}")
+    else:
+        form = ExcelUploadForm()
+    
+    return render(request, 'transactions/excel_upload.html', {'form': form})
+
+
+def transaction_export_view(request):
+    # 현재 로그인한 사용자의 활성 거래 내역만 가져옴
+    # (원한다면 여기서 날짜 필터링 등을 추가할 수 있습니다)
+    queryset = Transaction.active.filter(user=request.user).select_related('business', 'account', 'category')
+    
+    # 엑셀 파일 생성
+    excel_file = export_transactions_to_excel(queryset)
+    
+    # HTTP 응답 설정
+    filename = f"transactions_{datetime.now().strftime('%Y%m%d')}.xlsx"
+    response = HttpResponse(
+        excel_file.read(),
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    
+    return response
 
 # @login_required
 # def transaction_list(request):
