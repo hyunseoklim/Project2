@@ -56,6 +56,9 @@
                            class="btn btn-secondary">
                             취소
                         </a>
+                        <a href="{% url 'businesses:account_hard_delete' account.pk %}" class="btn btn-danger">
+                            영구 삭제
+                        </a>
                         <button type="submit" class="btn btn-success">
                             🔄 복구하기
                         </button>

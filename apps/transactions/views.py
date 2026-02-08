@@ -1,4 +1,4 @@
-from django.db.models import Sum
+from django.db.models import Sum, Q
 from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.paginator import Paginator
@@ -8,7 +8,6 @@ from django.shortcuts import render
 from .models import Transaction
 from django.db.models.functions import ExtractMonth
 from django.contrib.auth.decorators import login_required
-from django.db.models import Q
 from django.shortcuts import redirect, get_object_or_404
 from django.contrib import messages
 from django.db.models import Count
@@ -315,7 +314,9 @@ def transaction_list(request):
         total_income=Sum('amount', filter=Q(tx_type='IN')),
         total_expense=Sum('amount', filter=Q(tx_type='OUT')),
         total_vat=Sum('vat_amount'),
-        count=Count('id')
+        count=Count('id'),
+        income_vat=Sum('vat_amount', filter=Q(tx_type='IN')), 
+        expense_vat=Sum('vat_amount', filter=Q(tx_type='OUT')),
     )
 
     # 페이지네이션
