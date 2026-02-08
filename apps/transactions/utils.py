@@ -102,6 +102,7 @@ def process_transaction_excel(excel_file, user):
     ws = wb.active
     
     # 결과 추적
+    skipped_count = 0   # 중복 건수를 셀 변수입니다.
     success_list = []
     error_list = []
     error_details = []  # 실패한 행의 원본 데이터 저장
@@ -143,6 +144,23 @@ def process_transaction_excel(excel_file, user):
     print(f"✅ 로딩 완료: 사업장 {len(businesses)}개, 계좌 {len(accounts)}개, "
           f"카테고리 {len(categories_by_name)}개, 거래처 {len(merchants)}개")
     
+    # [수정] 현재 사용자의 최근 거래 내역을 가져와서 '비교용 지문' 세트를 만듭니다.
+    # 엑셀 데이터와 비교할 핵심 정보들만 묶어서 저장합니다.
+    existing_transactions = set(
+        Transaction.objects.filter(user=user).values_list(
+            'account_id', 
+            'tx_type', 
+            'amount', 
+            'vat_amount', 
+            'merchant_name',
+            'occurred_at__year', 
+            'occurred_at__month', 
+            'occurred_at__day', 
+            'occurred_at__hour', 
+            'occurred_at__minute'
+        )
+    )
+
     # ========================================
     # 2단계: 엑셀 읽기 및 검증
     # ========================================
@@ -349,7 +367,35 @@ def process_transaction_excel(excel_file, user):
                         'error': error_msg
                     })
                     continue
+                # -----------------------------------------------------------
+                # 2. [여기서부터 추가] 중복 체크 로직
+                # -----------------------------------------------------------
+                current_merchant_name = merchant_name_clean or (category.name if category else "")
+                clean_occurred_at = occurred_at.replace(second=0, microsecond=0)
                 
+                # 1. 현재 행의 데이터를 '지문'으로 만듭니다.
+                current_fingerprint = (
+                    account.id if hasattr(account, 'id') else None, # 새로 생성될 계좌는 None일 수 있음
+                    actual_tx_type,
+                    supply_amount,
+                    vat_amount,
+                    current_merchant_name,
+                    occurred_at.year,
+                    occurred_at.month,
+                    occurred_at.day,
+                    occurred_at.hour,
+                    occurred_at.minute
+                )
+
+                # 2. [핵심] DB를 조회하지 않고, 위에서 만든 set에 이 지문이 있는지 확인합니다. (매우 빠름!)
+                if current_fingerprint in existing_transactions:
+                    skipped_count += 1
+                    continue
+                
+                # 중복이 아니라면, 이 데이터도 지문에 추가 (엑셀 내 중복 방지)
+                existing_transactions.add(current_fingerprint)
+                # -----------------------------------------------------------
+
                 # ========================================
                 # Transaction 객체 생성
                 # ========================================
@@ -410,7 +456,8 @@ def process_transaction_excel(excel_file, user):
         'error_count': len(error_list),
         'errors': error_list,
         'error_details': error_details,  # 실패 상세 정보
-        'auto_created': auto_created
+        'auto_created': auto_created,
+        'skipped_count': skipped_count, #### [추가] 뷰에서 보여줄 데이터
     }
 
 

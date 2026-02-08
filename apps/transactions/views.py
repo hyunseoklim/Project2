@@ -561,6 +561,9 @@ def upload_transactions_excel(request):
                 
                 # 성공 메시지 생성
                 msg = f"✅ {result['success_count']}건의 거래가 등록되었습니다."
+
+                if result.get('skipped_count', 0) > 0:
+                  msg += f" (중복된 {result['skipped_count']}건은 제외됨)"
                 
                 # 자동 생성 항목 알림
                 auto = result['auto_created']
