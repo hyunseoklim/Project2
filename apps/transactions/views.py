@@ -716,6 +716,39 @@ def attachment_delete(request, pk):
     return render(request, 'transactions/attachment_confirm_delete.html', context)
 
 # @login_required
+# def attachment_list_view(request):
+#     """첨부파일(증빙자료)이 포함된 모든 거래 목록"""
+#     # 1. 쿼리 최적화: select_related로 Attachment를 JOIN해서 가져옴
+#     # 2. 필터: attachment가 있는 것만
+#     # 3. 정렬: 최신 거래순
+#     evidence_list = Transaction.objects.select_related('attachment', 'account') \
+#                                        .filter(user=request.user, attachment__isnull=False) \
+#                                        .order_by('-occurred_at')
+
+#     return render(request, 'transactions/attachment_list.html', {
+#         'evidence_list': evidence_list
+#     })
+
+
+@login_required
+def attachment_list_view(request):
+    # 기존 필터링 코드
+    evidence_queryset = Transaction.objects.select_related('attachment', 'account') \
+        .filter(
+            Q(user=request.user),
+            Q(attachment__isnull=False) | Q(memo__icontains='영수증')
+        ) \
+        .order_by('-occurred_at').distinct()
+
+    # 페이지네이션 추가 (한 페이지에 10개씩)
+    paginator = Paginator(evidence_queryset, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    return render(request, 'transactions/attachment_list.html', {
+        'page_obj': page_obj,                   # 하단 테이블용
+    })
+# @login_required
 # def transaction_list(request):
 #     """거래 목록 (개선 버전)"""
 #     user = request.user
