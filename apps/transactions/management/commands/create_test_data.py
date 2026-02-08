@@ -17,6 +17,8 @@ from django.db import transaction as db_transaction
 from apps.businesses.models import Business, Account
 from apps.transactions.models import Category, Merchant, Transaction
 
+from django.db.models import Q
+
 User = get_user_model()
 
 
@@ -99,13 +101,19 @@ class Command(BaseCommand):
         
         # 4. 카테고리 - 기존 시드 데이터 활용
         # income 카테고리 가져오기
-        income_cats = list(Category.objects.filter(user=user, type='income')[:3])
+        income_cats = list(Category.objects.filter(
+            Q(is_system=True) | Q(user=user), 
+            type='income'
+        )[:3])
         if not income_cats:
             self.stdout.write(self.style.ERROR("❌ 수입 카테고리가 없습니다. 시드 데이터를 먼저 로드하세요."))
             return
         
         # expense 카테고리 가져오기
-        expense_cats = list(Category.objects.filter(user=user, type='expense')[:8])
+        expense_cats = list(Category.objects.filter(
+            Q(is_system=True) | Q(user=user),
+            type='expense'
+        ))
         if not expense_cats:
             self.stdout.write(self.style.ERROR("❌ 지출 카테고리가 없습니다. 시드 데이터를 먼저 로드하세요."))
             return
