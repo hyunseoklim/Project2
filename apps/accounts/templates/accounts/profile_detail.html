@@ -1,82 +1,111 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}내 프로필 - 스마트 사업자 가계부{% endblock %}
 
 {% block content %}
-<div class="container-fluid py-5" style="font-family: 'Pretendard', -serif; background-color: #f8f9fa; min-height: 100vh;">
+<div class="container-fluid px-4 py-3">
     <div class="row justify-content-center">
-        <div class="col-lg-8 col-xl-6">
-            
-            <div class="text-center mb-5">
-                <div class="d-inline-block p-3 bg-white shadow-sm rounded-circle mb-3">
-                    <span style="font-size: 2.5rem;">💼</span>
-                </div>
-                <h2 class="fw-bold text-dark mb-2">나의 사업자 프로필</h2>
-                <p class="text-muted">등록된 사업자 정보는 세무 신고 및 지출 분석의 핵심 데이터로 활용됩니다.</p>
+        <div class="col-lg-10 col-xl-8">
+            <!-- 헤더 -->
+            <div class="d-flex align-items-center mb-4">
+                <h3 class="mb-0 fw-bold text-dark">👤 내 프로필</h3>
             </div>
 
-            <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
-                <div class="card-body p-0">
-                    <div class="bg-primary" style="height: 6px;"></div>
-                    
-                    <div class="p-4 p-md-5">
-                        <div class="row g-4">
-                            <div class="col-12">
-                                <div class="p-4 rounded-4" style="background-color: #f1f3f5; border: 1px solid #e9ecef;">
-                                    <div class="d-flex align-items-center mb-2">
-                                        <small class="fw-bold text-primary text-uppercase letter-spacing-1">Business Number</small>
-                                    </div>
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <h4 class="mb-0 fw-bold text-dark">
-                                            {{ profile.get_masked_business_number|default:profile.business_registration_number|default:"등록된 번호가 없습니다." }}
-                                        </h4>
-                                        <span class="badge bg-white text-primary border border-primary-subtle px-3 py-2 rounded-pill">확인됨</span>
-                                    </div>
+            <div class="row g-4">
+                <!-- 왼쪽: 사용자 정보 -->
+                <div class="col-lg-8">
+                    <!-- 기본 정보 카드 -->
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
+                            <h5 class="fw-bold mb-0 text-dark">기본 정보</h5>
+                            <span class="badge bg-primary-subtle text-primary rounded-pill px-3">사업자 회원</span>
+                        </div>
+                        <div class="card-body p-4">
+                            <div class="row py-2 border-bottom">
+                                <div class="col-sm-4 text-muted">아이디</div>
+                                <div class="col-sm-8 fw-bold">{{ user.username }}</div>
+                            </div>
+                            <div class="row py-2 border-bottom">
+                                <div class="col-sm-4 text-muted">이름</div>
+                                <div class="col-sm-8">
+                                    {% if user.last_name or user.first_name %}
+                                        {{ user.last_name }}{{ user.first_name }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
                                 </div>
                             </div>
+                            <div class="row py-2 border-bottom">
+                                <div class="col-sm-4 text-muted">가입일</div>
+                                <div class="col-sm-8">{{ user.date_joined|date:"Y-m-d" }}</div>
+                            </div>
+                            <div class="row py-2">
+                                <div class="col-sm-4 text-muted">마지막 로그인</div>
+                                <div class="col-sm-8">{{ user.last_login|date:"Y-m-d H:i" }}</div>
+                            </div>
+                        </div>
+                    </div>
 
-                            <div class="col-md-6">
-                                <div class="h-100 p-4 rounded-4 border border-light-subtle bg-white">
-                                    <small class="text-muted d-block mb-1">사업자 유형</small>
-                                    <span class="fs-5 fw-bold text-dark">
-                                        {{ profile.get_business_type_display|default:"미설정" }}
-                                    </span>
+                    <!-- 사업자 정보 카드 -->
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-header bg-white py-3 border-bottom">
+                            <h5 class="fw-bold mb-0 text-dark">사업자 정보</h5>
+                        </div>
+                        <div class="card-body p-4">
+                            <div class="row py-2 border-bottom">
+                                <div class="col-sm-4 text-muted">사업자 등록번호</div>
+                                <div class="col-sm-8 fw-bold">
+                                    {{ profile.get_masked_business_number|default:profile.business_registration_number|default:"-" }}
                                 </div>
                             </div>
-
-                            <div class="col-md-6">
-                                <div class="h-100 p-4 rounded-4 border border-light-subtle bg-white">
-                                    <small class="text-muted d-block mb-1">연락처</small>
-                                    <span class="fs-5 fw-bold text-dark">
-                                        {{ profile.phone|default:"미등록" }}
-                                    </span>
-                                </div>
+                            <div class="row py-2 border-bottom">
+                                <div class="col-sm-4 text-muted">사업자 유형</div>
+                                <div class="col-sm-8">{{ profile.get_business_type_display|default:"-" }}</div>
+                            </div>
+                            <div class="row py-2">
+                                <div class="col-sm-4 text-muted">연락처</div>
+                                <div class="col-sm-8">{{ profile.phone|default:"-" }}</div>
                             </div>
                         </div>
                     </div>
                 </div>
+
+                <!-- 오른쪽: 관리 메뉴 -->
+                <div class="col-lg-4">
+                    <div class="card border-0 shadow-sm text-center p-4 mb-3">
+                        <div class="mb-3">
+                            <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                                <span class="fs-1">👤</span>
+                            </div>
+                        </div>
+                        <h5 class="fw-bold">계정 관리</h5>
+                        <p class="small text-muted mb-4">프로필 정보를 수정하거나<br>설정을 변경할 수 있습니다.</p>
+                        
+                        <div class="d-grid gap-2">
+                            <a href="{% url 'accounts:profile_edit' %}" class="btn btn-warning fw-bold py-2 shadow-sm">
+                                ✏️ 정보 수정하기
+                            </a>
+                            <a href="{% url 'accounts:password_change' %}" class="btn btn-outline-primary btn-sm mt-2">
+                                🔒 비밀번호 변경
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="card border-0 shadow-sm" style="background-color: #f8f9fa;">
+                        <div class="card-body p-4">
+                            <h6 class="fw-bold mb-3">💡 도움말</h6>
+                            <ul class="small text-muted mb-0">
+                                <li class="mb-2">아이디는 변경할 수 없습니다.</li>
+                                <li class="mb-2">사업자 정보는 세무 신고에 활용됩니다.</li>
+                                <li>계정 삭제는 고객센터로 문의하세요.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
             </div>
-
-            <div class="d-flex flex-column flex-md-row gap-3 justify-content-center mt-4">
-                <a href="{% url 'accounts:profile_edit' %}" class="btn btn-primary btn-lg px-5 py-3 rounded-3 fw-bold shadow-sm">
-                    ✏️ 정보 수정
-                </a>
-                <a href="{% url 'accounts:home' %}" class="btn btn-outline-secondary btn-lg px-5 py-3 rounded-3 fw-bold bg-white">
-                    🏠 홈으로 이동
-                </a>
-            </div>
-
-            <p class="text-center text-muted small mt-5">
-                사업자 정보 변경이 필요하신가요? <br>
-                수정된 정보는 즉시 시스템에 반영되어 정확한 리포트를 생성합니다.
-            </p>
-
         </div>
     </div>
 </div>
-
-<style>
-    .rounded-4 { border-radius: 1rem !important; }
-    .letter-spacing-1 { letter-spacing: 0.5px; }
-    .btn { transition: all 0.2s; }
-    .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important; }
-</style>
 {% endblock %}

@@ -5,36 +5,70 @@
 
 {% block content %}
 <div class="container-fluid px-4 py-3">
+    
+    <!-- 헤더 -->
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h3 class="mb-0 fw-bold text-dark">🏢 사업장 관리</h3>
-            <p class="text-muted small mb-0 mt-1">등록된 사업장을 효율적으로 관리하세요.</p>
+        <h3 class="mb-0 fw-bold text-dark">🏢 사업장 관리</h3>
+        <div class="d-flex gap-2">
+            <a href="{% url 'businesses:business_deleted_list' %}" class="btn btn-outline-danger btn-sm px-3 d-flex align-items-center fw-bold shadow-sm" style="height: 38px;">
+                🗑️ 삭제된 사업장
+            </a>
+            <a href="{% url 'businesses:business_create' %}" class="btn btn-success btn-sm px-3 d-flex align-items-center fw-bold shadow-sm" style="height: 38px;">
+                ➕ 사업장 등록
+            </a>
         </div>
-        <a href="{% url 'businesses:business_create' %}" class="btn btn-primary btn-sm px-3 d-flex align-items-center fw-bold shadow-sm" style="height: 38px;">
-            ➕ 새 사업장 추가
-        </a>
     </div>
 
-    <div class="card border-0 shadow-sm mb-4">
+    <!-- 요약 통계 (색상 통일) -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-3 text-center">
+                    <small class="text-muted fw-bold">총 사업장</small>
+                    <h3 class="mt-2 mb-0 fw-bold text-dark">{{ total_count }}<small class="fs-6 fw-normal text-muted ms-1">개</small></h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-3 text-center">
+                    <small class="text-muted fw-bold">본점</small>
+                    <h3 class="mt-2 mb-0 fw-bold text-dark">{{ main_count }}<small class="fs-6 fw-normal text-muted ms-1">개</small></h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-3 text-center">
+                    <small class="text-muted fw-bold">지점</small>
+                    <h3 class="mt-2 mb-0 fw-bold text-dark">{{ branch_count }}<small class="fs-6 fw-normal text-muted ms-1">개</small></h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 검색 필터 (버튼 크기 조정) -->
+    <div class="card border-0 shadow-sm mb-3">
         <div class="card-body p-3">
-            <form method="get" class="row g-2 align-items-center">
-                {% for field in search_form %}
-                <div class="col-md-3">
-                    <div class="business-filter-input">
+            <form method="get">
+                <div class="row g-2 align-items-end">
+                    {% for field in search_form %}
+                    <div class="col-md-3">
                         {{ field }}
                     </div>
-                </div>
-                {% endfor %}
-                <div class="col-md-auto">
-                    <button type="submit" class="btn btn-warning fw-bold px-4 shadow-sm">필터 적용</button>
-                </div>
-                <div class="col-md-auto">
-                    <a href="{% url 'businesses:business_list' %}" class="btn btn-outline-secondary px-3">초기화</a>
+                    {% endfor %}
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100 fw-bold" style="height: 48px;">검색</button>
+                    </div>
+                    <div class="col-md-auto">
+                        <a href="{% url 'businesses:business_list' %}" class="btn btn-outline-secondary fw-bold px-3" style="height: 48px; white-space: nowrap;">초기화</a>
+                    </div>
                 </div>
             </form>
         </div>
     </div>
 
+    <!-- 사업장 카드 -->
     <div class="row g-3">
         {% if businesses %}
             {% for business in businesses %}
@@ -47,7 +81,7 @@
                             <h5 class="card-title fw-bold mb-0 text-truncate" style="max-width: 70%; color: #333;">
                                 {{ business.name }}
                             </h5>
-                            <span class="badge {% if business.branch_type == 'main' %}bg-success-subtle text-success{% else %}bg-info-subtle text-info{% endif %} rounded-pill">
+                            <span class="badge {% if business.branch_type == 'main' %}bg-primary rounded-pill{% else %}bg-secondary rounded-pill{% endif %}" style="font-size: 0.7rem;">
                                 {{ business.get_branch_type_display }}
                             </span>
                         </div>
@@ -62,8 +96,8 @@
                         </div>
 
                         <div class="d-grid mt-auto">
-                            <div class="btn btn-light btn-sm fw-bold text-secondary border-0 py-2 custom-btn-hover">
-                                상세 정보 확인
+                            <div class="btn btn-light btn-sm fw-bold text-secondary border py-2 custom-btn-hover">
+                                상세 정보 확인 →
                             </div>
                         </div>
                     </div>
@@ -71,10 +105,16 @@
             </div>
             {% endfor %}
         {% else %}
-            <div class="col-12 text-center py-5">
-                <div class="display-1 mb-4">🏢</div>
-                <h4 class="fw-bold text-dark">조건에 맞는 사업장이 없습니다</h4>
-                <a href="{% url 'businesses:business_list' %}" class="btn btn-primary fw-bold px-5 py-2 shadow-sm">전체보기</a>
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body text-center py-5">
+                        <span class="fs-1">📭</span>
+                        <p class="mt-2">조건에 맞는 사업장이 없습니다.</p>
+                        <a href="{% url 'businesses:business_list' %}" class="btn btn-outline-secondary btn-sm">
+                            전체 보기
+                        </a>
+                    </div>
+                </div>
             </div>
         {% endif %}
     </div>
@@ -83,26 +123,14 @@
 <style>
     .transition { transition: all 0.2s ease-in-out; }
     
-    /* 카드 호버 효과 */
     .hover-shadow:hover { 
         transform: translateY(-5px);
         box-shadow: 0 .75rem 1.5rem rgba(0,0,0,.12)!important;
     }
 
-    /* 회색 버튼 호버 효과 (카드 호버와 연동되거나 단독으로 보일 때) */
     .business-card:hover .custom-btn-hover {
         background-color: #e9ecef !important;
         color: #333 !important;
-    }
-    
-    .business-filter-input select, 
-    .business-filter-input input {
-        display: block;
-        width: 100%;
-        padding: .375rem .75rem;
-        font-size: 1rem;
-        border: 1px solid #dee2e6;
-        border-radius: .375rem;
     }
 </style>
 {% endblock %}

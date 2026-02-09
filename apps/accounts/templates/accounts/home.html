@@ -1,126 +1,98 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
 {% load static %}
 
-{% block title %}환영합니다 - 스마트 사업자 가계부{% endblock %}
+{% block title %}스마트 사업자 가계부{% endblock %}
 
 {% block content %}
-
-<style>
-    /* 1. 리스트 마우스 오버 효과 (붕 뜨기) */
-    .hover-float {
-        transition: all 0.3s ease;
-        cursor: default;
-    }
-    .hover-float:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
-        background-color: white !important;
-    }
-
-    /* 2. 버튼 마우스 오버 효과 (살짝 커짐) */
-    .btn-hover-scale {
-        transition: transform 0.2s ease;
-    }
-    .btn-hover-scale:hover {
-        transform: scale(1.05); 
-    }
-</style>
-
-<div class="container my-5" style="max-width: 700px;">
-
-    <div class="card shadow border-0 p-4 p-md-5">
-        
-        <div class="text-center mb-2">
-            <div class="display-1 mb-2">💼</div>
-            <h2 class="fw-bold text-dark">스마트 사업자 가계부</h2>
-        </div>
-
-        <hr class="border-warning border-3 opacity-75 my-4">
-
-        <div class="card border-0 mb-5 shadow-sm" style="background-color: #FFFDE7;">
-            <div class="card-body p-4 border-start border-4 border-warning">
-                <h3 class="fw-bold mb-3 text-dark">환영합니다! 👋</h3>
-                <p class="fs-5 fw-bold text-secondary mb-1">스마트 사업자 가계부란?</p>
-                <p class="text-muted mb-0">
-                    1인 사업자와 무인 사업자를 위한 똑똑한 재무 관리 시스템입니다.
-                </p>
+<div class="container-fluid px-4 py-5">
+    <div class="row justify-content-center text-center mb-5">
+        <div class="col-lg-8">
+            <div class="display-4 fw-bold text-dark mb-3">
+                복잡한 사업자 가계부,<br>
+                <span class="text-warning">똑똑하게</span> 관리하세요.
             </div>
-        </div>
-
-        <div class="mb-5">
-            <h4 class="fw-bold mb-3 border-start border-4 border-warning ps-3 text-dark">
-                | 주요 기능:
-            </h4>
-            
-            <ul class="list-unstyled mb-0 d-grid gap-3 ps-2">
-                <li class="d-flex align-items-center bg-light p-3 rounded shadow-sm hover-float">
-                    <span class="text-success fs-4 me-3 ms-2">✅</span>
-                    <span class="text-secondary fw-bold fs-5">부가세 자동 계산</span>
-                    <span class="text-muted small ms-2">(과세, 면세, 영세율)</span>
-                </li>
-                <li class="d-flex align-items-center bg-light p-3 rounded shadow-sm hover-float">
-                    <span class="text-success fs-4 me-3 ms-2">✅</span>
-                    <span class="text-secondary fw-bold fs-5">계좌 잔액 실시간 추적</span>
-                </li>
-                <li class="d-flex align-items-center bg-light p-3 rounded shadow-sm hover-float">
-                    <span class="text-success fs-4 me-3 ms-2">✅</span>
-                    <span class="text-secondary fw-bold fs-5">월별/카테고리별 지출 분석</span>
-                </li>
-                <li class="d-flex align-items-center bg-light p-3 rounded shadow-sm hover-float">
-                    <span class="text-success fs-4 me-3 ms-2">✅</span>
-                    <span class="text-secondary fw-bold fs-5">영수증 첨부 및 관리</span>
-                </li>
-                <li class="d-flex align-items-center bg-light p-3 rounded shadow-sm hover-float">
-                    <span class="text-success fs-4 me-3 ms-2">✅</span>
-                    <span class="text-secondary fw-bold fs-5">다중 사업장 지원</span>
-                </li>
-                <li class="d-flex align-items-center bg-light p-3 rounded shadow-sm hover-float">
-                    <span class="text-success fs-4 me-3 ms-2">✅</span>
-                    <span class="text-secondary fw-bold fs-5">부가세 신고 준비 자료</span>
-                </li>
-            </ul>
-        </div>
-
-        <div class="mb-4">
-            <h4 class="fw-bold mb-3 border-start border-4 border-warning ps-3 text-dark">
-                | 이런 분들께 추천합니다:
-            </h4>
-            <div class="bg-light p-4 rounded-4 shadow-sm">
-                <ul class="list-unstyled mb-0 d-grid gap-2 text-dark">
-                    <li class="d-flex align-items-center">
-                        <span class="me-2">💡</span> 
-                        <span>혼자서 사업을 운영하는 <b>1인 사업자</b></span>
-                    </li>
-                    <li class="d-flex align-items-center">
-                        <span class="me-2">💡</span> 
-                        <span>무인 카페, 빨래방 등 <b>무인 매장 운영자</b></span>
-                    </li>
-                    <li class="d-flex align-items-center">
-                        <span class="me-2">💡</span> 
-                        <span>여러 지출을 관리하는 <b>소규모 사업자</b></span>
-                    </li>
-                    <li class="d-flex align-items-center">
-                        <span class="me-2">💡</span> 
-                        <span>부가세 신고가 복잡한 <b>초보 사장님</b></span>
-                    </li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="text-center mt-3 p-5 rounded-4 bg-light shadow-sm">
-            <h4 class="fw-bold mb-4">🚀 지금 바로 시작하세요!</h4>
-            
-            <div class="d-flex justify-content-center gap-3 flex-wrap">
-                <a href="{% url 'accounts:signup' %}" class="btn btn-primary btn-lg px-5 fw-bold shadow-sm btn-hover-scale">
-                    회원가입하기
+            <p class="lead text-muted mb-4">
+                매출 관리부터 부가세 신고 준비까지, <br class="d-none d-md-block">
+                번거로운 장부 정리를 한 번에 해결해 드립니다.
+            </p>
+            <div class="d-flex justify-content-center gap-3">
+                <a href="{% url 'accounts:signup' %}" class="btn btn-warning btn-lg fw-bold px-5 shadow-sm border-0">
+                    지금 시작하기
                 </a>
-                
-                <a href="{% url 'accounts:login' %}" class="btn btn-light border btn-lg px-5 fw-bold shadow-sm btn-hover-scale">
-                    로그인하기
+                <a href="{% url 'accounts:login' %}" class="btn btn-light btn-lg fw-bold px-5 shadow-sm border">
+                    로그인
                 </a>
             </div>
         </div>
+    </div>
 
+    <div class="row g-4 justify-content-center mb-5">
+        <div class="col-md-4 col-xl-3">
+            <div class="card h-100 border-0 shadow-sm p-4 text-center hover-up">
+                <div class="fs-1 mb-3">📊</div>
+                <h5 class="fw-bold">실시간 매출/매입</h5>
+                <p class="text-muted small mb-0">일별, 월별 흐름을 한눈에 파악하고 사업의 수익성을 체크하세요.</p>
+            </div>
+        </div>
+        <div class="col-md-4 col-xl-3">
+            <div class="card h-100 border-0 shadow-sm p-4 text-center hover-up">
+                <div class="fs-1 mb-3">🧾</div>
+                <h5 class="fw-bold">증빙 자료 관리</h5>
+                <p class="text-muted small mb-0">영수증 파일을 간편하게 업로드하고 거래별로 증빙을 매칭하세요.</p>
+            </div>
+        </div>
+        <div class="col-md-4 col-xl-3">
+            <div class="card h-100 border-0 shadow-sm p-4 text-center hover-up">
+                <div class="fs-1 mb-3">📅</div>
+                <h5 class="fw-bold">부가세 신고 지원</h5>
+                <p class="text-muted small mb-0">분기별 예상 납부세액을 확인하여 미리 세금을 대비할 수 있습니다.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="bg-dark text-white rounded-4 p-4 p-md-5 d-flex flex-column flex-md-row align-items-center justify-content-between gap-4 shadow">
+                <div>
+                    <h3 class="fw-bold mb-2">사업에만 집중하세요!</h3>
+                    <p class="mb-0 opacity-75">가계부 정리는 스마트 가계부가 돕겠습니다.</p>
+                </div>
+                <a href="{% url 'accounts:signup' %}" class="btn btn-outline-warning btn-lg fw-bold px-4">
+                    무료로 가입하기
+                </a>
+            </div>
+        </div>
     </div>
 </div>
+
+<style>
+    /* 호버 효과 */
+    body { background-color: #f8f9fa; }
+    
+    .hover-up {
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        border-radius: 1rem !important;
+    }
+    
+    .hover-up:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 1rem 3rem rgba(0,0,0,.1) !important;
+    }
+
+    .btn-warning {
+        background-color: #ffc107;
+        color: #000;
+    }
+
+    .btn-warning:hover {
+        background-color: #e9ecef; /* 프로필 수정 페이지의 hover 스타일과 매칭 */
+        color: #000;
+    }
+
+    /* 반응형 폰트 조절 */
+    @media (max-width: 768px) {
+        .display-4 { font-size: 2rem; }
+        .lead { font-size: 1rem; }
+    }
+</style>
 {% endblock %}

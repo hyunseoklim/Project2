@@ -1,80 +1,65 @@
 {% load static %}
 
 <ul class="nav-list">
-    {% if user.is_authenticated %}
-        <li class="nav-item">
-            <a href="{% url 'accounts:home' %}" class="nav-link">
-                <span class="nav-icon">🏠</span>
-                <span class="nav-text">홈</span>
-            </a>
-        </li>
-        <li class="nav-item">
-            <a href="{% url 'accounts:dashboard' %}" class="nav-link">
-                <span class="nav-icon">📊</span>
-                <span class="nav-text">대시보드</span>
-            </a>
-        </li>
-        <li class="nav-item">
-            <a href="{% url 'transactions:transaction_list' %}" class="nav-link">
-                <span class="nav-icon">💰</span>
-                <span class="nav-text">거래 관리</span>
-            </a>
-        </li>
-        <li class="nav-item">
-            <a href="{% url 'businesses:business_list' %}" class="nav-link">
-                <span class="nav-icon">🏢</span>
-                <span class="nav-text">사업장 관리</span>
-            </a>
-        </li>
-        <li class="nav-item">
-            <a href="{% url 'transactions:merchant_list' %}" class="nav-link">
-                <span class="nav-icon">🏷️</span>
-                <span class="nav-text">거래처 관리</span>
-            </a>
-        </li>
-        <li class="nav-item">
-            <a href="{% url 'businesses:account_list' %}" class="nav-link">
-                <span class="nav-icon">🏦</span>
-                <span class="nav-text">계좌 관리</span>
-            </a>
-        </li>
-        <li class="nav-item">
-            <a href="{% url 'accounts:profile_detail' %}" class="nav-link">
-                <span class="nav-icon">👤</span>
-                <span class="nav-text">사업자 프로필</span>
-            </a>
-        </li>
-        
-        <div class="sidebar-divider"></div>
-        
-        <li class="nav-item">
-            <form action="{% url 'accounts:logout' %}" method="post">
-                {% csrf_token %}
-                <button type="submit" class="nav-link logout-btn-reset">
-                    <span class="nav-icon">🔓</span>
-                    <span class="nav-text">로그아웃</span>
-                </button>
-            </form>
-        </li>
-        
-        <li class="nav-item">
-            <a href="{% url 'accounts:password_change' %}" class="nav-link">
+    <li class="nav-item">
+        <a href="{% url 'accounts:home' %}" class="nav-link">
+            <span class="nav-icon">🏠</span>
+            <span class="nav-text">홈</span>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a href="{% url 'accounts:dashboard' %}" class="nav-link">
+            <span class="nav-icon">📊</span>
+            <span class="nav-text">대시보드</span>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a href="{% url 'transactions:transaction_list' %}" class="nav-link">
+            <span class="nav-icon">💰</span>
+            <span class="nav-text">거래 관리</span>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a href="{% url 'businesses:business_list' %}" class="nav-link">
+            <span class="nav-icon">🏢</span>
+            <span class="nav-text">사업장 관리</span>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a href="{% url 'transactions:merchant_list' %}" class="nav-link">
+            <span class="nav-icon">🏷️</span>
+            <span class="nav-text">거래처 관리</span>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a href="{% url 'businesses:account_list' %}" class="nav-link">
+            <span class="nav-icon">🏦</span>
+            <span class="nav-text">계좌 관리</span>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a href="{% url 'accounts:profile_detail' %}" class="nav-link">
+            <span class="nav-icon">👤</span>
+            <span class="nav-text">사업자 프로필</span>
+        </a>
+    </li>
+    
+    <div class="sidebar-divider"></div>
+    
+    <li class="nav-item">
+        <a href="{% url 'accounts:password_change' %}" class="nav-link">
             <span class="nav-icon">🔒</span>
             <span class="nav-text">비밀번호 변경</span>
-            </a>
-        </li>
-    {% else %}
-        <li class="nav-item">
-            <a href="{% url 'accounts:login' %}" class="nav-link">
-                <span class="nav-icon">🔐</span>
-                <span class="nav-text">로그인</span>
-            </a>
-        </li>
-        <li class="nav-item">
-            <a href="{% url 'accounts:signup' %}" class="nav-link">
-                <span class="nav-icon">✏️</span>
-                <span class="nav-text">회원가입</span>
-            </a>
-        </li>
-    {% endif %}
+        </a>
+    </li>
+
+    <li class="nav-item mt-auto">
+        <form action="{% url 'accounts:logout' %}" method="post">
+            {% csrf_token %}
+            <button type="submit" class="nav-link logout-btn-reset w-100 border-0 bg-transparent text-start">
+                <span class="nav-icon">🔓</span>
+                <span class="nav-text">로그아웃</span>
+            </button>
+        </form>
+    </li>
 </ul>

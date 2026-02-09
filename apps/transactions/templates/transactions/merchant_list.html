@@ -3,24 +3,29 @@
 {% block title %}거래처 관리 - 스마트 사업자 가계부{% endblock %}
 
 {% block content %}
-<div class="container py-4">
+<div class="container py-4 px-lg-5">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="mb-0" style="font-weight: 700; color: #333; letter-spacing: -0.5px; line-height: 1.2;">🤝 거래처 목록</h2>
-        <a href="{% url 'transactions:merchant_create' %}" class="btn btn-primary fw-bold shadow-sm">
-            <i class="bi bi-plus-lg me-1"></i>+ 거래처 추가
+        
+        <a href="{% url 'transactions:merchant_create' %}" 
+        class="btn btn-success btn-sm px-3 fw-bold shadow-sm d-flex align-items-center" 
+        style="height: 40px;">
+            ➕ 거래처 추가
         </a>
     </div>
 
-    <ul class="nav nav-pills mb-4 gap-2">
-        <li class="nav-item">
-            <a class="nav-link {% if view_type == 'all' or not view_type %}active{% endif %} fw-bold px-4 py-2 border shadow-sm" 
-               style="border-radius: 10px;" href="?view=all">전체 거래처</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link {% if view_type == 'frequent' %}active{% endif %} fw-bold px-4 py-2 border shadow-sm" 
-               style="border-radius: 10px;" href="?view=frequent">자주 쓰는 거래처</a>
-        </li>
-    </ul>
+    <div class="mb-4">
+        <ul class="nav gap-2">
+            <li class="nav-item">
+                <a class="nav-link nav-custom {% if view_type == 'all' or not view_type %}active-blue{% endif %} fw-bold px-4 py-2 border shadow-sm" 
+                href="?view=all">전체 거래처</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link nav-custom {% if view_type == 'frequent' %}active-blue{% endif %} fw-bold px-4 py-2 border shadow-sm" 
+                href="?view=frequent">자주 쓰는 거래처</a>
+            </li>
+        </ul>
+    </div>
 
     {% if merchants %}
     <div class="row g-3">
@@ -58,10 +63,10 @@
 
                     <div class="merchant-info mt-3 pt-3 border-top">
                         <div class="d-flex align-items-center mb-1 text-muted" style="font-size: 0.85rem;">
-                            <i class="bi bi-card-text me-2"></i><span>{{ merchant.get_masked_business_number|default:"사업자번호 없음" }}</span>
+                            <i class="bi bi-card-text me-2"></i><span>{{ merchant.get_masked_business_number|default:"-" }}</span>
                         </div>
                         <div class="d-flex align-items-center text-muted" style="font-size: 0.85rem;">
-                            <i class="bi bi-telephone me-2"></i><span>{{ merchant.contact|default:"연락처 없음" }}</span>
+                            <i class="bi bi-telephone me-2"></i><span>{{ merchant.contact|default:"-" }}</span>
                         </div>
                     </div>
                 </div>
@@ -70,16 +75,45 @@
         {% endfor %}
     </div>
     {% else %}
-    <div class="text-center py-5 bg-white rounded-3 shadow-sm border mt-3">
-        <p class="text-muted mb-0">등록된 거래처 정보가 없습니다.</p>
+    <div class="card border-0 shadow-sm rounded-4 mt-3">
+        <div class="card-body text-center py-5">
+            <span class="fs-1">📭</span>
+            <p class="mt-2 text-muted fw-bold">등록된 거래처 정보가 없습니다.</p>
+        </div>
     </div>
     {% endif %}
 </div>
 
 <style>
-    .nav-pills .nav-link { background-color: #fff; color: #6c757d; border: 1px solid #dee2e6 !important; transition: 0.2s; }
-    .nav-pills .nav-link.active { background-color: #0d6efd !important; color: #fff !important; border-color: #0d6efd !important; }
-    .hover-up { transition: all 0.25s ease; }
-    .hover-up:hover { transform: translateY(-4px); box-shadow: 0 8px 20px rgba(0,0,0,0.1) !important; }
+    /* 탭 메뉴 공통 스타일 */
+    .nav .nav-link.nav-custom {  /* nav-pills 제거 */
+        background-color: #fff;
+        color: #6c757d;
+        border: 1px solid #dee2e6 !important;
+        border-radius: 10px;
+        transition: all 0.2s ease;
+    }
+    
+    /* [선택된 탭] 파란색 배경 + 흰색 글씨 */
+    .nav .nav-link.active-blue {  /* nav-pills 제거 */
+        background-color: #0d6efd !important;
+        color: #ffffff !important;
+        border-color: #0d6efd !important;
+    }
+
+    /* 호버 시 회색 배경 (선택되지 않은 탭만) */
+    .nav .nav-link.nav-custom:hover:not(.active-blue) {  /* nav-pills 제거 */
+        background-color: #e9ecef;
+        color: #333;
+    }
+
+    /* 카드 호버 애니메이션 */
+    .hover-up { 
+        transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1); 
+    }
+    .hover-up:hover { 
+        transform: translateY(-5px); 
+        box-shadow: 0 12px 20px rgba(0,0,0,0.1) !important; 
+    }
 </style>
 {% endblock %}
