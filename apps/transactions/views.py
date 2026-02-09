@@ -501,12 +501,16 @@ def transaction_list(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
+    query_params = request.GET.copy()
+    query_params.pop('page', None)
+
     context = {
         'page_obj': page_obj,
         'stats': stats,
         'businesses': Business.objects.filter(user=request.user, is_active=True),
         'accounts': Account.objects.filter(user=request.user, is_active=True),
         'categories': Category.objects.all().order_by('type', 'order'),
+        'querystring': query_params.urlencode(),
     }
     return render(request, 'transactions/transaction_list.html', context)
 
