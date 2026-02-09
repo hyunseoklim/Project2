@@ -18,6 +18,7 @@ def auth_client(client, test_user):
     client.login(username='testuser', password='password123')
     return client
 
+
 @pytest.fixture
 def base_data(test_user):
     """기본적인 계좌, 상점, 카테고리, 시간을 제공하는 픽스처"""
@@ -70,6 +71,8 @@ class TestAccountsView:
         temp_account = Account.objects.create(user=test_user, name="테스트 계좌",balance=100000)
         temp_merchant = Merchant.objects.create(user=test_user, name="테스트 상점")
         temp_category = Category.objects.create(name="식비", type='expense')
+
+        aware_datetime = timezone.make_aware(datetime(2026, 2, 7, 12, 0, 0))
 
         # 2. 모든 필수 조건을 충족하는 트랜잭션 생성
         Transaction.objects.create(

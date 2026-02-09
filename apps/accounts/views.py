@@ -117,8 +117,11 @@ def dashboard(request):
     net_profit = total_income - total_expense
 
     # 4. 최근 거래 (상위 5개)
-    recent_transactions = Transaction.objects.filter(user=request.user).order_by('-occurred_at', '-id')[:5]
-
+    # 수정, timezone.now를 통해 미래내용 없앰.
+    recent_transactions = Transaction.objects.filter(
+        user=request.user,
+        occurred_at__lte=timezone.now() # 현재 시간보다 작거나 같은(과거~현재) 거래만
+    ).order_by('-occurred_at', '-id')[:5]
     # 5. 사업장별 집계
     businesses = Business.objects.filter(
         user=request.user,

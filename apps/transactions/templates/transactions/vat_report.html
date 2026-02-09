@@ -10,9 +10,26 @@
         <div>
             <h3 class="mb-0 fw-bold text-dark">📊 부가세 신고 준비</h3>
             <p class="text-muted mb-0 mt-1">
-                {{ year }}년 {{ quarter }}분기 ({{ start_date|date:"Y.m.d" }} ~ {{ end_date|date:"Y.m.d" }})
+                <strong>
+                    {{ year }}년 {{ quarter }}분기 ({{ start_date|date:"Y.m.d" }} ~ {{ end_date|date:"Y.m.d" }})
+                </strong>
             </p>
         </div>
+    </div>
+
+    <!-- 법적 고지 -->
+    <div class="alert alert-warning">
+        <h6>⚠️ 중요 안내</h6>
+        <ul class="mb-0">
+            <li>
+                <strong>
+                    정확한 신고는 <a href="https://www.hometax.go.kr" target="_blank" class="alert-link">홈택스</a>를 이용하거나 세무사와 상담하세요.
+                </strong></li>
+            <li>이 계산 결과는 <strong>참고용</strong>으로만 사용해주세요.</li>
+            <li>실제 금액은 미등록 내용, 기타 요인에 따라 달라질 수 있습니다.</li>
+            <li>본 서비스는 계산 오류나 신고 결과에 대한 책임을 지지 않습니다.</li>
+            <li>환급의 경우, 일반과세자는 환급 가능하나 간이과세자는 0원으로 처리됩니다.</li>
+        </ul>
     </div>
 
     <div class="row g-3 mb-4">

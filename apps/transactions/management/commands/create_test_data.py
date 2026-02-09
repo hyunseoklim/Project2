@@ -144,7 +144,8 @@ class Command(BaseCommand):
         self.stdout.write(f"✅ 거래처: {len(merchants)}개")
         
         total_created = 0
-
+        transactions_to_create = [] # 1. 생성할 객체를 담을 리스트
+        
         for year in years:
             self.stdout.write(f"\n📅 {year}년 데이터 생성 중...")
             year_created = 0
@@ -200,8 +201,8 @@ class Command(BaseCommand):
                             merchant_name = merchant.name
 
                         # 거래 생성 실행
-                        try:
-                            Transaction.objects.create(
+                        transactions_to_create.append(
+                            Transaction(
                                 user=user,
                                 business=business,
                                 account=account,
@@ -211,22 +212,14 @@ class Command(BaseCommand):
                                 tx_type=tx_type,
                                 tax_type=tax_type,
                                 amount=amount,
-                                occurred_at=datetime(year, month, day, 
-                                                random.randint(9, 20), 
-                                                random.randint(0, 59)),
-                                is_business=True,
-                                memo=f'{category.name} - {year}.{month:02d}.{day:02d}'
-                            )
-                            month_created += 1
-                        except Exception as e:
-                            self.stdout.write(self.style.ERROR(f"실패: {e}"))
-                        
-                        if month_created >= txs_per_month:
-                            break
-                    if month_created >= txs_per_month:
-                        break
-                
-                year_created += month_created
+                                occurred_at=datetime(year, month, day, random.randint(9, 20), random.randint(0, 59)),
+                        )
+                    )
+                    month_created += 1
+                    total_created += 1 # 카운트 증가
+
+                    if month_created >= txs_per_month: break
+                if month_created >= txs_per_month: break
                 self.stdout.write(f"  {month}월: {month_created}건 생성 완료")
         
         self.stdout.write(self.style.SUCCESS(f"\n🎉 완료! 총 {total_created}건의 거래 생성"))
