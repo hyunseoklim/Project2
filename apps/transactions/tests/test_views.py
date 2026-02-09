@@ -1,4 +1,6 @@
 from decimal import Decimal
+from datetime import datetime
+
 
 import pytest
 from django.contrib.auth.models import User
@@ -187,3 +189,96 @@ class TestTransactionViews:
         assert len(response.context['year_options']) == 5
         assert 'monthly_stats' in response.context
         assert len(response.context['monthly_stats']) == 3
+
+    def test_monthly_summary_filters_year_and_month(self, auth_client, test_user, business, account, income_category, expense_category):
+        Transaction.objects.create(
+            user=test_user,
+            business=business,
+            account=account,
+            category=income_category,
+            tx_type='IN',
+            tax_type='taxable',
+            is_business=True,
+            amount=Decimal('12000.00'),
+            vat_amount=None,
+            occurred_at=timezone.make_aware(datetime(2025, 3, 1, 9, 0, 0)),
+            merchant_name='고객',
+        )
+        Transaction.objects.create(
+            user=test_user,
+            business=business,
+            account=account,
+            category=expense_category,
+            tx_type='OUT',
+            tax_type='taxable',
+            is_business=True,
+            amount=Decimal('3000.00'),
+            vat_amount=None,
+            occurred_at=timezone.make_aware(datetime(2025, 3, 15, 9, 0, 0)),
+            merchant_name='업체',
+        )
+        Transaction.objects.create(
+            user=test_user,
+            business=business,
+            account=account,
+            category=expense_category,
+            tx_type='OUT',
+            tax_type='taxable',
+            is_business=True,
+            amount=Decimal('500.00'),
+            vat_amount=None,
+            occurred_at=timezone.make_aware(datetime(2024, 2, 1, 9, 0, 0)),
+            merchant_name='과거',
+        )
+
+        response = auth_client.get(reverse('transactions:monthly_summary'), {'year': 2025, 'month': 3})
+
+        assert response.status_code == 200
+        assert response.context['year'] == 2025
+        assert response.context['month'] == 3
+        assert len(response.context['rows']) == 1
+        assert response.context['rows'][0]['month'] == 3
+        assert response.context['totals']['income'] == Decimal('12000.00')
+        assert response.context['totals']['expense'] == Decimal('3000.00')
+
+    def test_monthly_summary_renders_charts(self, auth_client, test_user, business, account, income_category):
+        Transaction.objects.create(
+            user=test_user,
+            business=business,
+            account=account,
+            category=income_category,
+            tx_type='IN',
+            tax_type='taxable',
+            is_business=True,
+            amount=Decimal('8000.00'),
+            vat_amount=None,
+            occurred_at=timezone.now(),
+            merchant_name='고객',
+        )
+
+        response = auth_client.get(reverse('transactions:monthly_summary'))
+
+        assert response.status_code == 200
+        assert b'id="monthlyLineChart"' in response.content
+        assert b'id="monthlyNetChart"' in response.content
+
+    def test_monthly_summary_includes_year_list(self, auth_client, test_user, business, account, income_category):
+        Transaction.objects.create(
+            user=test_user,
+            business=business,
+            account=account,
+            category=income_category,
+            tx_type='IN',
+            tax_type='taxable',
+            is_business=True,
+            amount=Decimal('5000.00'),
+            vat_amount=None,
+            occurred_at=timezone.make_aware(datetime(2023, 5, 1, 9, 0, 0)),
+            merchant_name='고객',
+        )
+
+        response = auth_client.get(reverse('transactions:monthly_summary'))
+
+        assert response.status_code == 200
+        assert response.context['year_list']
+        assert 2023 in response.context['year_list']
