@@ -91,7 +91,9 @@ def account_list(request):
     # 페이지네이션 (헬퍼 함수 사용)
     page_obj = _get_optimized_page(accounts, request.GET.get('page'))
     
-    # 요약 정보
+
+
+    # 요약 정보 
     total_count = Account.active.filter(user=user).count()
     business_count = Account.active.filter(user=user, account_type='business').count()
     personal_count = Account.active.filter(user=user, account_type='personal').count()

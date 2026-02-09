@@ -19,6 +19,20 @@
                style="height: 38px;">
                 📊 월별 요약
             </a>
+            
+            <a href="{% url 'transactions:upload_excel'  %}"
+                class="btn btn-outline-info btn-sm px-3 fw-bold shadow-sm d-flex align-items-center" 
+                style="height: 38px;">
+                    📈 엑셀 사용
+                </a>
+
+            <a href="{% url 'transactions:attachment_list'  %}"
+                class="btn btn-outline-warning btn-sm px-3 fw-bold shadow-sm d-flex align-items-center" 
+                style="height: 38px;">
+                    🧾 영수증 모음
+            </a>
+
+
             <a href="{% url 'transactions:merchant_list' %}" 
                class="btn btn-outline-secondary btn-sm px-3 fw-bold shadow-sm d-flex align-items-center" 
                style="height: 38px;">
@@ -33,51 +47,54 @@
     </div>
 
     <div class="row g-3 mb-3">
-        <div class="col-md-3">
+        <div class="col-md-4">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body p-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <small class="text-muted">총 수입</small>
-                            <h5 class="mb-0 text-success fw-bold">{{ stats.total_income|default:0|floatformat:0|intcomma }}원</h5>
-                        </div>
-                    </div>
+                    <small class="text-muted">총 수입</small>
+                    <h5 class="mb-0 text-success fw-bold">{{ stats.total_income|default:0|floatformat:0|intcomma }}원</h5>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-4">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body p-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <small class="text-muted">총 지출</small>
-                            <h5 class="mb-0 text-danger fw-bold">{{ stats.total_expense|default:0|floatformat:0|intcomma }}원</h5>
-                        </div>
-                    </div>
+                    <small class="text-muted">총 지출</small>
+                    <h5 class="mb-0 text-danger fw-bold">{{ stats.total_expense|default:0|floatformat:0|intcomma }}원</h5>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-4">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body p-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <small class="text-muted">총 부가세</small>
-                            <h5 class="mb-0 text-info fw-bold">{{ stats.total_vat|default:0|floatformat:0|intcomma }}원</h5>
-                        </div>
-                    </div>
+                    <small class="text-muted">거래 건수</small>
+                    <h5 class="mb-0 fw-bold">{{ stats.count|default:0|intcomma }}건</h5>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
+    </div>
+
+    <div class="row g-3 mb-3">
+        <div class="col-md-4">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body p-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <small class="text-muted">거래 건수</small>
-                            <h5 class="mb-0 fw-bold">{{ stats.count|default:0|intcomma }}건</h5>
-                        </div>
-                    </div>
+                    <small class="text-muted">총 매출세액 (수입 부가세)</small>
+                    <h5 class="mb-0 text-dark fw-bold">{{ stats.income_vat|default:0|floatformat:0|intcomma }}원</h5>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-3">
+                    <small class="text-muted">총 매입세액 (지출 부가세)</small>
+                    <h5 class="mb-0 text-dark fw-bold">{{ stats.expense_vat|default:0|floatformat:0|intcomma }}원</h5>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100 border-start border-4 {% if stats.vat_result_value > 0 %}border-danger{% else %}border-primary{% endif %}">
+                <div class="card-body p-3">
+                    <small class="text-muted">{{ stats.vat_result_label }}</small>
+                    <h5 class="mb-0 fw-bold {{ stats.vat_color_class }}">{{ stats.vat_result_value|floatformat:0|intcomma }}원</h5>
                 </div>
             </div>
         </div>

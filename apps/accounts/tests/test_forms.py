@@ -18,12 +18,13 @@ class TestProfileForm:
     def test_profile_form_clean_brn_success(self, test_user):
         """하이픈이나 공백이 있어도 숫자로만 잘 정제되는지 테스트"""
         data = {
-            'business_registration_number': '123-45-67890 ', # 하이픈과 공백 섞임
+            'full_name': '테스트유저',  # 이 필드가 필수인데 빠져있을 확률이 높습니다!
+            'business_registration_number': '123-45-67890 ',
             'business_type': 'individual',
             'phone': '010-1234-5678'
         }
         form = ProfileForm(data=data, instance=test_user.profile)
-        
+        print(f"\nForm Errors: {form.errors}")
         assert form.is_valid()
         # 정제된 데이터가 clean 메서드를 통해 하이픈이 제거되었는지 확인
         assert form.cleaned_data['business_registration_number'] == '1234567890'
