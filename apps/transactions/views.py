@@ -15,6 +15,7 @@ from django.utils import timezone
 from .models import Merchant, Category
 from .forms import TransactionForm, MerchantForm, CategoryForm, ExcelUploadForm
 from apps.businesses.models import Account, Business
+from decimal import Decimal
 
 from django.http import FileResponse, Http404
 from .models import Attachment
@@ -486,15 +487,30 @@ def transaction_list(request):
     if date_to:
         transactions = transactions.filter(occurred_at__lte=date_to)
 
-    # 통계 계산
+    # 1. 통계 계산
     stats = transactions.aggregate(
         total_income=Sum('amount', filter=Q(tx_type='IN')),
         total_expense=Sum('amount', filter=Q(tx_type='OUT')),
-        total_vat=Sum('vat_amount'),
         count=Count('id'),
-        income_vat=Sum('vat_amount', filter=Q(tx_type='IN')), 
-        expense_vat=Sum('vat_amount', filter=Q(tx_type='OUT')),
+        income_vat=Sum('vat_amount', filter=Q(tx_type='IN')),  # 매출세액
+        expense_vat=Sum('vat_amount', filter=Q(tx_type='OUT')), # 매입세액
     )
+
+    # 2. 부가세 정산 로직 추가
+    income_vat = stats['income_vat'] or Decimal('0')
+    expense_vat = stats['expense_vat'] or Decimal('0')
+
+    # 차액 계산 (매출세액 - 매입세액)
+    vat_diff = income_vat - expense_vat
+
+    if vat_diff >= 0:
+        stats['vat_result_label'] = "예상 납부세액"
+        stats['vat_result_value'] = vat_diff
+        stats['vat_color_class'] = "text-danger" # 내야 할 돈은 빨간색
+    else:
+        stats['vat_result_label'] = "예상 환급세액"
+        stats['vat_result_value'] = abs(vat_diff) # 음수를 양수로 변환
+        stats['vat_color_class'] = "text-primary" # 돌려받을 돈은 파란색
 
     # 페이지네이션
     paginator = Paginator(transactions, 20)

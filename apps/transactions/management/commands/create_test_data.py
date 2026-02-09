@@ -143,9 +143,8 @@ class Command(BaseCommand):
         
         self.stdout.write(f"✅ 거래처: {len(merchants)}개")
         
-        # 6. 거래 생성
         total_created = 0
-        
+
         for year in years:
             self.stdout.write(f"\n📅 {year}년 데이터 생성 중...")
             year_created = 0
@@ -153,44 +152,56 @@ class Command(BaseCommand):
             for month in range(1, 13):
                 month_created = 0
                 
-                for day in range(1, 29):  # 1~28일
-                    # 하루에 몇 건씩
-                    daily_txs = random.randint(1, 3)
+                # 월 고정 지출 발생 여부 체크용 (한 달에 한 번만 발생하도록)
+                rent_paid = False
+                salary_paid = False
+
+                for day in range(1, 29):
+                    # 하루에 1~5건의 거래 발생 (빈도 약간 증가)
+                    daily_txs = random.randint(1, 5)
                     
                     for _ in range(daily_txs):
-                        # 수입 or 지출
-                        is_income = random.random() > 0.3  # 70% 수입
+                        # 80% 확률로 수입 발생 (수입 비중을 살짝 더 높임)
+                        is_income = random.random() > 0.2 
                         
                         if is_income:
-                            # === 수입 거래 ===
+                            # === 수입 거래: 카페 하루 매출 단위로 생각 ===
                             category = random.choice(income_cats)
-                            amount = Decimal(random.randint(50, 500)) * 100  # 5천~5만원
-                            merchant = merchants[-1]  # 수입은 거래처 없음
+                            # 금액 상향: 20만 원 ~ 100만 원 (일일 매출 규모)
+                            amount = Decimal(random.randint(2000, 10000)) * 100 
+                            merchant = merchants[-1]
                             tax_type = 'taxable'
                             tx_type = 'IN'
-                            
+                            merchant_name = "일반 고객"
                         else:
                             # === 지출 거래 ===
                             category = random.choice(expense_cats)
+                            tx_type = 'OUT'
+                            tax_type = random.choice(['taxable', 'tax_free'])
                             
-                            # 카테고리별 금액 범위
+                            # 카테고리별 금액 및 발생 빈도 제어
                             if '인건비' in category.name:
-                                amount = Decimal(random.randint(15, 30)) * 100000  # 150~300만원
+                                if not salary_paid: # 월 1회만 발생
+                                    amount = Decimal(random.randint(150, 300)) * 10000 
+                                    salary_paid = True
+                                else: continue # 이미 나갔으면 이번 루프는 스킵
                             elif '임차료' in category.name:
-                                amount = Decimal(2000000)  # 200만원 고정
+                                if not rent_paid: # 월 1회만 발생
+                                    amount = Decimal(2000000)
+                                    rent_paid = True
+                                else: continue
                             elif '광고' in category.name:
-                                amount = Decimal(random.randint(50, 200)) * 1000  # 5~20만원
+                                amount = Decimal(random.randint(5, 20)) * 10000 # 5~20만원
                             else:
-                                amount = Decimal(random.randint(10, 100)) * 1000  # 1만~10만원
+                                # 일반 잡비: 5천원 ~ 5만원
+                                amount = Decimal(random.randint(50, 500)) * 100
                             
                             merchant = random.choice(merchants[:-1])
                             merchant_name = merchant.name
-                            tax_type = random.choice(['taxable', 'tax_free'])
-                            tx_type = 'OUT'
-                        
-                        # 거래 생성
+
+                        # 거래 생성 실행
                         try:
-                            tx = Transaction.objects.create(
+                            Transaction.objects.create(
                                 user=user,
                                 business=business,
                                 account=account,
@@ -201,32 +212,22 @@ class Command(BaseCommand):
                                 tax_type=tax_type,
                                 amount=amount,
                                 occurred_at=datetime(year, month, day, 
-                                                   random.randint(9, 20), 
-                                                   random.randint(0, 59)),
+                                                random.randint(9, 20), 
+                                                random.randint(0, 59)),
                                 is_business=True,
                                 memo=f'{category.name} - {year}.{month:02d}.{day:02d}'
                             )
-                            
                             month_created += 1
-                            
                         except Exception as e:
-                            self.stdout.write(self.style.ERROR(
-                                f"거래 생성 실패: {e} "
-                                f"(category={category.name}, type={category.type}, tx_type={tx_type})"
-                            ))
-                            continue
+                            self.stdout.write(self.style.ERROR(f"실패: {e}"))
                         
                         if month_created >= txs_per_month:
                             break
-                    
                     if month_created >= txs_per_month:
                         break
                 
                 year_created += month_created
-                self.stdout.write(f"  {month}월: {month_created}건")
-            
-            total_created += year_created
-            self.stdout.write(self.style.SUCCESS(f"✅ {year}년 총 {year_created}건 생성"))
+                self.stdout.write(f"  {month}월: {month_created}건 생성 완료")
         
         self.stdout.write(self.style.SUCCESS(f"\n🎉 완료! 총 {total_created}건의 거래 생성"))
         self.stdout.write(f"\n접속 정보:")
