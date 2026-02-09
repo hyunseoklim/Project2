@@ -295,8 +295,8 @@ class Transaction(SoftDeleteModel):
     # imsi_cjy_delete_fo_rms.py 적용시 사용될 코드
     @property
     def total_amount(self):
-        """총금액 = 공급가액 + 부가세"""
-        return self.amount + (self.vat_amount or Decimal('0'))
+        """총금액 = 입력 금액 (부가세 포함 기준)"""
+        return self.amount or Decimal('0')
     
     @property
     def has_attachment(self):

@@ -14,6 +14,11 @@
                style="height: 38px;">
                 📁 거래 카테고리 관리
             </a>
+            <a href="{% url 'transactions:monthly_summary' %}" 
+               class="btn btn-outline-dark btn-sm px-3 fw-bold shadow-sm d-flex align-items-center" 
+               style="height: 38px;">
+                📊 월별 요약
+            </a>
             <a href="{% url 'transactions:merchant_list' %}" 
                class="btn btn-outline-secondary btn-sm px-3 fw-bold shadow-sm d-flex align-items-center" 
                style="height: 38px;">
@@ -207,7 +212,7 @@
                     <ul class="pagination pagination-sm justify-content-center mb-0">
                         {% if page_obj.has_previous %}
                         <li class="page-item">
-                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">이전</a>
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if querystring %}&{{ querystring }}{% endif %}">이전</a>
                         </li>
                         {% endif %}
 
@@ -215,13 +220,13 @@
                             {% if page_obj.number == num %}
                             <li class="page-item active"><span class="page-link">{{ num }}</span></li>
                             {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-                            <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                            <li class="page-item"><a class="page-link" href="?page={{ num }}{% if querystring %}&{{ querystring }}{% endif %}">{{ num }}</a></li>
                             {% endif %}
                         {% endfor %}
 
                         {% if page_obj.has_next %}
                         <li class="page-item">
-                            <a class="page-link" href="?page={{ page_obj.next_page_number }}">다음</a>
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if querystring %}&{{ querystring }}{% endif %}">다음</a>
                         </li>
                         {% endif %}
                     </ul>

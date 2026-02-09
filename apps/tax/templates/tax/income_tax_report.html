@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load humanize %}
 
 {% block title %}종합소득세 계산 - 스마트 사업자 가계부{% endblock %}
 
@@ -64,23 +65,23 @@
                     <table class="table table-borderless">
                         <tr>
                             <td class="text-muted">총 수입 (매출)</td>
-                            <td class="text-end"><strong>{{ total_income|floatformat:0 }}원</strong></td>
+                            <td class="text-end"><strong>{{ total_income|floatformat:0|intcomma }}원</strong></td>
                         </tr>
                         <tr>
                             <td class="text-muted">총 지출 (경비)</td>
-                            <td class="text-end text-danger">-{{ total_expense|floatformat:0 }}원</td>
+                            <td class="text-end text-danger">-{{ total_expense|floatformat:0|intcomma }}원</td>
                         </tr>
                         <tr class="border-top">
                             <td class="text-muted">소득금액</td>
-                            <td class="text-end"><strong>{{ actual_income_amount|floatformat:0 }}원</strong></td>
+                            <td class="text-end"><strong>{{ actual_income_amount|floatformat:0|intcomma }}원</strong></td>
                         </tr>
                         <tr>
                             <td class="text-muted">소득공제</td>
-                            <td class="text-end text-danger">-{{ deduction_amount|floatformat:0 }}원</td>
+                            <td class="text-end text-danger">-{{ deduction_amount|floatformat:0|intcomma }}원</td>
                         </tr>
                         <tr class="border-top">
                             <td class="text-muted"><strong>과세표준</strong></td>
-                            <td class="text-end"><strong>{{ actual_taxable|floatformat:0 }}원</strong></td>
+                            <td class="text-end"><strong>{{ actual_taxable|floatformat:0|intcomma }}원</strong></td>
                         </tr>
                     </table>
                 </div>
@@ -90,10 +91,10 @@
                         <div class="display-6 text-primary mb-3">{{ actual_result.rate_percent }}%</div>
                         
                         <div class="text-muted mb-2">예상 세금</div>
-                        <div class="display-5 text-danger mb-2">{{ actual_result.total|floatformat:0 }}원</div>
+                        <div class="display-5 text-danger mb-2">{{ actual_result.total|floatformat:0|intcomma }}원</div>
                         
                         <small class="text-muted">
-                            (소득세 {{ actual_result.tax|floatformat:0 }}원 + 지방세 {{ actual_result.local_tax|floatformat:0 }}원)
+                            (소득세 {{ actual_result.tax|floatformat:0|intcomma }}원 + 지방세 {{ actual_result.local_tax|floatformat:0|intcomma }}원)
                         </small>
                     </div>
                 </div>
@@ -120,10 +121,10 @@
                     <h6>① 실제 지출 방식</h6>
                     <p class="text-muted mb-2">장부에 기록된 실제 지출 사용</p>
                     <div class="bg-light p-3 rounded">
-                        <div>경비: {{ total_expense|floatformat:0 }}원</div>
-                        <div>소득금액: {{ actual_income_amount|floatformat:0 }}원</div>
+                        <div>경비: {{ total_expense|floatformat:0|intcomma }}원</div>
+                        <div>소득금액: {{ actual_income_amount|floatformat:0|intcomma }}원</div>
                         <div class="mt-2 fs-5">
-                            <strong>세금: {{ actual_result.total|floatformat:0 }}원</strong>
+                            <strong>세금: {{ actual_result.total|floatformat:0|intcomma }}원</strong>
                         </div>
                     </div>
                 </div>
@@ -131,10 +132,10 @@
                     <h6>② 단순경비율 방식 ✅</h6>
                     <p class="text-muted mb-2">{{ simple_result.business_type_name }} ({{ simple_result.rate_percent }}%)</p>
                     <div class="bg-success bg-opacity-10 p-3 rounded border border-success">
-                        <div>인정 경비: {{ simple_result.expense|floatformat:0 }}원</div>
-                        <div>소득금액: {{ simple_result.income_amount|floatformat:0 }}원</div>
+                        <div>인정 경비: {{ simple_result.expense|floatformat:0|intcomma }}원</div>
+                        <div>소득금액: {{ simple_result.income_amount|floatformat:0|intcomma }}원</div>
                         <div class="mt-2 fs-5 text-success">
-                            <strong>세금: {{ simple_result.tax_result.total|floatformat:0 }}원</strong>
+                            <strong>세금: {{ simple_result.tax_result.total|floatformat:0|intcomma }}원</strong>
                         </div>
                     </div>
                 </div>
@@ -142,13 +143,13 @@
             
             {% if recommended == 'simple' %}
             <div class="alert alert-success mt-3 mb-0">
-                <h6>💰 {{ savings|floatformat:0 }}원 절세 가능!</h6>
+                <h6>💰 {{ savings|floatformat:0|intcomma }}원 절세 가능!</h6>
                 <p class="mb-0">단순경비율 방식으로 신고하면 더 유리합니다.</p>
             </div>
             {% else %}
             <div class="alert alert-primary mt-3 mb-0">
                 <h6>📊 실제 지출 방식 추천</h6>
-                <p class="mb-0">실제 지출 방식이 {{ savings|floatformat:0 }}원 더 유리합니다.</p>
+                <p class="mb-0">실제 지출 방식이 {{ savings|floatformat:0|intcomma }}원 더 유리합니다.</p>
             </div>
             {% endif %}
         </div>
@@ -178,9 +179,9 @@
                         {% for item in category_impact %}
                         <tr>
                             <td>{{ item.category }}</td>
-                            <td class="text-end">{{ item.amount|floatformat:0 }}원</td>
+                            <td class="text-end">{{ item.amount|floatformat:0|intcomma }}원</td>
                             <td class="text-end text-success">
-                                <strong>{{ item.tax_saved|floatformat:0 }}원</strong>
+                                <strong>{{ item.tax_saved|floatformat:0|intcomma }}원</strong>
                             </td>
                         </tr>
                         {% endfor %}
@@ -214,8 +215,8 @@
                         {% for m in monthly_data %}
                         <tr {% if m.month == 12 %}class="table-active"{% endif %}>
                             <td>{{ m.month }}월</td>
-                            <td class="text-end">{{ m.income|floatformat:0 }}원</td>
-                            <td class="text-end">{{ m.tax|floatformat:0 }}원</td>
+                            <td class="text-end">{{ m.income|floatformat:0|intcomma }}원</td>
+                            <td class="text-end">{{ m.tax|floatformat:0|intcomma }}원</td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -225,7 +226,7 @@
             {% if monthly_data|length == 12 %}
             <div class="alert alert-info mb-0 mt-3">
                 <small>
-                    💡 현재 진행률로 가면 연말 예상 세금은 <strong>약 {{ last_month_tax|floatformat:0 }}원</strong>입니다.
+                    💡 현재 진행률로 가면 연말 예상 세금은 <strong>약 {{ last_month_tax|floatformat:0|intcomma }}원</strong>입니다.
                 </small>
             </div>
             {% endif %}
@@ -245,7 +246,7 @@
                     <div class="bg-light p-3 rounded">
                         <div class="text-muted mb-2">현재 위치</div>
                         <div class="fs-4">
-                            <strong>{{ actual_taxable|floatformat:0 }}원</strong>
+                            <strong>{{ actual_taxable|floatformat:0|intcomma }}원</strong>
                         </div>
                         <div class="text-primary">
                             세율 {{ bracket_info.current_rate_percent }}% 구간

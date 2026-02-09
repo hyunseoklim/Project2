@@ -229,6 +229,84 @@ def category_statistics(request):
     
     return render(request, 'transactions/category_statistics.html', context)
 
+
+@login_required
+def monthly_summary(request):
+    """월별 요약 (수입/지출 합계)"""
+    user = request.user
+    current_year = timezone.now().year
+
+    try:
+        year = int(request.GET.get('year', current_year))
+        if year < 2000 or year > 2100:
+            year = current_year
+    except (TypeError, ValueError):
+        year = current_year
+
+    try:
+        month = request.GET.get('month', None)
+        if month:
+            month = int(month)
+            if not 1 <= month <= 12:
+                month = None
+    except (TypeError, ValueError):
+        month = None
+
+    base_qs = Transaction.active.filter(user=user, occurred_at__year=year)
+    if month:
+        base_qs = base_qs.filter(occurred_at__month=month)
+
+    monthly_stats = (
+        base_qs
+        .annotate(month=ExtractMonth('occurred_at'))
+        .values('month')
+        .annotate(
+            income=Sum('amount', filter=Q(tx_type='IN')),
+            expense=Sum('amount', filter=Q(tx_type='OUT')),
+            count=Count('id'),
+        )
+        .order_by('month')
+    )
+
+    stats_by_month = {item['month']: item for item in monthly_stats}
+    rows = []
+    month_range = [month] if month else range(1, 13)
+    for month_value in month_range:
+        item = stats_by_month.get(month_value, {})
+        income = item.get('income') or 0
+        expense = item.get('expense') or 0
+        rows.append({
+            'month': month_value,
+            'income': income,
+            'expense': expense,
+            'net': income - expense,
+            'count': item.get('count') or 0,
+        })
+
+    totals = base_qs.aggregate(
+        income=Sum('amount', filter=Q(tx_type='IN')),
+        expense=Sum('amount', filter=Q(tx_type='OUT')),
+        count=Count('id'),
+    )
+
+    year_list = Transaction.active.filter(user=user).dates('occurred_at', 'year', order='DESC')
+    year_list = [d.year for d in year_list] or [current_year]
+
+    context = {
+        'year': year,
+        'month': month,
+        'year_list': year_list,
+        'rows': rows,
+        'totals': {
+            'income': totals.get('income') or 0,
+            'expense': totals.get('expense') or 0,
+            'net': (totals.get('income') or 0) - (totals.get('expense') or 0),
+            'count': totals.get('count') or 0,
+        },
+    }
+
+    return render(request, 'transactions/monthly_summary.html', context)
+
 # ============================================================
 # Merchant CRUD
 # ============================================================
@@ -423,12 +501,16 @@ def transaction_list(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
+    query_params = request.GET.copy()
+    query_params.pop('page', None)
+
     context = {
         'page_obj': page_obj,
         'stats': stats,
         'businesses': Business.objects.filter(user=request.user, is_active=True),
         'accounts': Account.objects.filter(user=request.user, is_active=True),
         'categories': Category.objects.all().order_by('type', 'order'),
+        'querystring': query_params.urlencode(),
     }
     return render(request, 'transactions/transaction_list.html', context)
 
@@ -608,6 +690,7 @@ class VATReportView(LoginRequiredMixin, TemplateView):
             'year': year,
             'quarter': quarter,
             'month': month,  # 선택된 월
+            'year_options': [year - 2, year - 1, year, year + 1, year + 2],
             'start_date': start_date,
             'end_date': end_date,
             'sales': sales_summary,

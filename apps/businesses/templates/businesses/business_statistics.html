@@ -76,7 +76,7 @@
                 <div class="card-body p-3 text-center">
                     <small class="text-muted fw-bold">💰 총 합계 금액</small>
                     <h3 class="mt-2 mb-0 fw-bold {% if selected_type == 'OUT' %}text-danger{% else %}text-success{% endif %}">
-                        {{ total_sum|intcomma }}<small class="fs-6 fw-normal text-muted ms-1">원</small>
+                        {{ total_sum|floatformat:0|intcomma }}<small class="fs-6 fw-normal text-muted ms-1">원</small>
                     </h3>
                 </div>
             </div>
@@ -126,7 +126,7 @@
                     <tr>
                         <td class="ps-4 fw-bold text-muted">{{ forloop.counter }}</td>
                         <td class="fw-bold text-dark">{{ s.category__name }}</td>
-                        <td class="text-end fw-bold">{{ s.total_amount|intcomma }}원</td>
+                        <td class="text-end fw-bold">{{ total_sum|floatformat:0|intcomma }}원</td>
                         <td class="text-center text-muted">{{ s.count }}건</td>
                         <td class="pe-4">
                             <div class="d-flex align-items-center">
