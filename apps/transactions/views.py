@@ -690,6 +690,7 @@ class VATReportView(LoginRequiredMixin, TemplateView):
             'year': year,
             'quarter': quarter,
             'month': month,  # 선택된 월
+            'year_options': [year - 2, year - 1, year, year + 1, year + 2],
             'start_date': start_date,
             'end_date': end_date,
             'sales': sales_summary,
