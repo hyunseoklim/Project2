@@ -13,26 +13,30 @@
 
 <body>
     {% include 'components/header.html' %}
-    <div class="main-container">
+    
+    <div class="main-container {% if not user.is_authenticated %}no-sidebar{% endif %}">
         
-        <aside class="sidebar">
-            <div class="logo-section">
-                <span class="logo-icon">💼</span>
-                <h1 class="logo-text">스마트 사업자<br>가계부</h1>
+        {% if user.is_authenticated %}
+        <aside class="sidebar border-end">
+            <div class="logo-section p-3 text-center">
+                <span class="fs-2">💼</span>
+                <h1 class="logo-text h5 fw-bold mt-2">스마트 사업자<br>가계부</h1>
             </div>
             {% include 'components/sidebar.html' %}
         </aside>
+        {% endif %}
 
         <main class="main-content">
-            {% include 'components/messages.html' %}
-
-            <nav class="top-nav">
+            <nav class="top-nav shadow-sm">
                 {% include 'components/navbar.html' %}
             </nav>
+
+            {% include 'components/messages.html' %}
 
             <div class="content-wrapper">
                 {% block content %}
                 {% endblock %}
+                
                 {% include "components/footer.html" %}
             </div>
         </main>

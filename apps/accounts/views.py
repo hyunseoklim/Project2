@@ -9,7 +9,8 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login as auth_login, update_session_auth_hash
 from django.db import IntegrityError, transaction
-from django.db.models import Sum
+from django.db.models import Sum, Q, DecimalField, Value, F
+from django.db.models.functions import Coalesce
 from django.utils import timezone
 from django.core.exceptions import ValidationError
 import logging
@@ -18,6 +19,7 @@ from .models import Profile
 from django.contrib.messages.views import SuccessMessageMixin
 from django.contrib.auth.views import PasswordChangeView
 from apps.transactions.models import Transaction
+from apps.businesses.models import Business
 
 logger = logging.getLogger(__name__)
 
@@ -93,8 +95,7 @@ def home(request):
 
 @login_required
 def dashboard(request):
-    """대시보드 (통계 + 빠른 메뉴)"""
-    
+    """대시보드 (통계 + 빠른 메뉴 + 사업장별 집계)"""
     profile = getattr(request.user, 'profile', None)
 
     # 1. 날짜 설정
@@ -102,23 +103,47 @@ def dashboard(request):
     year = now.year
     month = now.month
 
-    # 2. 필터링 (필드명 수정됨: occurred_at)
+    # 2. 이번 달 거래 필터링
     monthly_qs = Transaction.objects.filter(
         user=request.user,
         occurred_at__year=year,
         occurred_at__month=month
     )
 
-    # 3. 합계 계산 (필드명 수정됨: tx_type)
-    # 주의: DB에 저장된 값이 'INCOME'/'EXPENSE'가 맞는지 확인 필요 (일단 기존 코드 따름)
-    total_income = monthly_qs.filter(tx_type='INCOME').aggregate(Sum('amount'))['amount__sum'] or 0
-    total_expense = monthly_qs.filter(tx_type='EXPENSE').aggregate(Sum('amount'))['amount__sum'] or 0
-    
+    # 3. 합계 계산 (대소문자 이슈 방지를 위해 __iexact 사용)
+    # DB의 tx_type이 'income', 'INCOME' 무엇이든 상관없이 가져옵니다.
+    total_income = monthly_qs.filter(tx_type__iexact='IN').aggregate(Sum('amount'))['amount__sum'] or 0
+    total_expense = monthly_qs.filter(tx_type__iexact='OUT').aggregate(Sum('amount'))['amount__sum'] or 0
     net_profit = total_income - total_expense
 
-    # 4. 최근 거래 (필드명 수정됨: occurred_at)
+    # 4. 최근 거래 (상위 5개)
     recent_transactions = Transaction.objects.filter(user=request.user).order_by('-occurred_at', '-id')[:5]
 
+    # 5. 사업장별 집계
+    businesses = Business.objects.filter(
+        user=request.user,
+        is_active=True
+    ).annotate(
+        revenue=Coalesce(
+            Sum('transactions__amount', filter=Q(
+                transactions__tx_type='IN',
+                transactions__is_active=True
+            )),
+            Value(0),
+            output_field=DecimalField()
+        ),
+        expense=Coalesce(
+            Sum('transactions__amount', filter=Q(
+                transactions__tx_type='OUT',
+                transactions__is_active=True
+            )),
+            Value(0),
+            output_field=DecimalField()
+        ),
+        profit=F('revenue') - F('expense')
+    ).order_by('branch_type', 'name')
+
+    # 6. Context 한 번만!
     context = {
         'user': request.user,
         'profile': profile,
@@ -130,8 +155,9 @@ def dashboard(request):
         'total_expense': total_expense,
         'net_profit': net_profit,
         'recent_transactions': recent_transactions,
+        
+        'businesses': businesses,
     }
-
     return render(request, "accounts/home2.html", context)
 
 class MyPasswordChangeView(SuccessMessageMixin, PasswordChangeView):

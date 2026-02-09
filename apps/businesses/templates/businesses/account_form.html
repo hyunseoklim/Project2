@@ -1,148 +1,144 @@
 {% extends 'base.html' %}
-{% block title %}{{ title }}{% endblock %}
+{% load humanize %}
+
+{% block title %}
+{% if account %}계좌 수정{% else %}계좌 등록{% endif %} - 스마트 사업자 가계부
+{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="row">
-        <div class="col-lg-8 offset-lg-2">
-            <!-- 뒤로가기 -->
-            <div class="mb-3">
-                <a href="{% url 'businesses:account_list' %}" class="btn btn-outline-secondary btn-sm">
-                    ← 목록으로
-                </a>
-            </div>     
-       <!-- 메인 폼 카드 -->
-        <div class="card">
-            <div class="card-header bg-primary" style="color: white;">
-                <h4 class="mb-0">
-                    {% if account %}✏️{% else %}➕{% endif %} {{ title }}
-                </h4>
-            </div>
-            <div class="card-body">
-                <form method="post">
-                    {% csrf_token %}
-                    
-                    <!-- 계좌 별칭 -->
-                    <div class="mb-3">
-                        <label for="{{ form.name.id_for_label }}" class="form-label">
-                            계좌 별칭 <span class="text-danger">*</span>
-                        </label>
-                        {{ form.name }}
-                        {% if form.name.errors %}
-                            <div class="invalid-feedback">
-                                {{ form.name.errors.0 }}
-                            </div>
-                        {% endif %}
-                        <small class="form-text">계좌를 구분하기 위한 이름을 입력하세요.</small>
-                    </div>
+<div class="container-fluid px-4 py-3">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-xl-6">
+            <div class="card border-0 shadow-sm">
+                <!-- 헤더 -->
+                <div class="card-header bg-white py-3 border-bottom d-flex align-items-center gap-3">
+                    <a href="{% url 'businesses:account_list' %}" 
+                       class="btn btn-light btn-sm px-3 d-flex align-items-center fw-bold shadow-sm"
+                       style="height: 38px; transition: all 0.2s;"
+                       onmouseover="this.style.backgroundColor='#e9ecef'"
+                       onmouseout="this.style.backgroundColor='#fff'">
+                        ← 목록
+                    </a>
+                    <h5 class="mb-0 fw-bold text-dark">
+                        {% if account %}✏️ 계좌 수정{% else %}➕ 계좌 등록{% endif %}
+                    </h5>
+                </div>
 
-                    <!-- 은행명 -->
-                    <div class="mb-3">
-                        <label for="{{ form.bank_name.id_for_label }}" class="form-label">
-                            은행명 <span class="text-danger">*</span>
-                        </label>
-                        {{ form.bank_name }}
-                        {% if form.bank_name.errors %}
-                            <div class="invalid-feedback">
-                                {{ form.bank_name.errors.0 }}
-                            </div>
-                        {% endif %}
-                    </div>
-
-                    <!-- 계좌번호 -->
-                    <div class="mb-3">
-                        <label for="{{ form.account_number.id_for_label }}" class="form-label">
-                            계좌번호 <span class="text-danger">*</span>
-                        </label>
-                        {{ form.account_number }}
-                        {% if form.account_number.errors %}
-                            <div class="invalid-feedback">
-                                {{ form.account_number.errors.0 }}
-                            </div>
-                        {% endif %}
-                        <small class="form-text">
-                            💡 하이픈(-)을 포함하여 입력하세요. 예: 1234-5678-9012
-                        </small>
-                    </div>
-
-                    <div class="row">
-                        <!-- 계좌 구분 -->
-                        <div class="col-md-6 mb-3">
-                            <label for="{{ form.account_type.id_for_label }}" class="form-label">
-                                계좌 구분 <span class="text-danger">*</span>
+                <!-- 본문 -->
+                <div class="card-body p-4">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <!-- 계좌 별칭 -->
+                        <div class="mb-3">
+                            <label for="{{ form.name.id_for_label }}" class="form-label fw-bold">
+                                계좌 별칭 <span class="text-danger">*</span>
                             </label>
-                            {{ form.account_type }}
-                            {% if form.account_type.errors %}
-                                <div class="invalid-feedback">
-                                    {{ form.account_type.errors.0 }}
+                            {{ form.name }}
+                            {% if form.name.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.name.errors.0 }}
+                                </div>
+                            {% endif %}
+                            <small class="form-text text-muted">계좌를 구분하기 위한 이름을 입력하세요.</small>
+                        </div>
+
+                        <!-- 은행명 -->
+                        <div class="mb-3">
+                            <label for="{{ form.bank_name.id_for_label }}" class="form-label fw-bold">
+                                은행명 <span class="text-danger">*</span>
+                            </label>
+                            {{ form.bank_name }}
+                            {% if form.bank_name.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.bank_name.errors.0 }}
                                 </div>
                             {% endif %}
                         </div>
 
-                        <!-- 연결 사업장 -->
-                        <div class="col-md-6 mb-3">
-                            <label for="{{ form.business.id_for_label }}" class="form-label">
-                                연결 사업장 <small class="text-muted">(선택)</small>
+                        <!-- 계좌번호 -->
+                        <div class="mb-3">
+                            <label for="{{ form.account_number.id_for_label }}" class="form-label fw-bold">
+                                계좌번호 <span class="text-danger">*</span>
                             </label>
-                            {{ form.business }}
-                            {% if form.business.errors %}
-                                <div class="invalid-feedback">
-                                    {{ form.business.errors.0 }}
+                            {{ form.account_number }}
+                            {% if form.account_number.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.account_number.errors.0 }}
                                 </div>
                             {% endif %}
-                            <small class="form-text">사업용 계좌인 경우 사업장을 선택할 수 있습니다.</small>
-                        </div>
-                    </div>
-
-                    <!-- 폼 전체 에러 -->
-                    {% if form.non_field_errors %}
-                        <div class="alert alert-danger">
-                            ⚠️ {{ form.non_field_errors }}
-                        </div>
-                    {% endif %}
-
-                    <!-- 현재 잔액 (수정 시에만) -->
-                    {% if account %}
-                        <div class="alert alert-info">
-                            <h6>💰 현재 잔액</h6>
-                            <p class="mb-0" style="font-size: 1.5rem;">
-                                <strong>{{ account.balance|floatformat:0|default:"0" }}원</strong>
-                            </p>
-                            <hr>
-                            <small class="text-muted">
-                                💡 잔액은 거래 내역을 통해서만 변경됩니다.
+                            <small class="form-text text-muted">
+                                💡 하이픈(-)을 포함하여 입력하세요. 예: 1234-5678-9012
                             </small>
                         </div>
-                    {% endif %}
 
-                    <!-- 버튼 -->
-                    <div class="d-flex justify-content-end gap-2 mt-4">
-                        <a href="{% url 'businesses:account_list' %}" class="btn btn-secondary">
-                            취소
-                        </a>
-                        <button type="submit" class="btn btn-primary">
-                            {{ submit_text }}
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
+                        <!-- 계좌 구분 + 연결 사업장 -->
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.account_type.id_for_label }}" class="form-label fw-bold">
+                                    계좌 구분 <span class="text-danger">*</span>
+                                </label>
+                                {{ form.account_type }}
+                            </div>
 
-        <!-- 도움말 카드 -->
-        <div class="card mt-3">
-            <div class="card-header">
-                💡 안내
-            </div>
-            <div class="card-body">
-                <ul class="mb-0">
-                    <li>계좌번호는 하이픈(-)을 포함하여 입력하세요. (예: 1234-5678-9012)</li>
-                    <li>계좌 별칭은 계좌를 구분하기 위한 이름입니다.</li>
-                    <li>사업용 계좌는 선택적으로 사업장과 연결할 수 있습니다.</li>
-                    <li>잔액은 거래 내역 등록 시 자동으로 업데이트됩니다.</li>
-                </ul>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.business.id_for_label }}" class="form-label fw-bold">
+                                    연결 사업장 <small class="text-muted">(선택)</small>
+                                </label>
+                                {{ form.business }}
+                            </div>
+                        </div>
+
+                        <!-- 전체 에러 -->
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger border-0 py-2">
+                                ⚠️ {{ form.non_field_errors.0 }}
+                            </div>
+                        {% endif %}
+
+                        <!-- 현재 잔액 (수정 모드일 때만) -->
+                        {% if account %}
+                            <div class="alert alert-light border mb-3">
+                                <h6 class="fw-bold mb-2">💰 현재 잔액</h6>
+                                <p class="mb-2 fw-bold fs-4 text-success">
+                                    {{ account.balance|floatformat:0|intcomma }}원
+                                </p>
+                                <small class="text-muted">
+                                    💡 잔액은 거래 내역을 통해서만 변경됩니다.
+                                </small>
+                            </div>
+                        {% endif %}
+
+                        <!-- 안내 사항 -->
+                        <div class="alert alert-info border-0 mb-4">
+                            <h6 class="mb-2 fw-bold">💡 안내 사항</h6>
+                            <ul class="mb-0 small">
+                                <li>계좌번호는 하이픈(-)을 포함하여 입력하세요. (예: 1234-5678-9012)</li>
+                                <li>계좌 별칭은 계좌를 구분하기 위한 이름입니다.</li>
+                                <li>사업용 계좌는 선택적으로 사업장과 연결할 수 있습니다.</li>
+                                <li>잔액은 거래 내역 등록 시 자동으로 업데이트됩니다.</li>
+                            </ul>
+                        </div>
+
+                        <!-- 하단 버튼 -->
+                        <div class="d-flex justify-content-end gap-2">
+                            {% if account %}
+                                <a href="{% url 'businesses:account_detail' account.pk %}" class="btn btn-light border fw-bold px-4">
+                                    취소
+                                </a>
+                            {% else %}
+                                <a href="{% url 'businesses:account_list' %}" class="btn btn-light border fw-bold px-4">
+                                    취소
+                                </a>
+                            {% endif %}
+                            <button type="submit" class="btn {% if account %}btn-warning{% else %}btn-success{% endif %} fw-bold px-4 shadow-sm">
+                                {% if account %}✏️ 수정 완료{% else %}➕ 등록 완료{% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
-</div>
 </div>
 {% endblock %}

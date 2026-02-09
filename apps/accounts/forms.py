@@ -6,6 +6,12 @@ from django.core.exceptions import ValidationError
 import re
 
 class ProfileForm(forms.ModelForm):
+    full_name = forms.CharField(
+        label="성함",
+        max_length=30,
+        required=True,
+        widget=forms.TextInput(attrs={'placeholder': '실명을 입력하세요'})
+    )
     business_registration_number = forms.CharField(
         label="사업자 등록번호",
         max_length=15,  # 하이픈이나 공백을 고려해 늘려줍니다.
@@ -15,10 +21,10 @@ class ProfileForm(forms.ModelForm):
     
     class Meta:
         model = Profile
-        fields = ['business_registration_number', 'business_type', 'phone']
+        fields = ['full_name', 'business_registration_number', 'business_type', 'phone']
         
         # 1. 레이블(Label) 한글화: 화면에 표시될 이름을 지정합니다.
-        # HTML 하드코딩 방지용, 한글로 변환
+        # HTML 하드코딩 방지용, 한글로 변환``
         labels = {
             'business_registration_number': '사업자 등록 번호',
             'business_type': '사업 유형',
@@ -38,6 +44,10 @@ class ProfileForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         """3. 스타일 자동화: 모든 필드에 일괄적으로 부트스트랩 클래스 주입"""
         super().__init__(*args, **kwargs)
+        if self.instance and self.instance.user:
+            # User 모델의 first_name에 저장된 값을 full_name 필드의 초기값으로 설정
+            self.fields['full_name'].initial = self.instance.user.first_name
+            
         for field_name, field in self.fields.items():
             # 이미 설정된 클래스가 있다면 유지하고 form-control 추가
             existing_classes = field.widget.attrs.get('class', '')

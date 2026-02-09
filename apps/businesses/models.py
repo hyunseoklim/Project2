@@ -150,10 +150,10 @@ class Account(SoftDeleteModel):
             # select_for_update(of='self')를 쓰면 PostgreSQL 등에서 더 정밀한 잠금이 가능합니다.
             account = Account.objects.select_for_update().get(pk=self.pk)
             
-            if tx_type == 'OUT' and account.balance < amount:
-                raise ValidationError({
-                    'balance': f'잔액 부족 (현재: {account.balance:,.0f}원, 요청: {amount:,.0f}원)'
-                })
+            # if tx_type == 'OUT' and account.balance < amount:
+            #     raise ValidationError({
+            #         'balance': f'잔액 부족 (현재: {account.balance:,.0f}원, 요청: {amount:,.0f}원)'
+            #     })
             
             if tx_type == 'IN':
                 account.balance = F('balance') + amount

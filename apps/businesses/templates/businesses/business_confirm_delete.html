@@ -1,26 +1,82 @@
 {% extends "base.html" %}
+{% load humanize %}
 
 {% block title %}사업장 삭제 확인 - 스마트 사업자 가계부{% endblock %}
 
 {% block content %}
-<div class="content-wrapper">
-    <section class="welcome-section">
-        <div class="welcome-header">
-            <span class="welcome-icon">⚠️</span>
-            <h2 class="page-title">사업장 삭제 확인</h2>
-            <p class="description">"{{ business.name }}"을 삭제하고 싶으신가요?</p>
-            <p class="description" style="color: #e74c3c;">이 작업은 되돌릴 수 없습니다.</p>
-        </div>
+<div class="container-fluid px-4 py-3">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-xl-6">
+            <div class="card border-0 shadow-sm">
+                <!-- 헤더 -->
+                <div class="card-header bg-white py-3 border-bottom d-flex align-items-center gap-3">
+                    <a href="{% url 'businesses:business_list' %}" 
+                       class="btn btn-light btn-sm px-3 d-flex align-items-center fw-bold shadow-sm"
+                       style="height: 38px; transition: all 0.2s;"
+                       onmouseover="this.style.backgroundColor='#e9ecef'"
+                       onmouseout="this.style.backgroundColor='#fff'">
+                        ← 목록
+                    </a>
+                    <h5 class="mb-0 fw-bold text-dark">⚠️ 사업장 삭제 확인</h5>
+                </div>
 
-        <form method="post">
-            {% csrf_token %}
-            <div class="cta-section" style="border: none; background: none;">
-                <div class="button-group">
-                    <button type="submit" class="btn btn-primary" style="background-color: #e74c3c;">🗑️ 삭제 확인</button>
-                    <a href="{% url 'businesses:business_detail' business.pk %}" class="btn btn-secondary">취소</a>
+                <!-- 본문 -->
+                <div class="card-body p-4">
+                    <!-- 설명 -->
+                    <div class="mb-4 text-center">
+                        <p class="mb-1">"<strong>{{ business.name }}</strong>"을(를) 삭제하시겠습니까?</p>
+                    </div>
+
+                    <!-- 사업장 정보 -->
+                    <div class="alert alert-light border mb-4">
+                        <h6 class="mb-3 fw-bold">🏢 {{ business.name }}</h6>
+                        <hr>
+                        <div class="row g-3">
+                            <div class="col-6">
+                                <small class="text-muted">구분</small>
+                                <p class="mb-0 fw-bold">{{ business.get_branch_type_display }}</p>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted">업종</small>
+                                <p class="mb-0 fw-bold">{{ business.business_type|default:"-" }}</p>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted">위치</small>
+                                <p class="mb-0">{{ business.location|default:"-" }}</p>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted">연결된 계좌</small>
+                                <p class="mb-0 fw-bold">{{ account_count }}개</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 안내 사항 -->
+                    <div class="alert alert-warning border-0 mb-4">
+                        <h6 class="mb-2 fw-bold">📌 안내 사항</h6>
+                        <ul class="mb-0 small">
+                            <li>삭제된 사업장은 <strong>사업장 관리 페이지에서 복구가 가능</strong>합니다.</li>
+                            <li>연결된 계좌 <strong class="text-danger">{{ account_count }}개</strong>는 유지됩니다.</li>
+                            <li>삭제된 사업장은 목록에 표시되지 않습니다.</li>
+                        </ul>
+                    </div>
+
+                    <!-- 버튼 -->
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{% url 'businesses:business_detail' business.pk %}" 
+                               class="btn btn-light border fw-bold px-4">
+                                취소
+                            </a>
+                            <button type="submit" class="btn btn-danger fw-bold px-4 shadow-sm">
+                                🗑️ 삭제 확인
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
-        </form>
-    </section>
+        </div>
+    </div>
 </div>
 {% endblock %}
