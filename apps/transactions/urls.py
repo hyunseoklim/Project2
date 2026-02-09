@@ -16,6 +16,9 @@ urlpatterns = [
     # 카테고리별 집계
     path('categories/statistics/', views.category_statistics, name='category_statistics'),
 
+    # 월별 요약
+    path('summary/monthly/', views.monthly_summary, name='monthly_summary'),
+
     # Merchant
     path('merchants/', views.merchant_list, name='merchant_list'),
     path('merchants/create/', views.merchant_create, name='merchant_create'),
