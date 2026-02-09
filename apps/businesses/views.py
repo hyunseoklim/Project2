@@ -9,6 +9,7 @@ from decimal import Decimal
 import logging
 from .models import Account, Business
 from .forms import AccountForm, AccountSearchForm, BusinessForm, BusinessSearchForm
+from apps.transactions.models import Transaction
 
 logger = logging.getLogger(__name__)
 
@@ -578,6 +579,87 @@ def business_detail(request, pk):
     
     return render(request, 'businesses/business_detail.html', context)
 
+from django.shortcuts import render, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from django.db.models import Sum, Count
+from django.utils import timezone
+from apps.businesses.models import Business
+from apps.transactions.models import Transaction
+
+@login_required
+def business_statistics(request, pk):
+    """
+    사업장 통계 요약 조회 (유형/연도/월 필터링 포함)
+    """
+    business = get_object_or_404(Business, pk=pk, user=request.user, is_active=True)
+    
+    # 1. 파라미터 가져오기
+    tx_type = request.GET.get('tx_type', 'OUT')
+    year = request.GET.get('year', str(timezone.now().year))
+    month = request.GET.get('month', 'all')
+    period = request.GET.get('period', '')  # 'all_time' 체크용
+    
+    # 해당 사업장의 활성 거래 기본 쿼리셋
+    transactions = Transaction.objects.filter(
+        business=business,
+        is_active=True
+    )
+
+    # 2. 필터 적용 로직
+    period_label = "전체 기간"
+    
+    # 거래 유형 필터 (IN/OUT)
+    if tx_type in ['IN', 'OUT']:
+        transactions = transactions.filter(tx_type=tx_type)
+
+    # 날짜 필터 (전체 기간 모드가 아닐 때만 적용)
+    if period != 'all_time':
+        if year != 'all' and year.isdigit():
+            if month == 'all':
+                transactions = transactions.filter(occurred_at__year=year)
+                period_label = f"{year}년 전체"
+            elif month.isdigit():
+                transactions = transactions.filter(occurred_at__year=year, occurred_at__month=month)
+                period_label = f"{year}년 {month}월"
+    else:
+        # 전체 기간일 때는 연도/월 선택값을 무시
+        year = 'all'
+        month = 'all'
+
+    # 3. 데이터 집계 (카테고리별)
+    stats = transactions.values('category__name').annotate(
+        total_amount=Sum('amount'),
+        count=Count('id')
+    ).order_by('-total_amount')
+
+    # 총액 계산
+    total_sum = transactions.aggregate(Sum('amount'))['amount__sum'] or 0
+
+    # 비중(%) 계산
+    for s in stats:
+        if total_sum > 0:
+            s['percentage'] = round((s['total_amount'] / total_sum) * 100, 1)
+        else:
+            s['percentage'] = 0
+
+    # 4. 연도 목록 (최근 5년)
+    current_year = timezone.now().year
+    available_years = [str(y) for y in range(current_year, current_year - 5, -1)]
+
+    context = {
+        'business': business,
+        'stats': stats,
+        'total_sum': total_sum,
+        'category_count': stats.count(),
+        'available_years': available_years,
+        'selected_year': year,
+        'selected_month': month,
+        'selected_type': tx_type,
+        'period_label': period_label,
+        'is_all_time': period == 'all_time',
+    }
+    
+    return render(request, 'businesses/business_statistics.html', context)
 
 @login_required
 def business_update(request, pk):

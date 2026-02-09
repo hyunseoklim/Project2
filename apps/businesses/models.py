@@ -33,6 +33,8 @@ class Business(SoftDeleteModel):
     business_type = models.CharField(max_length=50, blank=True)
     registration_number = models.CharField(max_length=12, blank=True)
 
+    memo = models.TextField(blank=True, null=True, verbose_name="사업장 메모")
+
     BRANCH_TYPE_CHOICES = [
         ('main', '본점'),
         ('branch', '지점'),
@@ -73,7 +75,21 @@ class Business(SoftDeleteModel):
         
         total = qs.aggregate(total=Sum('amount'))['total']
         return total or Decimal('0.00')
-
+    
+    def get_total_expense(self, start_date=None, end_date=None):
+        """
+        총 지출 계산 (tx_type='OUT' 필터링)
+        """
+        # transactions 역참조를 통해 지출(OUT)만 가져옵니다.
+        qs = self.transactions.filter(tx_type='OUT', is_active=True)
+        
+        if start_date:
+            qs = qs.filter(occurred_at__gte=start_date)
+        if end_date:
+            qs = qs.filter(occurred_at__lte=end_date)
+        
+        total = qs.aggregate(total=Sum('amount'))['total']
+        return total or Decimal('0.00')
 
 class Account(SoftDeleteModel):
     """은행 계좌 (잔액 자동 추적)"""

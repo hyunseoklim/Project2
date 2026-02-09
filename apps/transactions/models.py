@@ -12,6 +12,7 @@ import logging
 
 from apps.core.models import TimeStampedModel, SoftDeleteModel
 from apps.businesses.models import Business, Account
+from django.db.models.signals import pre_save
 
 logger = logging.getLogger(__name__)
 
