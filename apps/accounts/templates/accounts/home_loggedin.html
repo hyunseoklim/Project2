@@ -4,182 +4,113 @@
 {% block title %}사이트맵 - 모든 페이지{% endblock %}
 
 {% block content %}
-<div class="container mt-3">
-    <h1 class="mb-4">사이트맵</h1>
+<div class="container-fluid mt-3 px-4">
+    <h1 class="mb-2 fw-bold">사이트맵</h1>
     <p class="text-muted mb-4">개발용 - 모든 페이지 링크 모음</p>
 
-    <!-- Accounts -->
-    <div class="card mb-4">
-        <div class="card-header bg-warning">
-            <h3 class="mb-0">Accounts (계정)</h3>
-        </div>
-        <div class="card-body">
-            <ul class="list-unstyled mb-0">
-                <li class="mb-2"><a href="{% url 'accounts:home' %}" class="btn btn-sm btn-outline-primary">홈</a> <code>accounts/</code></li>
-                <li class="mb-2"><a href="{% url 'accounts:login' %}" class="btn btn-sm btn-outline-primary">로그인</a> <code>accounts/login/</code></li>
-                <li class="mb-2"><a href="{% url 'accounts:logout' %}" class="btn btn-sm btn-outline-primary">로그아웃</a> <code>accounts/logout/</code></li>
-                <li class="mb-2"><a href="{% url 'accounts:signup' %}" class="btn btn-sm btn-outline-primary">회원가입</a> <code>accounts/signup/</code></li>
-                <li class="mb-2"><a href="{% url 'accounts:password_change' %}" class="btn btn-sm btn-outline-primary">비밀번호 변경</a> <code>accounts/password_change/</code></li>
-                <li class="mb-2"><a href="{% url 'accounts:profile_edit' %}" class="btn btn-sm btn-outline-primary">프로필 수정</a> <code>accounts/profile/edit/</code></li>
-                <li class="mb-2"><a href="{% url 'accounts:profile_detail' %}" class="btn btn-sm btn-outline-primary">프로필 상세</a> <code>accounts/profile/detail/</code></li>
-            </ul>
-        </div>
-    </div>
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header bg-warning">
+                    <h3 class="mb-0 fs-5 fw-bold">Accounts (계정)</h3>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2"><a href="{% url 'accounts:home' %}" class="btn btn-sm btn-outline-primary">홈</a> <code>accounts/</code></li>
+                        <li class="mb-2"><a href="{% url 'accounts:dashboard' %}" class="btn btn-sm btn-outline-primary">대시보드</a> <code>accounts/dashboard/</code></li>
+                        <li class="mb-2"><a href="{% url 'accounts:login' %}" class="btn btn-sm btn-outline-primary">로그인</a> <code>accounts/login/</code></li>
+                        <li class="mb-2"><a href="{% url 'accounts:logout' %}" class="btn btn-sm btn-outline-primary">로그아웃</a> <code>accounts/logout/</code></li>
+                        <li class="mb-2"><a href="{% url 'accounts:signup' %}" class="btn btn-sm btn-outline-primary">회원가입</a> <code>accounts/signup/</code></li>
+                        <li class="mb-2"><a href="{% url 'accounts:password_change' %}" class="btn btn-sm btn-outline-primary">비밀번호 변경</a> <code>accounts/password_change/</code></li>
+                        <li class="mb-2"><a href="{% url 'accounts:profile_edit' %}" class="btn btn-sm btn-outline-primary">프로필 수정</a> <code>accounts/profile/edit/</code></li>
+                        <li class="mb-2"><a href="{% url 'accounts:profile_detail' %}" class="btn btn-sm btn-outline-primary">프로필 상세</a> <code>accounts/profile/detail/</code></li>
+                    </ul>
+                </div>
+            </div>
 
-    <!-- Businesses - Account (계좌) -->
-    <div class="card mb-4">
-        <div class="card-header bg-warning">
-            <h3 class="mb-0">Businesses - Account (계좌)</h3>
-        </div>
-        <div class="card-body">
-            <ul class="list-unstyled mb-0">
-                <li class="mb-2"><a href="{% url 'businesses:account_list' %}" class="btn btn-sm btn-outline-success">계좌 목록</a> <code>businesses/accounts/</code></li>
-                <li class="mb-2"><a href="{% url 'businesses:account_deleted_list' %}" class="btn btn-sm btn-outline-secondary">삭제된 계좌 목록</a> <code>businesses/accounts/deleted/</code></li>
-                <li class="mb-2"><a href="{% url 'businesses:account_summary' %}" class="btn btn-sm btn-outline-info">계좌 요약</a> <code>businesses/accounts/summary/</code></li>
-                <li class="mb-2"><a href="{% url 'businesses:account_create' %}" class="btn btn-sm btn-outline-success">계좌 생성</a> <code>businesses/accounts/create/</code></li>
-            </ul>
-            
-            {% if accounts %}
-            <hr>
-            <h5 class="mb-3">계좌 목록 (최근 10개)</h5>
-            <ul class="list-unstyled mb-0">
-                {% for account in accounts %}
-                <li class="mb-2">
-                    <strong>{{ account.account_name }}</strong> - 
-                    <a href="{% url 'businesses:account_detail' account.pk %}" class="btn btn-sm btn-outline-info">상세</a>
-                    <a href="{% url 'businesses:account_update' account.pk %}" class="btn btn-sm btn-outline-warning">수정</a>
-                    <a href="{% url 'businesses:account_delete' account.pk %}" class="btn btn-sm btn-outline-danger">삭제</a>
-                </li>
-                {% endfor %}
-            </ul>
-            {% endif %}
-        </div>
-    </div>
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header bg-warning">
+                    <h3 class="mb-0 fs-5 fw-bold">Businesses - Business (사업장)</h3>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2"><a href="{% url 'businesses:business_list' %}" class="btn btn-sm btn-outline-success">사업장 목록</a> <code>businesses/</code></li>
+                        <li class="mb-2"><a href="{% url 'businesses:business_deleted_list' %}" class="btn btn-sm btn-outline-secondary">삭제된 사업장 목록</a> <code>businesses/deleted/</code></li>
+                        <li class="mb-2"><a href="{% url 'businesses:business_create' %}" class="btn btn-sm btn-outline-success">사업장 생성</a> <code>businesses/create/</code></li>
+                    </ul>
+                </div>
+            </div>
 
-    <!-- Businesses - Business (사업장) -->
-    <div class="card mb-4">
-        <div class="card-header bg-warning">
-            <h3 class="mb-0">Businesses - Business (사업장)</h3>
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header bg-warning">
+                    <h3 class="mb-0 fs-5 fw-bold">Businesses - Account (계좌)</h3>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2"><a href="{% url 'businesses:account_list' %}" class="btn btn-sm btn-outline-success">계좌 목록</a> <code>businesses/accounts/</code></li>
+                        <li class="mb-2"><a href="{% url 'businesses:account_deleted_list' %}" class="btn btn-sm btn-outline-secondary">삭제된 계좌 목록</a> <code>businesses/accounts/deleted/</code></li>
+                        <li class="mb-2"><a href="{% url 'businesses:account_summary' %}" class="btn btn-sm btn-outline-info">계좌 요약</a> <code>businesses/accounts/summary/</code></li>
+                        <li class="mb-2"><a href="{% url 'businesses:account_create' %}" class="btn btn-sm btn-outline-success">계좌 생성</a> <code>businesses/accounts/create/</code></li>
+                    </ul>
+                </div>
+            </div>
         </div>
-        <div class="card-body">
-            <ul class="list-unstyled mb-0">
-                <li class="mb-2"><a href="{% url 'businesses:business_list' %}" class="btn btn-sm btn-outline-success">사업장 목록</a> <code>businesses/</code></li>
-                <li class="mb-2"><a href="{% url 'businesses:business_deleted_list' %}" class="btn btn-sm btn-outline-secondary">삭제된 사업장 목록</a> <code>businesses/deleted/</code></li>
-                <li class="mb-2"><a href="{% url 'businesses:business_create' %}" class="btn btn-sm btn-outline-success">사업장 생성</a> <code>businesses/create/</code></li>
-            </ul>
-            
-            {% if businesses %}
-            <hr>
-            <h5 class="mb-3">사업장 목록 (최근 10개)</h5>
-            <ul class="list-unstyled mb-0">
-                {% for business in businesses %}
-                <li class="mb-2">
-                    <strong>{{ business.business_name }}</strong> - 
-                    <a href="{% url 'businesses:business_detail' business.pk %}" class="btn btn-sm btn-outline-info">상세</a>
-                    <a href="{% url 'businesses:business_update' business.pk %}" class="btn btn-sm btn-outline-warning">수정</a>
-                    <a href="{% url 'businesses:business_delete' business.pk %}" class="btn btn-sm btn-outline-danger">삭제</a>
-                    <a href="{% url 'businesses:business_restore' business.pk %}" class="btn btn-sm btn-outline-success">복구</a>
-                </li>
-                {% endfor %}
-            </ul>
-            {% endif %}
-        </div>
-    </div>
 
-    <!-- Transactions - VAT Report & Search -->
-    <div class="card mb-4">
-        <div class="card-header bg-warning">
-            <h3 class="mb-0">Transactions - VAT Report & Search</h3>
-        </div>
-        <div class="card-body">
-            <ul class="list-unstyled mb-0">
-                <li class="mb-2"><a href="{% url 'transactions:vat_report_default' %}" class="btn btn-sm btn-outline-danger">부가세 신고서</a> <code>transactions/vat-report/</code> <span class="badge bg-info">로직수정</span></li>
-                <li class="mb-2"><a href="{% url 'transactions:transaction_list' %}" class="btn btn-sm btn-outline-primary">거래 검색</a> <code>transactions/search</code> <span class="badge bg-info">로직수정</span></li>
-            </ul>
-        </div>
-    </div>
+        <div class="col-lg-6">
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header bg-warning">
+                    <h3 class="mb-0 fs-5 fw-bold">Transactions - Transaction (거래)</h3>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2"><a href="{% url 'transactions:transaction_list' %}" class="btn btn-sm btn-outline-primary">거래 목록</a> <code>transactions/</code></li>
+                        <li class="mb-2"><a href="{% url 'transactions:transaction_create' %}" class="btn btn-sm btn-outline-success">거래 생성</a> <code>transactions/create/</code></li>
+                    </ul>
+                </div>
+            </div>
 
-    <!-- Transactions - Category (카테고리) -->
-    <div class="card mb-4">
-        <div class="card-header bg-warning">
-            <h3 class="mb-0">Transactions - Category (카테고리)</h3>
-        </div>
-        <div class="card-body">
-            <ul class="list-unstyled mb-0">
-                <li class="mb-2"><a href="{% url 'transactions:category_list' %}" class="btn btn-sm btn-outline-success">카테고리 목록</a> <code>transactions/categories/</code></li>
-                <li class="mb-2"><a href="{% url 'transactions:category_create' %}" class="btn btn-sm btn-outline-success">카테고리 생성</a> <code>transactions/categories/create/</code></li>
-            </ul>
-            
-            {% if categories %}
-            <hr>
-            <h5 class="mb-3">카테고리 목록 (최근 10개)</h5>
-            <ul class="list-unstyled mb-0">
-                {% for category in categories %}
-                <li class="mb-2">
-                    <strong>{{ category.name }}</strong> - 
-                    <a href="{% url 'transactions:category_update' category.pk %}" class="btn btn-sm btn-outline-warning">수정</a>
-                    <a href="{% url 'transactions:category_delete' category.pk %}" class="btn btn-sm btn-outline-danger">삭제</a>
-                </li>
-                {% endfor %}
-            </ul>
-            {% endif %}
-        </div>
-    </div>
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header bg-warning">
+                    <h3 class="mb-0 fs-5 fw-bold">Transactions - VAT & Report</h3>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2"><a href="{% url 'transactions:vat_report_default' %}" class="btn btn-sm btn-outline-danger">부가세 신고서</a> <code>transactions/vat-report/</code></li>
+                        <li class="mb-2"><a href="{% url 'transactions:transaction_list' %}" class="btn btn-sm btn-outline-primary">거래 검색/필터</a> <code>transactions/search/</code></li>
+                    </ul>
+                </div>
+            </div>
 
-    <!-- Transactions - Merchant (거래처) -->
-    <div class="card mb-4">
-        <div class="card-header bg-warning">
-            <h3 class="mb-0">Transactions - Merchant (거래처)</h3>
-        </div>
-        <div class="card-body">
-            <ul class="list-unstyled mb-0">
-                <li class="mb-2"><a href="{% url 'transactions:merchant_list' %}" class="btn btn-sm btn-outline-success">거래처 목록</a> <code>transactions/merchants/</code></li>
-                <li class="mb-2"><a href="{% url 'transactions:merchant_create' %}" class="btn btn-sm btn-outline-success">거래처 생성</a> <code>transactions/merchants/create/</code></li>
-            </ul>
-            
-            {% if merchants %}
-            <hr>
-            <h5 class="mb-3">거래처 목록 (최근 10개)</h5>
-            <ul class="list-unstyled mb-0">
-                {% for merchant in merchants %}
-                <li class="mb-2">
-                    <strong>{{ merchant.name }}</strong> - 
-                    <a href="{% url 'transactions:merchant_detail' merchant.pk %}" class="btn btn-sm btn-outline-info">상세</a>
-                    <a href="{% url 'transactions:merchant_update' merchant.pk %}" class="btn btn-sm btn-outline-warning">수정</a>
-                    <a href="{% url 'transactions:merchant_delete' merchant.pk %}" class="btn btn-sm btn-outline-danger">삭제</a>
-                </li>
-                {% endfor %}
-            </ul>
-            {% endif %}
-        </div>
-    </div>
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header bg-warning">
+                    <h3 class="mb-0 fs-5 fw-bold">Transactions - Category (카테고리)</h3>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2"><a href="{% url 'transactions:category_list' %}" class="btn btn-sm btn-outline-success">카테고리 목록</a> <code>transactions/categories/</code></li>
+                        <li class="mb-2"><a href="{% url 'transactions:category_create' %}" class="btn btn-sm btn-outline-success">카테고리 생성</a> <code>transactions/categories/create/</code></li>
+                    </ul>
+                </div>
+            </div>
 
-    <!-- Transactions - Transaction (거래) -->
-    <div class="card mb-4">
-        <div class="card-header bg-warning">
-            <h3 class="mb-0">Transactions - Transaction (거래)</h3>
-        </div>
-        <div class="card-body">
-            <ul class="list-unstyled mb-0">
-                <li class="mb-2"><a href="{% url 'transactions:transaction_list' %}" class="btn btn-sm btn-outline-primary">거래 목록</a> <code>transactions/</code></li>
-                <li class="mb-2"><a href="{% url 'transactions:transaction_create' %}" class="btn btn-sm btn-outline-success">거래 생성</a> <code>transactions/create/</code></li>
-            </ul>
-            
-            {% if transactions %}
-            <hr>
-            <h5 class="mb-3">거래 목록 (최근 10개)</h5>
-            <ul class="list-unstyled mb-0">
-                {% for transaction in transactions %}
-                <li class="mb-2">
-                    <strong>{{ transaction.transaction_date }} - {{ transaction.description }}</strong> - 
-                    <a href="{% url 'transactions:transaction_detail' transaction.pk %}" class="btn btn-sm btn-outline-info">상세</a>
-                    <a href="{% url 'transactions:transaction_update' transaction.pk %}" class="btn btn-sm btn-outline-warning">수정</a>
-                    <a href="{% url 'transactions:transaction_delete' transaction.pk %}" class="btn btn-sm btn-outline-danger">삭제</a>
-                </li>
-                {% endfor %}
-            </ul>
-            {% endif %}
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header bg-warning">
+                    <h3 class="mb-0 fs-5 fw-bold">Transactions - Merchant (거래처)</h3>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2"><a href="{% url 'transactions:merchant_list' %}" class="btn btn-sm btn-outline-success">거래처 목록</a> <code>transactions/merchants/</code></li>
+                        <li class="mb-2"><a href="{% url 'transactions:merchant_create' %}" class="btn btn-sm btn-outline-success">거래처 생성</a> <code>transactions/merchants/create/</code></li>
+                    </ul>
+                </div>
+            </div>
         </div>
     </div>
 </div>
+
+<style>
+    code { background-color: #f8f9fa; padding: 2px 5px; border-radius: 4px; font-size: 0.85rem; }
+    .card-header h3 { font-size: 1.1rem !important; }
+    .btn-sm { min-width: 100px; text-align: center; }
+</style>
 {% endblock %}

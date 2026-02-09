@@ -70,12 +70,9 @@
                         <a href="{% url 'transactions:merchant_update' merchant.pk %}" class="btn btn-warning fw-bold py-2 shadow-sm">
                             정보 수정하기
                         </a>
-                        <form action="{% url 'transactions:merchant_delete' merchant.pk %}" method="post" onsubmit="return confirm('정말 삭제하시겠습니까?');">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-outline-danger btn-sm border-0 mt-2">
-                                거래처 삭제
-                            </button>
-                        </form>
+                        <a href="{% url 'transactions:merchant_delete' merchant.pk %}" class="btn btn-outline-danger btn-sm border-0 mt-2">
+                            거래처 삭제
+                        </a>
                     </div>
                 </div>
 

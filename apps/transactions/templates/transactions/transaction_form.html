@@ -1,107 +1,187 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load humanize %}
 
-{% block title %}{{ title }} - 스마트 사업자 가계부{% endblock %}
+{% block title %}
+{% if form.instance.pk %}거래 수정{% else %}거래 등록{% endif %} - 스마트 사업자 가계부
+{% endblock %}
 
 {% block content %}
-<div class="container py-5">
+<div class="container-fluid px-4 py-3">
     <div class="row justify-content-center">
-        <div class="col-md-10 col-lg-8">
-            
-            <div class="d-flex align-items-center mb-4 pb-2 border-bottom">
-                <a href="{% url 'transactions:transaction_list' %}" class="btn btn-outline-secondary btn-sm me-3">
-                    ← 목록
-                </a>
-                <h3 class="mb-0 fw-bold text-dark">{{ title }}</h3>
-            </div>
-
+        <div class="col-lg-8 col-xl-6">
             <div class="card border-0 shadow-sm">
-                <div class="card-body p-4 p-md-5">
-                    <form method="post" id="transactionForm">
+                <!-- 헤더 -->
+                <div class="card-header bg-white py-3 border-bottom d-flex align-items-center gap-3">
+                    <a href="{% url 'transactions:transaction_list' %}" 
+                       class="btn btn-light btn-sm px-3 d-flex align-items-center fw-bold shadow-sm"
+                       style="height: 38px; transition: all 0.2s;"
+                       onmouseover="this.style.backgroundColor='#e9ecef'"
+                       onmouseout="this.style.backgroundColor='#fff'">
+                        ← 목록
+                    </a>
+                    <h5 class="mb-0 fw-bold text-dark">
+                        {% if form.instance.pk %}✏️ 거래 수정{% else %}➕ 거래 등록{% endif %}
+                    </h5>
+                </div>
+
+                <!-- 본문 -->
+                <div class="card-body p-4">
+                    <form method="post">
                         {% csrf_token %}
 
-                        <div class="row g-4">
+                        <div class="row g-3">
+                            <!-- 거래 유형 + 부가세 유형 -->
                             <div class="col-md-6">
-                                <label class="form-label fw-bold">거래 유형 *</label>
+                                <label for="{{ form.tx_type.id_for_label }}" class="form-label fw-bold">
+                                    거래 유형 <span class="text-danger">*</span>
+                                </label>
                                 {{ form.tx_type }}
+                                {% if form.tx_type.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.tx_type.errors.0 }}</div>
+                                {% endif %}
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label fw-bold">부가세 유형 *</label>
+                                <label for="{{ form.tax_type.id_for_label }}" class="form-label fw-bold">
+                                    부가세 유형 <span class="text-danger">*</span>
+                                </label>
                                 {{ form.tax_type }}
-                            </div>
-
-                            <div class="col-12">
-                                <label class="form-label fw-bold">거래일시 *</label>
-                                {{ form.occurred_at }}
-                            </div>
-
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold">사업장</label>
-                                {{ form.business }}
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold">계좌 *</label>
-                                {{ form.account }}
-                            </div>
-
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold">거래처 선택</label>
-                                {{ form.merchant }}
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold">거래처 직접 입력</label>
-                                {{ form.merchant_name }}
-                            </div>
-
-                            <div class="col-12">
-                                <label class="form-label fw-bold">카테고리 *</label>
-                                {{ form.category }}
-                                {% if form.category.errors %}
-                                    <div class="text-danger small mt-1">{{ form.category.errors.0 }}</div>
+                                {% if form.tax_type.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.tax_type.errors.0 }}</div>
                                 {% endif %}
                             </div>
 
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold text-primary">금액 *</label>
-                                <div class="input-group">
-                                    <input type="text" id="amount_display" class="form-control fw-bold form-control-lg" placeholder="0">
-                                    <span class="input-group-text">원</span>
-                                </div>
-                                <input type="hidden" name="amount" id="id_amount" value="{{ form.amount.value|default:0 }}">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold">부가세 (자동계산)</label>
-                                <div class="input-group">
-                                    <input type="text" id="vat_display" class="form-control text-muted bg-light" placeholder="0" readonly>
-                                    <span class="input-group-text bg-light">원</span>
-                                </div>
-                                <input type="hidden" name="vat_amount" id="id_vat_amount" value="{{ form.vat_amount.value|default:0 }}">
+                            <!-- 거래일시 -->
+                            <div class="col-12">
+                                <label for="{{ form.occurred_at.id_for_label }}" class="form-label fw-bold">
+                                    거래일시 <span class="text-danger">*</span>
+                                </label>
+                                {{ form.occurred_at }}
+                                {% if form.occurred_at.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.occurred_at.errors.0 }}</div>
+                                {% endif %}
                             </div>
 
+                            <!-- 사업장 + 계좌 -->
+                            <div class="col-md-6">
+                                <label for="{{ form.business.id_for_label }}" class="form-label fw-bold">
+                                    사업장 <small class="text-muted">(선택)</small>
+                                </label>
+                                {{ form.business }}
+                                {% if form.business.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.business.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.account.id_for_label }}" class="form-label fw-bold">
+                                    계좌 <span class="text-danger">*</span>
+                                </label>
+                                {{ form.account }}
+                                {% if form.account.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.account.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- 거래처 선택 + 직접 입력 -->
+                            <div class="col-md-6">
+                                <label for="{{ form.merchant.id_for_label }}" class="form-label fw-bold">
+                                    거래처 선택 <small class="text-muted">(선택)</small>
+                                </label>
+                                {{ form.merchant }}
+                                {% if form.merchant.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.merchant.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.merchant_name.id_for_label }}" class="form-label fw-bold">
+                                    거래처 직접 입력 <small class="text-muted">(선택)</small>
+                                </label>
+                                {{ form.merchant_name }}
+                                {% if form.merchant_name.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.merchant_name.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- 카테고리 -->
                             <div class="col-12">
-                                <div class="form-check form-switch p-3 border rounded bg-light d-flex align-items-center">
-                                    <div class="ms-4 ps-2">
-                                        {{ form.is_business }}
-                                        <label class="form-check-label fw-bold ms-2" for="{{ form.is_business.id_for_label }}">
-                                            사업용 거래로 분류
-                                        </label>
-                                    </div>
+                                <label for="{{ form.category.id_for_label }}" class="form-label fw-bold">
+                                    카테고리 <span class="text-danger">*</span>
+                                </label>
+                                {{ form.category }}
+                                {% if form.category.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.category.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- 금액 -->
+                            <div class="col-12">
+                                <label for="{{ form.amount.id_for_label }}" class="form-label fw-bold">
+                                    금액 <span class="text-danger">*</span>
+                                </label>
+                                <div class="d-flex align-items-center gap-2">
+                                    <input type="number" name="amount" id="id_amount" class="form-control" 
+                                        value="{{ form.amount.value|default:'' }}" 
+                                        step="1" min="0" placeholder="0" required>
+                                    <span class="fw-bold" style="white-space: nowrap;">원</span>
+                                </div>
+                                {% if form.amount.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.amount.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- 사업용 거래 -->
+                            <div class="col-12">
+                                <div class="form-check form-switch p-3 border rounded bg-light">
+                                    {{ form.is_business }}
+                                    <label class="form-check-label fw-bold ms-2" for="{{ form.is_business.id_for_label }}">
+                                        사업용 거래로 분류
+                                    </label>
                                 </div>
                             </div>
 
+                            <!-- 메모 -->
                             <div class="col-12">
-                                <label class="form-label fw-bold">메모</label>
+                                <label for="{{ form.memo.id_for_label }}" class="form-label fw-bold">
+                                    메모 <small class="text-muted">(선택)</small>
+                                </label>
                                 {{ form.memo }}
+                                {% if form.memo.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.memo.errors.0 }}</div>
+                                {% endif %}
                             </div>
                         </div>
 
-                        <div class="row g-3 mt-5">
-                            <div class="col-6">
-                                <a href="{% url 'transactions:transaction_list' %}" class="btn btn-light w-100 py-2 fw-bold text-muted border">취소</a>
+                        <!-- 전체 에러 -->
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger border-0 py-2 mt-3">
+                                ⚠️ {{ form.non_field_errors.0 }}
                             </div>
-                            <div class="col-6">
-                                <button type="submit" class="btn btn-primary w-100 py-2 fw-bold shadow-sm">저장하기</button>
-                            </div>
+                        {% endif %}
+
+                        <!-- 안내 사항 -->
+                        <div class="alert alert-info border-0 mt-4 mb-4">
+                            <h6 class="mb-2 fw-bold">💡 안내 사항</h6>
+                            <ul class="mb-0 small">
+                                <li>부가세는 저장 시 자동으로 계산됩니다 (과세 거래 10%).</li>
+                                <li>거래처는 목록에서 선택하거나 직접 입력할 수 있습니다.</li>
+                                <li>사업용 거래로 분류하면 세금 신고 시 활용할 수 있습니다.</li>
+                            </ul>
+                        </div>
+
+                        <!-- 하단 버튼 -->
+                        <div class="d-flex justify-content-end gap-2">
+                            {% if form.instance.pk %}
+                                <a href="{% url 'transactions:transaction_detail' form.instance.pk %}" class="btn btn-light border fw-bold px-4">
+                                    취소
+                                </a>
+                            {% else %}
+                                <a href="{% url 'transactions:transaction_list' %}" class="btn btn-light border fw-bold px-4">
+                                    취소
+                                </a>
+                            {% endif %}
+                            <button type="submit" class="btn {% if form.instance.pk %}btn-warning{% else %}btn-success{% endif %} fw-bold px-4 shadow-sm">
+                                {% if form.instance.pk %}✏️ 수정 완료{% else %}➕ 등록 완료{% endif %}
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -110,57 +190,46 @@
     </div>
 </div>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        // 1. 기본 스타일 적용
-        const formInputs = document.querySelectorAll('input:not([type="hidden"]), select, textarea');
-        formInputs.forEach(input => {
-            input.classList.add(input.type === 'checkbox' ? 'form-check-input' : 'form-control');
-        });
+<style>
+    input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]),
+    select,
+    textarea {
+        display: block !important;
+        width: 100% !important;
+        padding: 0.375rem 0.75rem !important;
+        font-size: 1rem !important;
+        font-weight: 400 !important;
+        line-height: 1.5 !important;
+        color: #212529 !important;
+        background-color: #fff !important;
+        background-clip: padding-box !important;
+        border: 1px solid #dee2e6 !important;
+        border-radius: 0.375rem !important;
+        transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out !important;
+    }
 
-        const amtDisp = document.getElementById('amount_display');
-        const amtHid = document.getElementById('id_amount');
-        const vatDisp = document.getElementById('vat_display');
-        const vatHid = document.getElementById('id_vat_amount');
-        const taxTypeSelect = document.querySelector('[name="tax_type"]');
+    input:focus,
+    select:focus,
+    textarea:focus {
+        color: #212529 !important;
+        background-color: #fff !important;
+        border-color: #86b7fe !important;
+        outline: 0 !important;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25) !important;
+    }
 
-        function formatNumber(val) {
-            if (!val || val == 0) return "";
-            return val.toString().replace(/[^0-9]/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-        }
+    input[type="checkbox"] {
+        width: 3rem !important;
+        height: 1.5rem !important;
+    }
 
-        // 2. 핵심: 부가세 자동 계산 로직 (면세 대응)
-        function calculateVAT() {
-            const amount = parseInt(amtHid.value) || 0;
-            const selectedText = taxTypeSelect.options[taxTypeSelect.selectedIndex]?.text || "";
-            
-            // 유형에 '과세' 또는 '10%'가 포함된 경우만 계산
-            if (selectedText.includes('과세') || selectedText.includes('10%')) {
-                const vatVal = Math.floor(amount * 0.1);
-                vatHid.value = vatVal;
-                vatDisp.value = formatNumber(vatVal);
-            } else {
-                // 면세, 영세 등은 무조건 0원
-                vatHid.value = 0;
-                vatDisp.value = "0";
-            }
-        }
+    textarea {
+        min-height: 100px !important;
+    }
 
-        // 3. 이벤트 연결
-        amtDisp.addEventListener('input', function(e) {
-            let rawValue = e.target.value.replace(/[^0-9]/g, '');
-            amtHid.value = rawValue;
-            e.target.value = formatNumber(rawValue);
-            calculateVAT();
-        });
-
-        taxTypeSelect.addEventListener('change', calculateVAT);
-
-        // 4. 초기값 로드
-        if(amtHid.value && amtHid.value != 0) {
-            amtDisp.value = formatNumber(amtHid.value);
-            calculateVAT();
-        }
-    });
-</script>
+    .d-flex > input[type="number"],
+    .d-flex > input[type="text"] {
+        flex: 1 !important;
+    }
+</style>
 {% endblock %}

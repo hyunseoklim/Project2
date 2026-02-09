@@ -18,7 +18,7 @@
             <div class="card border-0 shadow-sm mb-4" style="border-radius: 15px;">
                 <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
                     <h5 class="fw-bold mb-0 text-dark">기본 정보</h5>
-                    <span class="badge {% if business.branch_type == 'main' %}bg-success-subtle text-success{% else %}bg-info-subtle text-info{% endif %} rounded-pill px-3">
+                    <span class="badge {% if business.branch_type == 'main' %}bg-primary rounded-pill{% else %}bg-secondary rounded-pill{% endif %} px-3" style="font-size: 0.7rem;">
                         {{ business.get_branch_type_display }}
                     </span>
                 </div>
@@ -72,11 +72,11 @@
                     
                     <div class="d-grid gap-2">
                         <a href="{% url 'businesses:business_update' business.pk %}" class="btn btn-warning fw-bold py-2 shadow-sm">
-                            정보 수정하기
+                            ✏️ 정보 수정
                         </a>
-                        <button type="button" class="btn btn-outline-danger btn-sm border-0 mt-2" data-bs-toggle="modal" data-bs-target="#deleteModal">
-                            사업장 삭제
-                        </button>
+                        <a href="{% url 'businesses:business_delete' business.pk %}" class="btn btn-outline-danger fw-bold py-2 mt-2">
+                            🗑️ 사업장 삭제
+                        </a>
                     </div>
                 </div>
 
@@ -90,30 +90,6 @@
                     </div>
                 </div>
 
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow">
-            <div class="modal-header border-bottom-0 pt-4 px-4">
-                <h5 class="modal-title fw-bold">사업장 삭제 확인</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body px-4 pb-4">
-                <p class="mb-0 text-secondary">
-                    <strong class="text-dark">{{ business.name }}</strong>을(를) 삭제하시겠습니까?<br>
-                    연결된 모든 데이터가 삭제되며, 복구할 수 없습니다.
-                </p>
-            </div>
-            <div class="modal-footer border-top-0 px-4 pb-4">
-                <button type="button" class="btn btn-light fw-bold px-4" data-bs-modal="modal">취소</button>
-                <form action="{% url 'businesses:business_delete' business.pk %}" method="post">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-danger fw-bold px-4">삭제 확정</button>
-                </form>
             </div>
         </div>
     </div>

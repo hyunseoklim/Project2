@@ -1,14 +1,14 @@
 {% extends 'base.html' %}
 {% load humanize %}
 
-{% block title %}계좌 요약 대시보드 - 스마트 사업자 가계부{% endblock %}
+{% block title %}계좌 요약 보기 - 스마트 사업자 가계부{% endblock %}
 
 {% block content %}
 <div class="container-fluid px-4 py-3">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3 class="mb-0 fw-bold text-dark">📊 계좌 요약 대시보드</h3>
-        <a href="{% url 'businesses:account_list' %}" class="btn btn-outline-success btn-sm px-3 d-flex align-items-center fw-bold shadow-sm" style="height: 38px;">
-            💳 계좌 목록 보기
+        <h3 class="mb-0 fw-bold text-dark">📊 계좌 요약 보기</h3>
+        <a href="{% url 'businesses:account_list' %}" class="btn btn-outline-secondary btn-sm px-3 d-flex align-items-center fw-bold shadow-sm" style="height: 38px;">
+            ← 계좌 관리
         </a>
     </div>
 
@@ -138,15 +138,16 @@
                                     <th class="ps-4">계좌명</th>
                                     <th>은행 / 계좌번호</th>
                                     <th class="text-center">구분</th>
-                                    <th class="text-end">현재 잔액</th>
-                                    <th class="text-center pe-4">관리</th>
+                                    <th class="text-end pe-4">현재 잔액</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for account in low_balance_accounts %}
                                 <tr>
                                     <td class="ps-4">
-                                        <div class="fw-bold text-dark">{{ account.name }}</div>
+                                        <a href="{% url 'businesses:account_detail' account.pk %}" class="text-decoration-none fw-bold text-dark">
+                                            {{ account.name }}
+                                        </a>
                                     </td>
                                     <td>
                                         <div class="small text-dark">{{ account.bank_name }}</div>
@@ -159,11 +160,8 @@
                                             <span class="badge bg-light text-muted border">개인용</span>
                                         {% endif %}
                                     </td>
-                                    <td class="text-end text-danger fw-bold">
+                                    <td class="text-end pe-4 text-danger fw-bold">
                                         {{ account.balance|floatformat:0|intcomma }}원
-                                    </td>
-                                    <td class="text-center pe-4">
-                                        <a href="{% url 'businesses:account_detail' account.pk %}" class="btn btn-warning btn-sm fw-bold shadow-sm">상세</a>
                                     </td>
                                 </tr>
                                 {% endfor %}

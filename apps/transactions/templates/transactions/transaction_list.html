@@ -9,15 +9,21 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h3 class="mb-0 fw-bold text-dark">💰 거래 관리</h3>
         <div class="d-flex gap-2">
-            <a href="{% url 'transactions:transaction_create' %}" class="btn btn-primary btn-sm px-4 shadow-sm d-flex align-items-center fw-bold" style="height: 38px;">
-                + 거래 등록
+            <a href="{% url 'transactions:category_list' %}" 
+               class="btn btn-outline-primary btn-sm px-3 fw-bold shadow-sm d-flex align-items-center" 
+               style="height: 38px;">
+                📁 거래 카테고리 관리
             </a>
-            <a href="{% url 'transactions:category_list' %}" class="btn btn-primary btn-sm px-4 shadow-sm d-flex align-items-center fw-bold" style="height: 38px;">
-                + 카테고리 관리
+            <a href="{% url 'transactions:merchant_list' %}" 
+               class="btn btn-outline-secondary btn-sm px-3 fw-bold shadow-sm d-flex align-items-center" 
+               style="height: 38px;">
+                🏪 거래처 관리
             </a>
-            <a href="{% url 'transactions:merchant_list' %}" class="btn btn-primary btn-sm px-4 shadow-sm d-flex align-items-center fw-bold" style="height: 38px;">
-                + 거래처 관리
-            </a>            
+            <a href="{% url 'transactions:transaction_create' %}" 
+               class="btn btn-success btn-sm px-3 fw-bold shadow-sm d-flex align-items-center" 
+               style="height: 38px;">
+                ➕ 거래 등록
+            </a>
         </div>    
     </div>
 
@@ -84,16 +90,16 @@
                         <input type="text" name="search" class="form-control form-control-sm shadow-sm" 
                             style="height: 38px;" placeholder="거래처, 메모" value="{{ request.GET.search }}">
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-md-auto" style="min-width: 110px;">
                         <select name="tx_type" class="form-select form-select-sm shadow-sm" style="height: 38px;">
-                            <option value="">전체 유형</option>
+                            <option value="">거래 구분</option>
                             <option value="IN" {% if request.GET.tx_type == 'IN' %}selected{% endif %}>수입</option>
                             <option value="OUT" {% if request.GET.tx_type == 'OUT' %}selected{% endif %}>지출</option>
                         </select>
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-md-auto" style="min-width: 110px;">
                         <select name="business" class="form-select form-select-sm shadow-sm" style="height: 38px;">
-                            <option value="">사업장(전체)</option>
+                            <option value="">사업장 전체</option>
                             {% for business in businesses %}
                             <option value="{{ business.id }}" {% if request.GET.business == business.id|stringformat:"s" %}selected{% endif %}>
                                 {{ business.name }}
@@ -101,9 +107,9 @@
                             {% endfor %}
                         </select>
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-md-auto" style="min-width: 110px;">
                         <select name="account" class="form-select form-select-sm shadow-sm" style="height: 38px;">
-                            <option value="">계좌(전체)</option>
+                            <option value="">계좌 전체</option>
                             {% for account in accounts %}
                             <option value="{{ account.id }}" {% if request.GET.account == account.id|stringformat:"s" %}selected{% endif %}>
                                 {{ account.name }}
@@ -120,10 +126,17 @@
                             style="height: 38px; line-height: 24px;" value="{{ request.GET.date_to }}">
                     </div>
                     <div class="col-md-1">
-                        <button type="submit" class="btn btn-warning btn-sm w-100 fw-bold shadow-sm" 
+                        <button type="submit" class="btn btn-primary btn-sm w-100 fw-bold shadow-sm" 
                                 style="height: 38px; display: flex; align-items: center; justify-content: center;">
                             검색
                         </button>
+                    </div>
+                    <div class="col-md-auto">
+                    <a href="{% url 'transactions:transaction_list' %}" 
+                       class="btn btn-outline-secondary btn-sm fw-bold" 
+                       style="height: 38px; white-space: nowrap; display: flex; align-items: center; padding: 0 0.75rem;">
+                        초기화
+                        </a>
                     </div>
                 </div>
             </form>
@@ -149,13 +162,13 @@
                     </thead>
                     <tbody>
                         {% for transaction in page_obj %}
-                        <tr>
+                        <tr style="cursor: pointer;" onclick="location.href='{% url 'transactions:transaction_detail' transaction.pk %}'">
                             <td><small>{{ transaction.occurred_at|date:"m/d H:i" }}</small></td>
                             <td>
                                 {% if transaction.tx_type == 'IN' %}
-                                <span class="badge bg-success">수입</span>
+                                <span class="badge bg-primary-subtle text-primary rounded-pill">수입</span>
                                 {% else %}
-                                <span class="badge bg-danger">지출</span>
+                                <span class="badge bg-danger-subtle text-danger rounded-pill">지출</span>
                                 {% endif %}
                             </td>
                             <td>{{ transaction.get_merchant_display|truncatewords:3 }}</td>
@@ -168,11 +181,8 @@
                                 </small>
                             </td>
                             <td><small class="text-muted">{{ transaction.memo|truncatewords:3|default:"-" }}</small></td>
-                            <td class="text-center">
-                                <div class="btn-group btn-group-sm">
-                                    <a href="{% url 'transactions:transaction_detail' transaction.pk %}" class="btn btn-outline-secondary btn-sm">👁️</a>
-                                    <a href="{% url 'transactions:transaction_update' transaction.pk %}" class="btn btn-outline-warning btn-sm">✏️</a>
-                                </div>
+                            <td class="text-center" onclick="event.stopPropagation();">
+                                <a href="{% url 'transactions:transaction_update' transaction.pk %}" class="btn btn-outline-warning btn-sm" style="font-size: 0.7rem; padding: 0.15rem 0.4rem;">✏️</a>
                             </td>
                         </tr>
                         {% empty %}
@@ -181,11 +191,11 @@
                                 <div>
                                     <span class="fs-1">📭</span>
                                     {% if request.GET.urlencode %}
-                                        <p class="mt-2">검색 결과가 없습니다. 필터를 조정해보세요.</p>
+                                        <p class="mt-2">조건에 맞는 거래 내역이 없습니다.</p>
                                         <a href="{% url 'transactions:transaction_list' %}" class="btn btn-outline-secondary btn-sm">전체 내역 보기</a>
                                     {% else %}
                                         <p class="mt-2">거래 내역이 없습니다.</p>
-                                        <a href="{% url 'transactions:transaction_create' %}" class="btn btn-primary btn-sm">+ 첫 거래 등록하기</a>
+                                        <a href="{% url 'transactions:transaction_create' %}" class="btn btn-primary btn-sm">➕ 첫 거래 등록하기</a>
                                     {% endif %}
                                 </div>
                             </td>

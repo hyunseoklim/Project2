@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load humanize %}
 
-{% block title %}사업장 삭제 확인 - 스마트 사업자 가계부{% endblock %}
+{% block title %}사업장 복구 - 스마트 사업자 가계부{% endblock %}
 
 {% block content %}
 <div class="container-fluid px-4 py-3">
@@ -10,21 +10,21 @@
             <div class="card border-0 shadow-sm">
                 <!-- 헤더 -->
                 <div class="card-header bg-white py-3 border-bottom d-flex align-items-center gap-3">
-                    <a href="{% url 'businesses:business_list' %}" 
+                    <a href="{% url 'businesses:business_deleted_list' %}" 
                        class="btn btn-light btn-sm px-3 d-flex align-items-center fw-bold shadow-sm"
                        style="height: 38px; transition: all 0.2s;"
                        onmouseover="this.style.backgroundColor='#e9ecef'"
                        onmouseout="this.style.backgroundColor='#fff'">
                         ← 목록
                     </a>
-                    <h5 class="mb-0 fw-bold text-dark">⚠️ 사업장 삭제 확인</h5>
+                    <h5 class="mb-0 fw-bold text-dark">♻️ 사업장 복구</h5>
                 </div>
 
                 <!-- 본문 -->
                 <div class="card-body p-4">
                     <!-- 설명 -->
                     <div class="mb-4 text-center">
-                        <p class="mb-1">"<strong>{{ business.name }}</strong>"을(를) 삭제하시겠습니까?</p>
+                        <p class="mb-1">"<strong>{{ business.name }}</strong>"을(를) 복구하시겠습니까?</p>
                     </div>
 
                     <!-- 사업장 정보 -->
@@ -45,19 +45,20 @@
                                 <p class="mb-0">{{ business.location|default:"-" }}</p>
                             </div>
                             <div class="col-6">
-                                <small class="text-muted">연결된 계좌</small>
-                                <p class="mb-0 fw-bold">{{ account_count }}개</p>
+                                <small class="text-muted">등록일</small>
+                                <p class="mb-0">{{ business.created_at|date:"Y년 m월 d일" }}</p>
                             </div>
                         </div>
                     </div>
 
-                    <!-- 안내 사항 -->
-                    <div class="alert alert-warning border-0 mb-4">
-                        <h6 class="mb-2 fw-bold">📌 안내 사항</h6>
+                    <!-- 복구 안내 -->
+                    <div class="alert alert-success border-0 mb-4">
+                        <h6 class="mb-2 fw-bold">✅ 복구 안내</h6>
                         <ul class="mb-0 small">
-                            <li>삭제된 사업장은 <strong>사업장 관리 페이지에서 복구가 가능</strong>합니다.</li>
-                            <li>연결된 계좌 <strong class="text-danger">{{ account_count }}개</strong>는 유지됩니다.</li>
-                            <li>삭제된 사업장은 목록에 표시되지 않습니다.</li>
+                            <li>사업장이 다시 활성화됩니다.</li>
+                            <li>사업장 목록에 다시 표시됩니다.</li>
+                            <li>연결된 계좌 정보는 그대로 유지됩니다.</li>
+                            <li>모든 기능을 정상적으로 사용할 수 있습니다.</li>
                         </ul>
                     </div>
 
@@ -65,12 +66,12 @@
                     <form method="post">
                         {% csrf_token %}
                         <div class="d-flex justify-content-end gap-2">
-                            <a href="{% url 'businesses:business_detail' business.pk %}" 
+                            <a href="{% url 'businesses:business_deleted_list' %}" 
                                class="btn btn-light border fw-bold px-4">
                                 취소
                             </a>
-                            <button type="submit" class="btn btn-danger fw-bold px-4 shadow-sm">
-                                🗑️ 삭제 확인
+                            <button type="submit" class="btn btn-success fw-bold px-4 shadow-sm">
+                                ♻️ 복구 확인
                             </button>
                         </div>
                     </form>
