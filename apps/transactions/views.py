@@ -15,6 +15,7 @@ from django.utils import timezone
 from .models import Merchant, Category
 from .forms import TransactionForm, MerchantForm, CategoryForm, ExcelUploadForm
 from apps.businesses.models import Account, Business
+from decimal import Decimal
 
 from django.http import FileResponse, Http404
 from .models import Attachment
@@ -486,15 +487,30 @@ def transaction_list(request):
     if date_to:
         transactions = transactions.filter(occurred_at__lte=date_to)
 
-    # 통계 계산
+    # 1. 통계 계산
     stats = transactions.aggregate(
         total_income=Sum('amount', filter=Q(tx_type='IN')),
         total_expense=Sum('amount', filter=Q(tx_type='OUT')),
-        total_vat=Sum('vat_amount'),
         count=Count('id'),
-        income_vat=Sum('vat_amount', filter=Q(tx_type='IN')), 
-        expense_vat=Sum('vat_amount', filter=Q(tx_type='OUT')),
+        income_vat=Sum('vat_amount', filter=Q(tx_type='IN')),  # 매출세액
+        expense_vat=Sum('vat_amount', filter=Q(tx_type='OUT')), # 매입세액
     )
+
+    # 2. 부가세 정산 로직 추가
+    income_vat = stats['income_vat'] or Decimal('0')
+    expense_vat = stats['expense_vat'] or Decimal('0')
+
+    # 차액 계산 (매출세액 - 매입세액)
+    vat_diff = income_vat - expense_vat
+
+    if vat_diff >= 0:
+        stats['vat_result_label'] = "예상 납부세액"
+        stats['vat_result_value'] = vat_diff
+        stats['vat_color_class'] = "text-danger" # 내야 할 돈은 빨간색
+    else:
+        stats['vat_result_label'] = "예상 환급세액"
+        stats['vat_result_value'] = abs(vat_diff) # 음수를 양수로 변환
+        stats['vat_color_class'] = "text-primary" # 돌려받을 돈은 파란색
 
     # 페이지네이션
     paginator = Paginator(transactions, 20)
@@ -847,16 +863,23 @@ def attachment_upload(request, transaction_id):
 
 @login_required
 def attachment_download(request, pk):
-    """첨부파일 다운로드"""
+    """첨부파일 다운로드 (물리 파일 존재 확인 추가)"""
     attachment = get_object_or_404(
         Attachment, 
         pk=pk, 
         user=request.user
     )
     
+    # 1. DB에는 기록이 있지만, 실제 파일이 스토리지에 없는 경우 체크
+    if not attachment.file or not attachment.file.storage.exists(attachment.file.name):
+        messages.error(request, "서버에서 실제 파일을 찾을 수 없습니다. 파일이 삭제되었을 수 있습니다.")
+        # 상세 페이지나 목록 페이지로 리다이렉트 (예: 거래 상세 페이지)
+        return redirect(request.META.get('HTTP_REFERER', '/'))
+
     try:
-        # 파일 응답
-        response = FileResponse(attachment.file.open('rb'))
+        # 2. 파일 열기
+        file_handle = attachment.file.open('rb')
+        response = FileResponse(file_handle)
         
         # Content-Type 설정
         content_type = attachment.content_type or mimetypes.guess_type(attachment.original_name)[0] or 'application/octet-stream'
@@ -870,8 +893,9 @@ def attachment_download(request, pk):
         return response
         
     except Exception as e:
-        logger.error(f"파일 다운로드 실패: {e}")
-        raise Http404("파일을 찾을 수 없습니다.")
+        logger.error(f"파일 다운로드 중 예외 발생: {pk}, 에러: {e}")
+        messages.error(request, "파일을 읽는 중 오류가 발생했습니다.")
+        return redirect(request.META.get('HTTP_REFERER', '/'))
 
 
 @login_required
@@ -900,20 +924,6 @@ def attachment_delete(request, pk):
     
     return render(request, 'transactions/attachment_confirm_delete.html', context)
 
-# @login_required
-# def attachment_list_view(request):
-#     """첨부파일(증빙자료)이 포함된 모든 거래 목록"""
-#     # 1. 쿼리 최적화: select_related로 Attachment를 JOIN해서 가져옴
-#     # 2. 필터: attachment가 있는 것만
-#     # 3. 정렬: 최신 거래순
-#     evidence_list = Transaction.objects.select_related('attachment', 'account') \
-#                                        .filter(user=request.user, attachment__isnull=False) \
-#                                        .order_by('-occurred_at')
-
-#     return render(request, 'transactions/attachment_list.html', {
-#         'evidence_list': evidence_list
-#     })
-
 
 @login_required
 def attachment_list_view(request):
@@ -933,69 +943,3 @@ def attachment_list_view(request):
     return render(request, 'transactions/attachment_list.html', {
         'page_obj': page_obj,                   # 하단 테이블용
     })
-# @login_required
-# def transaction_list(request):
-#     """거래 목록 (개선 버전)"""
-#     user = request.user
-    
-#     # 1. 기본 쿼리셋 (사용자별, 활성화된 거래만)
-#     transactions = Transaction.active.filter(user=user).with_relations()
-    
-#     # 2. 연도/월 필터 (예외처리 추가)
-#     year = request.GET.get('year')
-#     month = request.GET.get('month')
-    
-#     if year:
-#         try:
-#             year_int = int(year)
-#             if 2000 <= year_int <= 2100:
-#                 transactions = transactions.filter(occurred_at__year=year_int)
-#                 year = year_int  # 정상적인 값으로 변환
-#         except (ValueError, TypeError):
-#             year = None
-    
-#     if month:
-#         try:
-#             month_int = int(month)
-#             if 1 <= month_int <= 12:
-#                 transactions = transactions.filter(occurred_at__month=month_int)
-#                 month = month_int  # 정상적인 값으로 변환
-#         except (ValueError, TypeError):
-#             month = None
-    
-#     # 3. 정렬
-#     transactions = transactions.order_by('-occurred_at')
-    
-#     # 4. 페이지네이션 (20개씩)
-#     paginator = Paginator(transactions, 20)
-#     page_number = request.GET.get('page')
-#     page_obj = paginator.get_page(page_number)
-    
-#     # 5. 연도 선택지 (DB에서 실제 존재하는 연도만)
-#     year_list = Transaction.active.filter(user=user).dates('occurred_at', 'year', order='DESC')
-#     year_list = [d.year for d in year_list]
-    
-
-#     # 6. 통계 (선택적)
-#     from django.db.models import Sum, Count
-
-#     stats = transactions.aggregate(
-#     total_count=Count('id'),
-#     total_income=Sum('amount', filter=Q(tx_type='IN')),
-#     total_expense=Sum('amount', filter=Q(tx_type='OUT'))
-# )
-
-#     # None 값 처리 (데이터가 없을 경우 0으로 변환)
-#     stats['total_income'] = stats['total_income'] or 0
-#     stats['total_expense'] = stats['total_expense'] or 0
-#     stats['net_profit'] = stats['total_income'] - stats['total_expense']
-        
-#     context = {
-#         'page_obj': page_obj,
-#         'year_list': year_list,
-#         'selected_year': year,
-#         'selected_month': month,
-#         'stats': stats,
-#     }
-    
-#     return render(request, 'transactions/list.html', context)
