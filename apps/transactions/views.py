@@ -272,16 +272,28 @@ def merchant_create(request):
 
 @login_required
 def merchant_detail(request, pk):
+    """
+    거래처 상세 정보 조회 + 즉시 수정(POST) 기능 포함
+    """
     merchant = get_object_or_404(Merchant, pk=pk, user=request.user, is_active=True)
     
+    # 상세페이지에서 직접 수정 저장 시 처리
+    if request.method == 'POST':
+        form = MerchantForm(request.POST, instance=merchant, user=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f"'{merchant.name}' 거래처 정보가 수정되었습니다.")
+            return redirect('transactions:merchant_detail', pk=merchant.pk)
+    else:
+        form = MerchantForm(instance=merchant, user=request.user)
+
     # 해당 거래처의 최근 거래 내역
     recent_transactions = Transaction.active.filter(
         merchant=merchant,
         user=request.user
     ).order_by('-occurred_at')[:20]
     
-    # 통계
-    from django.db.models import Sum, Count
+    # 통계 계산
     stats = Transaction.active.filter(merchant=merchant, user=request.user).aggregate(
         total_count=Count('id'),
         total_amount=Sum('amount'),
@@ -290,6 +302,7 @@ def merchant_detail(request, pk):
     
     return render(request, 'transactions/merchant_detail.html', {
         'merchant': merchant,
+        'form': form,
         'recent_transactions': recent_transactions,
         'stats': stats,
     })

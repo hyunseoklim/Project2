@@ -1,100 +1,136 @@
 {% extends 'base.html' %}
 
-{% block title %}카테고리 목록{% endblock %}
+{% block title %}카테고리 관리 - 스마트 사업자 가계부{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>카테고리 목록</h2>
-    
-    <div class="d-flex gap-2">
-        <a href="{% url 'transactions:category_statistics' %}" class="btn btn-warning">
-            카테고리별 집계
-        </a>
-        <a href="{% url 'transactions:category_create' %}" class="btn btn-warning">
-            + 내 카테고리 추가
+<div class="container py-5">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-5 gap-3">
+        <div>
+            <h2 class="fw-bold text-dark mb-1">🛠️ 카테고리 관리</h2>
+            <p class="text-muted mb-0 small">수입과 지출을 세분화하면 우리 가게 돈 흐름이 정확히 보입니다.</p>
+        </div>
+        <a href="{% url 'transactions:category_create' %}" class="btn btn-primary px-4 py-2 fw-bold shadow-sm rounded-pill">
+            <i class="bi bi-plus-circle-fill me-2"></i> 새 항목 추가
         </a>
     </div>
 </div>
 
-    {% if messages %}
-        {% for message in messages %}
-        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-            {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-        {% endfor %}
-    {% endif %}
-
-    <!-- 수입 카테고리 -->
-    <div class="card mb-4">
-        <div class="card-header bg-success text-white">
-            <h5 class="mb-0">수입 카테고리</h5>
-        </div>
-        <div class="card-body">
-            <ul class="list-group list-group-flush">
-                {% for cat in categories %}
-                    {% if cat.type == 'income' %}
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span>
-                            {{ cat.name }}
-                            {% if cat.is_system %}
-                                <span class="badge bg-secondary">기본</span>
-                            {% else %}
-                                <span class="badge bg-primary">내 카테고리</span>
-                            {% endif %}
-                        </span>
-                        
-                        {% if not cat.is_system and cat.user == request.user %}
-                        <div>
-                            <a href="{% url 'transactions:category_update' cat.pk %}" 
-                               class="btn btn-sm btn-outline-primary">수정</a>
-                            <a href="{% url 'transactions:category_delete' cat.pk %}" 
-                               class="btn btn-sm btn-outline-danger">삭제</a>
-                        </div>
-                        {% endif %}
-                    </li>
-                    {% endif %}
-                {% endfor %}
-            </ul>
-        </div>
+<div class="bg-white p-2 rounded-4 mb-5 border shadow-sm">
+        <ul class="nav nav-pills nav-justified gap-3 border-0" id="categoryTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active fw-bold py-3 border-0 transition-all custom-tab-btn expense-btn" 
+                        id="expense-tab" data-bs-toggle="pill" data-bs-target="#expense-pane" 
+                        type="button" role="tab">
+                    💸 지출 항목
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link fw-bold py-3 border-0 transition-all custom-tab-btn income-btn" 
+                        id="income-tab" data-bs-toggle="pill" data-bs-target="#income-pane" 
+                        type="button" role="tab">
+                    💰 수입 항목
+                </button>
+            </li>
+        </ul>
     </div>
 
-    <!-- 지출 카테고리 -->
-    <div class="card mb-4">
-        <div class="card-header bg-danger text-white">
-            <h5 class="mb-0">지출 카테고리</h5>
-        </div>
-        <div class="card-body">
-            <ul class="list-group list-group-flush">
+    <div class="tab-content" id="categoryTabContent">
+        
+        <div class="tab-pane fade show active" id="expense-pane" role="tabpanel">
+            <div class="row g-3">
                 {% for cat in categories %}
                     {% if cat.type == 'expense' %}
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span>
-                            {{ cat.name }}
-                            {% if cat.expense_type %}
-                                <span class="badge bg-secondary">{{ cat.get_expense_type_display }}</span>
-                            {% endif %}
-                            {% if cat.is_system %}
-                                <span class="badge bg-info">기본</span>
-                            {% else %}
-                                <span class="badge bg-primary">내 카테고리</span>
-                            {% endif %}
-                        </span>
-                        
-                        {% if not cat.is_system and cat.user == request.user %}
-                        <div>
-                            <a href="{% url 'transactions:category_update' cat.pk %}" 
-                               class="btn btn-sm btn-outline-primary">수정</a>
-                            <a href="{% url 'transactions:category_delete' cat.pk %}" 
-                               class="btn btn-sm btn-outline-danger">삭제</a>
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card h-100 border-0 shadow-sm hover-up border-start border-4 {% if cat.is_system %}border-secondary-subtle{% else %}border-primary{% endif %}">
+                            <div class="card-body p-3 d-flex justify-content-between align-items-center">
+                                <div class="d-flex align-items-center">
+                                    <div class="category-icon bg-danger-subtle text-danger me-3">
+                                        {% if "식" in cat.name %}<i class="bi bi-egg-fried"></i>
+                                        {% elif "월세" in cat.name or "임차" in cat.name %}<i class="bi bi-house-door"></i>
+                                        {% elif "급여" in cat.name or "알바" in cat.name %}<i class="bi bi-person-badge"></i>
+                                        {% elif "차" in cat.name or "유류" in cat.name %}<i class="bi bi-truck"></i>
+                                        {% elif "광고" in cat.name or "홍보" in cat.name %}<i class="bi bi-megaphone"></i>
+                                        {% elif "통신" in cat.name %}<i class="bi bi-telephone"></i>
+                                        {% elif "세금" in cat.name or "공과금" in cat.name %}<i class="bi bi-receipt"></i>
+                                        {% else %}<i class="bi bi-dash-circle"></i>{% endif %}
+                                    </div>
+                                    <div>
+                                        <h6 class="fw-bold mb-0 text-dark">{{ cat.name }}</h6>
+                                        <span class="text-muted small" style="font-size: 0.7rem;">{{ cat.get_expense_type_display|default:"일반비용" }}</span>
+                                    </div>
+                                </div>
+                                {% if not cat.is_system %}
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-icon border-0" data-bs-toggle="dropdown"><i class="bi bi-three-dots-vertical"></i></button>
+                                    <ul class="dropdown-menu dropdown-menu-end border-0 shadow">
+                                        <li><a class="dropdown-item py-2" href="{% url 'transactions:category_update' cat.pk %}">수정</a></li>
+                                        <li><a class="dropdown-item py-2 text-danger" href="{% url 'transactions:category_delete' cat.pk %}">삭제</a></li>
+                                    </ul>
+                                </div>
+                                {% else %}<i class="bi bi-lock-fill text-black-50 small"></i>{% endif %}
+                            </div>
                         </div>
-                        {% endif %}
-                    </li>
+                    </div>
                     {% endif %}
                 {% endfor %}
-            </ul>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="income-pane" role="tabpanel">
+            <div class="row g-3">
+                {% for cat in categories %}
+                    {% if cat.type == 'income' %}
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card h-100 border-0 shadow-sm hover-up border-start border-4 {% if cat.is_system %}border-secondary-subtle{% else %}border-success{% endif %}">
+                            <div class="card-body p-3 d-flex justify-content-between align-items-center">
+                                <div class="d-flex align-items-center">
+                                    <div class="category-icon bg-success-subtle text-success me-3">
+                                        {% if "매출" in cat.name or "판매" in cat.name %}<i class="bi bi-shop"></i>
+                                        {% elif "지원" in cat.name or "보조금" in cat.name %}<i class="bi bi-gift"></i>
+                                        {% elif "이자" in cat.name or "배당" in cat.name %}<i class="bi bi-bank"></i>
+                                        {% elif "기타" in cat.name or "환급" in cat.name %}<i class="bi bi-arrow-repeat"></i>
+                                        {% else %}<i class="bi bi-plus-circle-fill"></i>{% endif %}
+                                    </div>
+                                    <div>
+                                        <h6 class="fw-bold mb-0 text-dark">{{ cat.name }}</h6>
+                                        {% if "매출" in cat.name %}
+                                            <span class="badge bg-success-subtle text-success border-0 small" style="font-size: 0.65rem;">주수입</span>
+                                        {% elif "이자" in cat.name or "지원" in cat.name %}
+                                            <span class="badge bg-info-subtle text-info border-0 small" style="font-size: 0.65rem;">영업외수입</span>
+                                        {% else %}
+                                            <span class="badge bg-light text-secondary border-0 small" style="font-size: 0.65rem;">일반수입</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% if not cat.is_system %}
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-icon border-0" data-bs-toggle="dropdown"><i class="bi bi-three-dots-vertical"></i></button>
+                                    <ul class="dropdown-menu dropdown-menu-end border-0 shadow">
+                                        <li><a class="dropdown-item py-2" href="{% url 'transactions:category_update' cat.pk %}">수정</a></li>
+                                        <li><a class="dropdown-item py-2 text-danger" href="{% url 'transactions:category_delete' cat.pk %}">삭제</a></li>
+                                    </ul>
+                                </div>
+                                {% else %}<i class="bi bi-lock-fill text-black-50 small"></i>{% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
         </div>
     </div>
 </div>
+
+<style>
+    body { background-color: #f8f9fa; }
+    .nav-pills .nav-link { color: #888; border-radius: 12px; }
+    .nav-pills .nav-link.active { background-color: white !important; box-shadow: 0 4px 15px rgba(0,0,0,0.05); color: #0d6efd !important; }
+    #income-tab.active { color: #198754 !important; }
+    .hover-up { transition: 0.25s; }
+    .hover-up:hover { transform: translateY(-4px); box-shadow: 0 8px 20px rgba(0,0,0,0.08) !important; }
+    .category-icon { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 12px; font-size: 1.2rem; }
+</style>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 {% endblock %}

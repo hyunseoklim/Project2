@@ -1,62 +1,86 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load humanize %}
 
 {% block title %}거래 삭제 확인 - 스마트 사업자 가계부{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
+<div class="container-fluid px-4 py-3">
     <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header bg-danger text-white">
-                    <h4><i class="fas fa-exclamation-triangle"></i> 거래 삭제 확인</h4>
+        <div class="col-lg-8 col-xl-6">
+            <div class="card border-0 shadow-sm">
+                <!-- 헤더 -->
+                <div class="card-header bg-white py-3 border-bottom d-flex align-items-center gap-3">
+                    <a href="{% url 'transactions:transaction_list' %}" 
+                       class="btn btn-light btn-sm px-3 d-flex align-items-center fw-bold shadow-sm"
+                       style="height: 38px; transition: all 0.2s;"
+                       onmouseover="this.style.backgroundColor='#e9ecef'"
+                       onmouseout="this.style.backgroundColor='#fff'">
+                        ← 목록
+                    </a>
+                    <h5 class="mb-0 fw-bold text-dark">⚠️ 거래 삭제 확인</h5>
                 </div>
-                <div class="card-body">
-                    <p class="lead">다음 거래를 삭제하시겠습니까?</p>
 
-                    <div class="alert alert-warning">
-                        <strong>주의:</strong> 삭제된 거래는 복구할 수 없으며, 계좌 잔액이 조정됩니다.
+                <!-- 본문 -->
+                <div class="card-body p-4">
+                    <!-- 설명 -->
+                    <div class="mb-4 text-center">
+                        <p class="mb-1">다음 거래를 삭제하시겠습니까?</p>
                     </div>
 
-                    <table class="table table-bordered">
-                        <tbody>
-                            <tr>
-                                <th width="30%" class="bg-light">거래일시</th>
-                                <td>{{ transaction.occurred_at|date:"Y-m-d H:i" }}</td>
-                            </tr>
-                            <tr>
-                                <th class="bg-light">유형</th>
-                                <td>
-                                    {% if transaction.tx_type == 'IN' %}
-                                    <span class="badge bg-success">수입</span>
-                                    {% else %}
-                                    <span class="badge bg-danger">지출</span>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                            <tr>
-                                <th class="bg-light">거래처</th>
-                                <td>{{ transaction.get_merchant_display }}</td>
-                            </tr>
-                            <tr>
-                                <th class="bg-light">금액</th>
-                                <td class="fw-bold">{{ transaction.amount|floatformat:0 }}원</td>
-                            </tr>
-                            <tr>
-                                <th class="bg-light">계좌</th>
-                                <td>{{ transaction.account.name }}</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <!-- 거래 정보 -->
+                    <div class="alert alert-light border mb-4">
+                        <table class="table table-borderless mb-0">
+                            <tbody>
+                                <tr>
+                                    <th width="30%" class="text-muted">거래일시</th>
+                                    <td class="fw-bold">{{ transaction.occurred_at|date:"Y-m-d H:i" }}</td>
+                                </tr>
+                                <tr>
+                                    <th class="text-muted">유형</th>
+                                    <td>
+                                        {% if transaction.tx_type == 'IN' %}
+                                        <span class="badge bg-primary-subtle text-primary rounded-pill">수입</span>
+                                        {% else %}
+                                        <span class="badge bg-danger-subtle text-danger rounded-pill">지출</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th class="text-muted">거래처</th>
+                                    <td>{{ transaction.get_merchant_display }}</td>
+                                </tr>
+                                <tr>
+                                    <th class="text-muted">금액</th>
+                                    <td class="fw-bold text-primary fs-5">{{ transaction.amount|floatformat:0|intcomma }}원</td>
+                                </tr>
+                                <tr>
+                                    <th class="text-muted">계좌</th>
+                                    <td>{{ transaction.account.name }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
 
+                    <!-- 안내 사항 -->
+                    <div class="alert alert-warning border-0 mb-4">
+                        <h6 class="mb-2 fw-bold">📌 안내 사항</h6>
+                        <ul class="mb-0 small">
+                            <li>삭제된 거래는 <strong class="text-danger">복구할 수 없습니다.</strong></li>
+                            <li>계좌 잔액이 자동으로 조정됩니다.</li>
+                        </ul>
+                    </div>
+
+                    <!-- 버튼 -->
                     <form method="post">
                         {% csrf_token %}
-                        <div class="d-flex justify-content-between">
-                            <a href="{% url 'transactions:transaction_detail' transaction.pk %}" class="btn btn-secondary">
-                                <i class="fas fa-times"></i> 취소
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{% url 'transactions:transaction_detail' transaction.pk %}" 
+                               class="btn btn-light border fw-bold px-4">
+                                취소
                             </a>
-                            <button type="submit" class="btn btn-danger">
-                                <i class="fas fa-trash"></i> 삭제
+                            <button type="submit" class="btn btn-danger fw-bold px-4 shadow-sm">
+                                🗑️ 삭제 확인
                             </button>
                         </div>
                     </form>
