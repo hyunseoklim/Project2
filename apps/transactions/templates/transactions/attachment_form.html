@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}영수증 업로드 - 스마트 사업자 가계부{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            
+            <!-- 현재 거래 정보 (카드 스타일) -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5 class="mb-0">📋 현재 거래 정보</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <small class="text-muted">거래처</small>
+                            <p class="mb-2"><strong>{{ transaction.get_merchant_display }}</strong></p>
+                        </div>
+                        <div class="col-md-6">
+                            <small class="text-muted">금액</small>
+                            <p class="mb-2"><strong>{{ transaction.amount|floatformat:0 }}원</strong></p>
+                        </div>
+                        <div class="col-md-6">
+                            <small class="text-muted">거래일시</small>
+                            <p class="mb-0">{{ transaction.occurred_at|date:"Y-m-d H:i" }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <small class="text-muted">거래 유형</small>
+                            <p class="mb-0">{{ transaction.get_tx_type_display }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 영수증 업로드 폼 -->
+            <div class="card">
+                <div class="card-header">
+                    <h4>📎 영수증 업로드</h4>
+                </div>
+
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+
+                        <!-- 영수증 유형 -->
+                        <div class="mb-3">
+                            <label class="form-label">영수증 유형 *</label>
+                            {{ form.attachment_type }}
+                            {% if form.attachment_type.errors %}
+                            <div class="text-danger">{{ form.attachment_type.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- 파일 선택 -->
+                        <div class="mb-3">
+                            <label class="form-label">파일 선택 *</label>
+                            {{ form.file }}
+                            {% if form.file.errors %}
+                            <div class="text-danger">{{ form.file.errors }}</div>
+                            {% endif %}
+                            <small class="text-muted d-block mt-1">
+                                jpg, jpeg, png, pdf 파일만 가능 (최대 5MB)
+                            </small>
+                        </div>
+
+                        <!-- 현재 파일 정보 (수정 시) -->
+                        {% if is_update and transaction.has_attachment %}
+                        <div class="alert alert-warning mb-3">
+                            <strong>⚠️ 현재 파일:</strong> {{ transaction.attachment.original_name }}<br>
+                            <small>새 파일을 선택하면 기존 파일이 교체됩니다.</small>
+                        </div>
+                        {% endif %}
+
+                        <!-- Non-field errors -->
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {{ form.non_field_errors }}
+                        </div>
+                        {% endif %}
+
+                        <!-- 버튼 -->
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'transactions:transaction_detail' transaction.pk %}" 
+                               class="btn btn-secondary">
+                                취소
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                {% if is_update %}수정{% else %}업로드{% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

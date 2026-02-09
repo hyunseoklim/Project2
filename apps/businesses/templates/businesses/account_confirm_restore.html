@@ -20,6 +20,31 @@
                     <h5 class="mb-0 fw-bold text-dark">♻️ 계좌 복구</h5>
                 </div>
 
+                <!-- 최재용 코드추가 -->
+                <div class="alert alert-success">
+                    <h6 class="mb-2">✅ 복구 안내</h6>
+                    <ul class="mb-0 small">
+                        <li>계좌가 다시 활성화됩니다.</li>
+                        <li>계좌 목록에 다시 표시됩니다.</li>
+                        <li>거래 내역은 그대로 유지됩니다.</li>
+                        <li>모든 기능을 정상적으로 사용할 수 있습니다.</li>
+                    </ul>
+                </div>
+
+                <!-- 버튼 -->
+                <form method="post" class="mt-4">
+                    {% csrf_token %}
+                    <div class="d-flex justify-content-end gap-2">
+                        <a href="{% url 'businesses:account_list' %}" 
+                           class="btn btn-secondary">
+                            취소
+                        </a>
+                        <a href="{% url 'businesses:account_hard_delete' account.pk %}" class="btn btn-danger">
+                            영구 삭제
+                        </a>
+                        <button type="submit" class="btn btn-success">
+                            🔄 복구하기
+                        </button>
                 <!-- 본문 -->
                 <div class="card-body p-4">
                     <!-- 설명 -->

@@ -10,6 +10,7 @@ urlpatterns = [
     path('accounts/', include('apps.accounts.urls')),
     path('businesses/', include('apps.businesses.urls')),  
     path('transactions/', include('apps.transactions.urls')),
+    path('tax/', include('apps.tax.urls')),  # ← 추가!
 
 ]
 

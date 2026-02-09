@@ -306,6 +306,20 @@ def account_delete(request, pk):
 
 
 @login_required
+def account_hard_delete(request, pk):
+    # 계좌 영구삭제 모드
+    # 소프트 삭제된 데이터도 가져오기 위해 .objects 사용
+    account = get_object_or_404(Account.objects, pk=pk, user=request.user)
+    
+    if request.method == 'POST':
+        account.hard_delete() # 모델의 메서드 호출
+        messages.success(request, "계좌가 영구 삭제되었습니다.")
+        return redirect('businesses:account_list')
+    
+    return render(request, 'businesses/account_confirm_hard_delete.html', {'account': account})
+
+
+@login_required
 def account_restore(request, pk):
     """
     삭제된 계좌 복구

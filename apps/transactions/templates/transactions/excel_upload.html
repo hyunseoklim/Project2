@@ -1,19 +1,284 @@
-<h2>거래 내역 엑셀 업로드</h2>
+{% extends 'base.html' %}
+{% load static %}
 
-{% if messages %}
-    <div>
-        {% for message in messages %}
-            <div class="alert alert-{{ message.tags }}">
-                {{ message }}
-            </div>
-        {% endfor %}
+{% block title %}엑셀 데이터 관리 - 스마트 사업자 가계부{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- 페이지 헤더 -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h2>📊 엑셀 데이터 관리</h2>
+            <p class="text-muted">거래 내역을 엑셀로 가져오거나 내보낼 수 있습니다.</p>
+        </div>
     </div>
-{% endif %}
 
-<form method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">업로드 시작</button>
-</form>
-<br>
-<a href="{% url 'transactions:download_template' %}">입력 양식 다운로드</a>
+    <!-- 메시지 표시 -->
+    {% if messages %}
+        <div class="row mb-3">
+            <div class="col-md-12">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
+    <div class="row">
+        <!-- 1. 템플릿 다운로드 -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">📥 1단계: 템플릿 다운로드</h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">
+                        엑셀 업로드용 양식을 다운로드합니다.
+                    </p>
+                    <div class="alert alert-light">
+                        <small>
+                            <strong>포함 항목:</strong><br>
+                            • 날짜<br>
+                            • 거래 유형 (입금/출금)<br>
+                            • 금액<br>
+                            • 거래처<br>
+                            • 카테고리<br>
+                            • 메모
+                        </small>
+                    </div>
+                    <a href="{% url 'transactions:download_template' %}" 
+                       class="btn btn-info w-100">
+                        📥 템플릿 다운로드
+                    </a>
+                </div>
+                <div class="card-footer text-muted">
+                    <small>💡 먼저 템플릿을 다운로드하세요</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. 엑셀 업로드 -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">📤 2단계: 엑셀 업로드</h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">
+                        작성한 엑셀 파일을 업로드합니다.
+                    </p>
+                    <form method="post" 
+                          action="{% url 'transactions:upload_excel' %}" 
+                          enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            {{ form.as_p }}
+                        </div>
+
+                        <div class="alert alert-warning">
+                            <small>
+                                <strong>⚠️ 주의사항:</strong><br>
+                                • 템플릿 양식을 사용하세요<br>
+                                • 날짜 형식: YYYY-MM-DD<br>
+                                • 금액은 숫자만 입력<br>
+                                • 필수 항목을 모두 입력
+                            </small>
+                        </div>
+
+                        <button type="submit" class="btn btn-success w-100">
+                            📤 업로드 시작
+                        </button>
+                    </form>
+                </div>
+                <div class="card-footer text-muted">
+                    <small>💡 템플릿을 작성한 후 업로드하세요</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. 거래 내역 내보내기 -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">💾 3단계: 데이터 내보내기</h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">
+                        현재 등록된 거래 내역을 엑셀로 내보냅니다.
+                    </p>
+                    <div class="alert alert-light">
+                        <small>
+                            <strong>내보내기 옵션:</strong><br>
+                            • 전체 거래 내역<br>
+                            • 기간별 필터링 가능<br>
+                            • 카테고리별 분류<br>
+                            • 엑셀 형식으로 저장
+                        </small>
+                    </div>
+                    <a href="{% url 'transactions:transaction_export' %}" 
+                       class="btn btn-primary w-100">
+                        💾 내보내기
+                    </a>
+                </div>
+                <div class="card-footer text-muted">
+                    <small>💡 기존 데이터를 백업하거나 분석하세요</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 업로드 결과 -->
+    {% if upload_result %}
+    <div class="card mb-4">
+        <div class="card-header {% if upload_result.error_count > 0 %}bg-warning{% else %}bg-success text-white{% endif %}">
+            <h5 class="mb-0">업로드 결과</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h4 class="text-success">✅ 성공: {{ upload_result.success_count }}건</h4>
+                </div>
+                <div class="col-md-6">
+                    <h4 class="text-danger">❌ 실패: {{ upload_result.error_count }}건</h4>
+                </div>
+            </div>
+            
+            <!-- 자동 생성 항목 -->
+            {% if upload_result.auto_created.accounts or upload_result.auto_created.businesses or upload_result.auto_created.merchants %}
+            <div class="alert alert-info mt-3">
+                <h6>📝 자동 생성된 항목:</h6>
+                <ul class="mb-0">
+                    {% if upload_result.auto_created.accounts %}
+                    <li>계좌: {{ upload_result.auto_created.accounts|length }}개</li>
+                    {% endif %}
+                    {% if upload_result.auto_created.businesses %}
+                    <li>사업장: {{ upload_result.auto_created.businesses|length }}개</li>
+                    {% endif %}
+                    {% if upload_result.auto_created.merchants %}
+                    <li>거래처: {{ upload_result.auto_created.merchants|length }}개</li>
+                    {% endif %}
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- 실패 상세 내역 -->
+    {% if upload_result.error_details %}
+    <div class="card border-danger">
+        <div class="card-header bg-danger text-white">
+            <h5 class="mb-0">❌ 실패한 행 상세 ({{ upload_result.error_count }}건)</h5>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-warning">
+                <strong>⚠️ 금융 데이터는 1원 오차도 허용하지 않습니다!</strong><br>
+                총금액 = 공급가액 + 부가세가 정확히 일치해야 합니다.
+            </div>
+            
+            <div class="table-responsive">
+                <table class="table table-sm table-bordered table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 50px;">행</th>
+                            <th>거래일시</th>
+                            <th>사업장</th>
+                            <th>계좌번호</th>
+                            <th>유형</th>
+                            <th>카테고리</th>
+                            <th>거래처</th>
+                            <th>총금액</th>
+                            <th>공급가액</th>
+                            <th>부가세</th>
+                            <th>메모</th>
+                            <th style="min-width: 200px;">실패 사유</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for detail in upload_result.error_details %}
+                        <tr>
+                            <td class="text-center"><strong>{{ detail.row_number }}</strong></td>
+                            <td>{{ detail.raw_data.거래일시|default:"-" }}</td>
+                            <td>{{ detail.raw_data.사업장|default:"-" }}</td>
+                            <td>{{ detail.raw_data.계좌번호|default:"-" }}</td>
+                            <td>{{ detail.raw_data.유형|default:"-" }}</td>
+                            <td>{{ detail.raw_data.카테고리|default:"-" }}</td>
+                            <td>{{ detail.raw_data.거래처|default:"-" }}</td>
+                            <td class="text-end">{{ detail.raw_data.총금액|default:"-" }}</td>
+                            <td class="text-end">{{ detail.raw_data.공급가액|default:"-" }}</td>
+                            <td class="text-end">{{ detail.raw_data.부가세|default:"-" }}</td>
+                            <td>{{ detail.raw_data.메모|default:"-" }}</td>
+                            <td class="text-danger">
+                                <pre style="white-space: pre-wrap; font-size: 0.85em; margin: 0;">{{ detail.error }}</pre>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="alert alert-info mt-3">
+                <strong>💡 해결 방법:</strong>
+                <ol class="mb-0">
+                    <li>위 표에서 실패한 행의 원본 데이터를 확인하세요</li>
+                    <li>엑셀 파일에서 해당 행을 수정하세요</li>
+                    <li>실패한 행만 다시 업로드하거나, 전체를 재업로드하세요</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    {% endif %}
+
+    <!-- 사용 가이드 -->
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">📖 사용 가이드</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <h6>1️⃣ 새로운 거래 추가하기</h6>
+                            <ol class="small">
+                                <li>템플릿 다운로드</li>
+                                <li>엑셀에서 거래 내역 작성</li>
+                                <li>작성한 파일 업로드</li>
+                            </ol>
+                        </div>
+                        <div class="col-md-4">
+                            <h6>2️⃣ 기존 데이터 백업하기</h6>
+                            <ol class="small">
+                                <li>내보내기 클릭</li>
+                                <li>기간/조건 선택</li>
+                                <li>엑셀 파일 저장</li>
+                            </ol>
+                        </div>
+                        <div class="col-md-4">
+                            <h6>3️⃣ 데이터 수정 후 재업로드</h6>
+                            <ol class="small">
+                                <li>기존 데이터 내보내기</li>
+                                <li>엑셀에서 수정</li>
+                                <li>수정된 파일 업로드</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 뒤로가기 -->
+    <div class="row mt-3">
+        <div class="col-md-12">
+            <a href="{% url 'transactions:transaction_list' %}" class="btn btn-outline-secondary">
+                ← 거래 내역으로 돌아가기
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -6,6 +6,7 @@ from django.db.models.signals import post_delete
 from django.dispatch import receiver
 from django.db.models import F
 from decimal import Decimal
+import uuid
 import os
 import logging
 
@@ -291,9 +292,31 @@ class Transaction(SoftDeleteModel):
             return self.amount - self.vat_amount
         return self.amount or 0
     
+    # imsi_cjy_delete_fo_rms.py 적용시 사용될 코드
+    @property
+    def total_amount(self):
+        """총금액 = 공급가액 + 부가세"""
+        return self.amount + (self.vat_amount or Decimal('0'))
+    
     @property
     def has_attachment(self):
         return hasattr(self, 'attachment') and self.attachment is not None
+
+def attachment_upload_path(instance, filename):
+    """
+    고유한 파일명 생성
+    
+    원본: 영수증.jpg
+    저장: attachments/2026/02/a1b2c3d4e5f6.jpg
+    """
+    # 확장자 추출
+    ext = os.path.splitext(filename)[1]  # .jpg, .pdf 등
+    
+    # 고유한 파일명 생성 (UUID)
+    unique_filename = f"{uuid.uuid4().hex}{ext}"
+    
+    # 년/월 폴더 + 고유 파일명
+    return f'attachments/{instance.transaction.occurred_at:%Y/%m}/{unique_filename}'
 
 
 class Attachment(TimeStampedModel):
@@ -302,7 +325,10 @@ class Attachment(TimeStampedModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='attachments', db_index=True)
     transaction = models.OneToOneField(Transaction, on_delete=models.CASCADE, related_name='attachment')
     attachment_type = models.CharField(max_length=20, choices=ATTACHMENT_TYPE_CHOICES, default='receipt')
-    file = models.FileField(upload_to='attachments/%Y/%m/', validators=[FileExtensionValidator(allowed_extensions=['jpg', 'jpeg', 'png', 'pdf'])])
+    file = models.FileField(
+        upload_to=attachment_upload_path,
+        validators=[FileExtensionValidator(allowed_extensions=['jpg', 'jpeg', 'png', 'pdf'])]
+    )
     original_name = models.CharField(max_length=255)
     size = models.IntegerField()
     content_type = models.CharField(max_length=100)

@@ -36,7 +36,6 @@
                             <small class="text-muted">총 수입</small>
                             <h5 class="mb-0 text-success fw-bold">{{ stats.total_income|default:0|floatformat:0|intcomma }}원</h5>
                         </div>
-                        <span class="fs-3">📈</span>
                     </div>
                 </div>
             </div>
@@ -49,7 +48,6 @@
                             <small class="text-muted">총 지출</small>
                             <h5 class="mb-0 text-danger fw-bold">{{ stats.total_expense|default:0|floatformat:0|intcomma }}원</h5>
                         </div>
-                        <span class="fs-3">📉</span>
                     </div>
                 </div>
             </div>
@@ -62,7 +60,6 @@
                             <small class="text-muted">총 부가세</small>
                             <h5 class="mb-0 text-info fw-bold">{{ stats.total_vat|default:0|floatformat:0|intcomma }}원</h5>
                         </div>
-                        <span class="fs-3">💵</span>
                     </div>
                 </div>
             </div>
@@ -75,7 +72,6 @@
                             <small class="text-muted">거래 건수</small>
                             <h5 class="mb-0 fw-bold">{{ stats.count|default:0|intcomma }}건</h5>
                         </div>
-                        <span class="fs-3">📊</span>
                     </div>
                 </div>
             </div>

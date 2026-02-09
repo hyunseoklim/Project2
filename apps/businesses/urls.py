@@ -15,6 +15,7 @@ urlpatterns = [
     path('accounts/<int:pk>/update/', views.account_update, name='account_update'),
     path('accounts/<int:pk>/delete/', views.account_delete, name='account_delete'),
     path('accounts/<int:pk>/restore/', views.account_restore, name='account_restore'),
+    path('account/<int:pk>/hard-delete/', views.account_hard_delete, name='account_hard_delete'),
 
     # 사업장 목록 및 삭제된 목록
     path('', views.business_list, name='business_list'),

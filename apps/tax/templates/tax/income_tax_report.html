@@ -1,0 +1,393 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}종합소득세 계산 - 스마트 사업자 가계부{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- 페이지 헤더 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>📊 종합소득세 계산</h2>
+        <a href="https://www.hometax.go.kr" target="_blank" class="btn btn-outline-primary btn-sm">
+            🏠 홈택스 바로가기
+        </a>
+    </div>
+
+    <!-- 계산 조건 선택 폼 -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">계산 조건</h5>
+        </div>
+        <div class="card-body">
+            <form method="get" action="{% url 'tax:income_tax_report' %}">
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">{{ form.year.label }}</label>
+                        {{ form.year }}
+                        <small class="text-muted d-block">{{ form.year.help_text }}</small>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">{{ form.business_type.label }}</label>
+                        {{ form.business_type }}
+                        <small class="text-muted d-block">{{ form.business_type.help_text }}</small>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">{{ form.deduction_amount.label }}</label>
+                        {{ form.deduction_amount }}
+                        <small class="text-muted d-block">{{ form.deduction_amount.help_text }}</small>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">계산하기</button>
+            </form>
+        </div>
+    </div>
+
+    {% if not has_data %}
+        <!-- 데이터 없음 -->
+        <div class="alert alert-info">
+            <h5>📭 거래 내역이 없습니다</h5>
+            <p class="mb-0">{{ selected_year }}년 사업용 거래 내역을 먼저 등록해주세요.</p>
+            <a href="{% url 'transactions:transaction_create' %}" class="btn btn-primary btn-sm mt-2">
+                거래 등록하기
+            </a>
+        </div>
+    {% else %}
+
+    <!-- 1. 기본 계산 결과 -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">💰 {{ selected_year }}년 종합소득세 계산</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <table class="table table-borderless">
+                        <tr>
+                            <td class="text-muted">총 수입 (매출)</td>
+                            <td class="text-end"><strong>{{ total_income|floatformat:0 }}원</strong></td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">총 지출 (경비)</td>
+                            <td class="text-end text-danger">-{{ total_expense|floatformat:0 }}원</td>
+                        </tr>
+                        <tr class="border-top">
+                            <td class="text-muted">소득금액</td>
+                            <td class="text-end"><strong>{{ actual_income_amount|floatformat:0 }}원</strong></td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">소득공제</td>
+                            <td class="text-end text-danger">-{{ deduction_amount|floatformat:0 }}원</td>
+                        </tr>
+                        <tr class="border-top">
+                            <td class="text-muted"><strong>과세표준</strong></td>
+                            <td class="text-end"><strong>{{ actual_taxable|floatformat:0 }}원</strong></td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="col-md-6">
+                    <div class="bg-light p-4 rounded text-center">
+                        <div class="text-muted mb-2">적용 세율</div>
+                        <div class="display-6 text-primary mb-3">{{ actual_result.rate_percent }}%</div>
+                        
+                        <div class="text-muted mb-2">예상 세금</div>
+                        <div class="display-5 text-danger mb-2">{{ actual_result.total|floatformat:0 }}원</div>
+                        
+                        <small class="text-muted">
+                            (소득세 {{ actual_result.tax|floatformat:0 }}원 + 지방세 {{ actual_result.local_tax|floatformat:0 }}원)
+                        </small>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="alert alert-info mt-3 mb-0">
+                <small>
+                    📌 <strong>실제 지출 방식</strong>으로 계산된 결과입니다. 
+                    (거래 내역 {{ transaction_count }}건 분석)
+                </small>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. 단순경비율 비교 -->
+    {% if simple_result %}
+    <div class="card mb-4 border-success">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0">💡 절세 방법 비교</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h6>① 실제 지출 방식</h6>
+                    <p class="text-muted mb-2">장부에 기록된 실제 지출 사용</p>
+                    <div class="bg-light p-3 rounded">
+                        <div>경비: {{ total_expense|floatformat:0 }}원</div>
+                        <div>소득금액: {{ actual_income_amount|floatformat:0 }}원</div>
+                        <div class="mt-2 fs-5">
+                            <strong>세금: {{ actual_result.total|floatformat:0 }}원</strong>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <h6>② 단순경비율 방식 ✅</h6>
+                    <p class="text-muted mb-2">{{ simple_result.business_type_name }} ({{ simple_result.rate_percent }}%)</p>
+                    <div class="bg-success bg-opacity-10 p-3 rounded border border-success">
+                        <div>인정 경비: {{ simple_result.expense|floatformat:0 }}원</div>
+                        <div>소득금액: {{ simple_result.income_amount|floatformat:0 }}원</div>
+                        <div class="mt-2 fs-5 text-success">
+                            <strong>세금: {{ simple_result.tax_result.total|floatformat:0 }}원</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            {% if recommended == 'simple' %}
+            <div class="alert alert-success mt-3 mb-0">
+                <h6>💰 {{ savings|floatformat:0 }}원 절세 가능!</h6>
+                <p class="mb-0">단순경비율 방식으로 신고하면 더 유리합니다.</p>
+            </div>
+            {% else %}
+            <div class="alert alert-primary mt-3 mb-0">
+                <h6>📊 실제 지출 방식 추천</h6>
+                <p class="mb-0">실제 지출 방식이 {{ savings|floatformat:0 }}원 더 유리합니다.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- 3. 카테고리별 절세 효과 -->
+    {% if category_impact %}
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">📊 카테고리별 절세 효과</h5>
+        </div>
+        <div class="card-body">
+            <p class="text-muted mb-3">
+                각 카테고리 지출이 세금 절감에 미치는 영향 (세율 {{ actual_result.rate_percent }}% 적용)
+            </p>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>카테고리</th>
+                            <th class="text-end">지출액</th>
+                            <th class="text-end">절세 효과</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in category_impact %}
+                        <tr>
+                            <td>{{ item.category }}</td>
+                            <td class="text-end">{{ item.amount|floatformat:0 }}원</td>
+                            <td class="text-end text-success">
+                                <strong>{{ item.tax_saved|floatformat:0 }}원</strong>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- 4. 월별 누적 추이 -->
+    {% if monthly_data %}
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">📈 월별 누적 세금 추이</h5>
+        </div>
+        <div class="card-body">
+            <p class="text-muted mb-3">
+                매월 누적 소득 기준 예상 세금
+            </p>
+            <div class="table-responsive">
+                <table class="table table-sm table-hover">
+                    <thead>
+                        <tr>
+                            <th>월</th>
+                            <th class="text-end">누적 소득금액</th>
+                            <th class="text-end">예상 세금</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for m in monthly_data %}
+                        <tr {% if m.month == 12 %}class="table-active"{% endif %}>
+                            <td>{{ m.month }}월</td>
+                            <td class="text-end">{{ m.income|floatformat:0 }}원</td>
+                            <td class="text-end">{{ m.tax|floatformat:0 }}원</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            {% if monthly_data|length == 12 %}
+            <div class="alert alert-info mb-0 mt-3">
+                <small>
+                    💡 현재 진행률로 가면 연말 예상 세금은 <strong>약 {{ last_month_tax|floatformat:0 }}원</strong>입니다.
+                </small>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- 5. 세율 구간 정보 -->
+    {% if bracket_info %}
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">📌 세율 구간 정보</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="bg-light p-3 rounded">
+                        <div class="text-muted mb-2">현재 위치</div>
+                        <div class="fs-4">
+                            <strong>{{ actual_taxable|floatformat:0 }}원</strong>
+                        </div>
+                        <div class="text-primary">
+                            세율 {{ bracket_info.current_rate_percent }}% 구간
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    {% if bracket_info.is_max %}
+                    <div class="bg-warning bg-opacity-10 p-3 rounded">
+                        <div class="text-muted mb-2">최고 세율 구간</div>
+                        <div class="fs-4">
+                            <strong>{{ bracket_info.current_rate_percent }}%</strong>
+                        </div>
+                        <div class="text-muted">
+                            최고 세율이 적용되고 있습니다
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="bg-info bg-opacity-10 p-3 rounded">
+                        <div class="text-muted mb-2">다음 구간까지</div>
+                        <div class="fs-4">
+                            <strong>{{ bracket_info.distance|floatformat:0 }}원</strong>
+                        </div>
+                        <div class="text-muted">
+                            남음 ({{ bracket_info.next_rate_percent }}% 구간)
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            {% if not bracket_info.is_max %}
+            <div class="alert alert-info mt-3 mb-0">
+                <small>
+                    💡 소득이 <strong>{{ bracket_info.distance|floatformat:0 }}원</strong> 더 늘어나면 
+                    세율이 <strong>{{ bracket_info.current_rate_percent }}% → {{ bracket_info.next_rate_percent }}%</strong>로 올라갑니다.
+                </small>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+  
+
+    <!-- 7. 2024년 종합소득세 세율표 -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">📋 {{ selected_year }}년 종합소득세 세율표</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead class="table-light">
+                        <tr>
+                            <th>과세표준</th>
+                            <th class="text-center">세율</th>
+                            <th class="text-end">누진공제</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1,400만원 이하</td>
+                            <td class="text-center">6%</td>
+                            <td class="text-end">-</td>
+                        </tr>
+                        <tr>
+                            <td>1,400만원 초과 ~ 5,000만원</td>
+                            <td class="text-center">15%</td>
+                            <td class="text-end">126만원</td>
+                        </tr>
+                        <tr>
+                            <td>5,000만원 초과 ~ 8,800만원</td>
+                            <td class="text-center">24%</td>
+                            <td class="text-end">576만원</td>
+                        </tr>
+                        <tr>
+                            <td>8,800만원 초과 ~ 1.5억원</td>
+                            <td class="text-center">35%</td>
+                            <td class="text-end">1,544만원</td>
+                        </tr>
+                        <tr>
+                            <td>1.5억원 초과 ~ 3억원</td>
+                            <td class="text-center">38%</td>
+                            <td class="text-end">1,994만원</td>
+                        </tr>
+                        <tr>
+                            <td>3억원 초과 ~ 5억원</td>
+                            <td class="text-center">40%</td>
+                            <td class="text-end">2,594만원</td>
+                        </tr>
+                        <tr>
+                            <td>5억원 초과 ~ 10억원</td>
+                            <td class="text-center">42%</td>
+                            <td class="text-end">3,594만원</td>
+                        </tr>
+                        <tr>
+                            <td>10억원 초과</td>
+                            <td class="text-center">45%</td>
+                            <td class="text-end">6,594만원</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <small class="text-muted">
+                * 지방소득세(소득세의 10%)가 별도로 부과됩니다.
+            </small>
+        </div>
+    </div>
+
+    {% endif %}
+
+    <!-- 법적 고지 -->
+    <div class="alert alert-warning">
+        <h6>⚠️ 중요 안내</h6>
+        <ul class="mb-0">
+            <li>이 계산 결과는 <strong>참고용</strong>으로만 사용해주세요.</li>
+            <li>실제 세액은 소득공제, 세액공제, 기타 요인에 따라 달라질 수 있습니다.</li>
+            <li>정확한 신고는 <a href="https://www.hometax.go.kr" target="_blank" class="alert-link">홈택스</a>를 이용하거나 세무사와 상담하세요.</li>
+            <li>본 서비스는 계산 오류나 신고 결과에 대한 책임을 지지 않습니다.</li>
+        </ul>
+    </div>
+</div>
+
+<script>
+    // 폼 필드에 클래스 추가
+    document.addEventListener('DOMContentLoaded', function () {
+        const formInputs = document.querySelectorAll('input, select, textarea');
+        formInputs.forEach(input => {
+            if (!input.classList.contains('form-control') && 
+                !input.classList.contains('form-select') &&
+                !input.classList.contains('form-check-input')) {
+                if (input.type === 'checkbox') {
+                    input.classList.add('form-check-input');
+                } else if (input.tagName === 'SELECT') {
+                    input.classList.add('form-select');
+                } else {
+                    input.classList.add('form-control');
+                }
+            }
+        });
+    });
+</script>
+
+{% endblock %}
