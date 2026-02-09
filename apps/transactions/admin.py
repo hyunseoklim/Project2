@@ -19,6 +19,10 @@ class AttachmentInline(admin.TabularInline):
 
     @admin.display(description='파일 크기')
     def get_size_display(self, obj):
+        # [수정] size가 None이거나 0인 경우 처리
+        if obj.size is None:
+            return "0 B"
+            
         if obj.size < 1024:
             return f"{obj.size} B"
         elif obj.size < 1024 * 1024:
@@ -107,6 +111,10 @@ class AttachmentAdmin(admin.ModelAdmin):
 
     @admin.display(description='크기', ordering='size')
     def get_size_display(self, obj):
+        # [수정] 위와 동일하게 None 처리 추가
+        if obj.size is None:
+            return "0 B"
+            
         if obj.size < 1024:
             return f"{obj.size} B"
         elif obj.size < 1024 * 1024:
