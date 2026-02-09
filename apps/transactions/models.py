@@ -12,6 +12,7 @@ import logging
 
 from apps.core.models import TimeStampedModel, SoftDeleteModel
 from apps.businesses.models import Business, Account
+from django.db.models.signals import pre_save
 
 logger = logging.getLogger(__name__)
 
@@ -346,11 +347,35 @@ class Attachment(TimeStampedModel):
         if self.file and hasattr(self.file, 'size') and self.file.size > ATTACHMENT_MAX_FILE_SIZE:
             raise ValidationError({'file': f'파일 크기는 {ATTACHMENT_MAX_FILE_SIZE // (1024*1024)}MB를 초과할 수 없습니다'})
 
-@receiver(post_delete, sender=Attachment)
-def delete_file_on_attachment_delete(sender, instance, **kwargs):
-    if not instance.file: return
+@receiver(pre_save, sender=Attachment)
+def auto_delete_file_on_change(sender, instance, **kwargs):
+    """
+    파일이 수정될 때 기존의 물리 파일을 삭제
+    """
+    # 1. 처음 생성되는 레코드라면(PK가 없다면) 비교할 대상이 없으므로 종료
+    if not instance.pk:
+        return False
+
     try:
+        # 2. DB에 저장되어 있는 기존 레코드를 가져옴
+        old_file = sender.objects.get(pk=instance.pk).file
+    except sender.DoesNotExist:
+        return False
+
+    # 3. 새로 업로드된 파일과 기존 파일이 다르다면?
+    new_file = instance.file
+    if not old_file == new_file:
+        # 4. 기존 파일이 존재한다면 삭제
+        if old_file and os.path.isfile(old_file.path):
+            os.remove(old_file.path)
+            logger.info(f"기존 파일 삭제 완료 (수정됨): {old_file.path}")
+
+@receiver(post_delete, sender=Attachment)
+def auto_delete_file_on_delete(sender, instance, **kwargs):
+    """
+    레코드가 삭제된 후(post_delete) 실제 물리 파일을 삭제
+    """
+    if instance.file:
         if os.path.isfile(instance.file.path):
             os.remove(instance.file.path)
-    except Exception as e:
-        logger.warning(f"파일 삭제 실패: {e}")
+            logger.info(f"물리 파일 삭제 완료 (레코드 삭제됨): {instance.file.path}")
