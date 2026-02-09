@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}{{ business.name }} 통계 요약{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-3">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1" style="font-size: 0.85rem;">
+                    <li class="breadcrumb-item"><a href="{% url 'businesses:business_list' %}" class="text-decoration-none">사업장 관리</a></li>
+                    <li class="breadcrumb-item active">{{ business.name }}</li>
+                </ol>
+            </nav>
+            <h3 class="mb-0 fw-bold text-dark">📊 {{ business.name }} 통계</h3>
+        </div>
+        <a href="{% url 'businesses:business_detail' business.pk %}" class="btn btn-outline-secondary btn-sm fw-bold">
+            ← 상세정보로
+        </a>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-3">
+            <form method="get" class="row g-2 align-items-center">
+                <div class="col-12 col-md">
+                    <select name="tx_type" class="form-select form-select-sm fw-bold border-light-subtle w-100">
+                        <option value="OUT" {% if selected_type == 'OUT' %}selected{% endif %}>지출 (-)</option>
+                        <option value="IN" {% if selected_type == 'IN' %}selected{% endif %}>수입 (+)</option>
+                    </select>
+                </div>
+                <div class="col-12 col-md">
+                    <select name="year" class="form-select form-select-sm fw-bold border-light-subtle w-100">
+                        <option value="all" {% if selected_year == 'all' %}selected{% endif %}>연도 전체</option>
+                        {% for y in available_years %}
+                        <option value="{{ y }}" {% if selected_year == y %}selected{% endif %}>{{ y }}년</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-12 col-md">
+                    <select name="month" class="form-select form-select-sm fw-bold border-light-subtle w-100">
+                        <option value="all" {% if selected_month == 'all' %}selected{% endif %}>월 전체</option>
+                        {% for m in "123456789101112"|make_list %}
+                        <option value="{{ forloop.counter }}" {% if selected_month == forloop.counter|stringformat:"s" %}selected{% endif %}>{{ forloop.counter }}월</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-auto d-flex gap-2 ms-md-2">
+                    <button type="submit" class="btn btn-primary btn-sm fw-bold px-3 shadow-sm">
+                        🔍 조회
+                    </button>
+                    <a href="?period=all_time&tx_type={{ selected_type }}" class="btn btn-outline-dark btn-sm fw-bold px-3 shadow-sm text-nowrap">
+                        📅 전체 기간
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100 bg-light-subtle">
+                <div class="card-body p-3 text-center">
+                    <small class="text-muted fw-bold">📍 현재 조회 범위</small>
+                    <h4 class="mt-2 mb-0 fw-bold text-dark">{{ period_label }}</h4>
+                    <span class="badge {% if selected_type == 'OUT' %}bg-danger{% else %}bg-success{% endif %} mt-1">
+                        {% if selected_type == 'OUT' %}지출 내역{% else %}수입 내역{% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-3 text-center">
+                    <small class="text-muted fw-bold">💰 총 합계 금액</small>
+                    <h3 class="mt-2 mb-0 fw-bold {% if selected_type == 'OUT' %}text-danger{% else %}text-success{% endif %}">
+                        {{ total_sum|intcomma }}<small class="fs-6 fw-normal text-muted ms-1">원</small>
+                    </h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-3 text-center">
+                    <small class="text-muted fw-bold">📁 활성 카테고리</small>
+                    <h3 class="mt-2 mb-0 fw-bold text-dark">{{ category_count }}<small class="fs-6 fw-normal text-muted ms-1">개</small></h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm p-4 h-100">
+                <h5 class="fw-bold mb-4">🎨 항목별 비중</h5>
+                <div style="height: 300px;"><canvas id="pieChart"></canvas></div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm p-4 h-100">
+                <h5 class="fw-bold mb-4">📈 항목별 규모</h5>
+                <div style="height: 300px;"><canvas id="barChart"></canvas></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-5">
+        <div class="card-header bg-white border-bottom py-3 text-dark fw-bold">
+            📁 항목별 상세 분석
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">순위</th>
+                        <th>카테고리</th>
+                        <th class="text-end">금액</th>
+                        <th class="text-center">건수</th>
+                        <th class="pe-4" style="width: 35%;">점유율</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in stats %}
+                    <tr>
+                        <td class="ps-4 fw-bold text-muted">{{ forloop.counter }}</td>
+                        <td class="fw-bold text-dark">{{ s.category__name }}</td>
+                        <td class="text-end fw-bold">{{ s.total_amount|intcomma }}원</td>
+                        <td class="text-center text-muted">{{ s.count }}건</td>
+                        <td class="pe-4">
+                            <div class="d-flex align-items-center">
+                                <div class="progress flex-grow-1" style="height: 6px;">
+                                    <div class="progress-bar {% if selected_type == 'OUT' %}bg-danger{% else %}bg-success{% endif %}" style="width: {{ s.percentage }}%"></div>
+                                </div>
+                                <span class="ms-3 small fw-bold text-muted" style="min-width: 45px;">{{ s.percentage }}%</span>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center py-5 text-muted">해당 기간의 거래 데이터가 없습니다.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const labels = [{% for s in stats %}"{{ s.category__name }}",{% endfor %}];
+    const chartData = [{% for s in stats %}{{ s.total_amount }},{% endfor %}];
+    const colors = ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#858796', '#5a5c69', '#f8f9fc'];
+
+    new Chart(document.getElementById('pieChart'), {
+        type: 'doughnut',
+        data: { labels: labels, datasets: [{ data: chartData, backgroundColor: colors, borderWidth: 0 }] },
+        options: { maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+    });
+
+    new Chart(document.getElementById('barChart'), {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{ label: '금액', data: chartData, backgroundColor: '{% if selected_type == "OUT" %}#e74a3b{% else %}#1cc88a{% endif %}', borderRadius: 4 }]
+        },
+        options: {
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true } }
+        }
+    });
+</script>
+{% endblock %}

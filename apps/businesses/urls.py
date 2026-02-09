@@ -17,16 +17,19 @@ urlpatterns = [
     path('accounts/<int:pk>/restore/', views.account_restore, name='account_restore'),
     path('account/<int:pk>/hard-delete/', views.account_hard_delete, name='account_hard_delete'),
 
-    # 사업장 목록 및 삭제된 목록
+# 1. 특수 목적의 주소 (글자로 된 것들)를 먼저 배치
     path('', views.business_list, name='business_list'),
-    path('deleted/', views.business_deleted_list, name='business_deleted_list'),  # 추가
-    # 사업장 생성
+    path('deleted/', views.business_deleted_list, name='business_deleted_list'),
     path('create/', views.business_create, name='business_create'),
-    # 사업장 상세/수정/삭제/복구
+
+    # 2. 통계 페이지 (통계도 ID가 필요하므로 상세 페이지 바로 근처에)
+    path('<int:pk>/statistics/', views.business_statistics, name='business_statistics'),
+
+    # 3. 변수(ID)가 들어가는 상세 페이지를 아래쪽에 배치
     path('<int:pk>/', views.business_detail, name='business_detail'),
     path('<int:pk>/update/', views.business_update, name='business_update'),
     path('<int:pk>/delete/', views.business_delete, name='business_delete'),
-    path('<int:pk>/restore/', views.business_restore, name='business_restore'),  # 추가
+    path('<int:pk>/restore/', views.business_restore, name='business_restore'),
 ]
 
 
