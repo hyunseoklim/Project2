@@ -278,6 +278,7 @@ class TestProfileEditView:
         
         # 1. 수정할 데이터 준비 (ProfileForm 필드에 맞게)
         new_data = {
+            'full_name': '홍길동',  # 필수로 설정되어 있다면 반드시 추가해야 함!
             'business_registration_number': '9876543210', # 기존과 다른 번호
             'business_type': 'corporate',
             'phone': '010-9999-8888'
