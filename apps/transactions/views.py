@@ -1,4 +1,4 @@
-from django.db.models import Sum
+from django.db.models import Sum, Q
 from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.paginator import Paginator
@@ -8,7 +8,6 @@ from django.shortcuts import render
 from .models import Transaction
 from django.db.models.functions import ExtractMonth
 from django.contrib.auth.decorators import login_required
-from django.db.models import Q
 from django.shortcuts import redirect, get_object_or_404
 from django.contrib import messages
 from django.db.models import Count
@@ -17,8 +16,17 @@ from .models import Merchant, Category
 from .forms import TransactionForm, MerchantForm, CategoryForm, ExcelUploadForm
 from apps.businesses.models import Account, Business
 
+from django.http import FileResponse, Http404
+from .models import Attachment
+from .forms import AttachmentForm
+import mimetypes
+
+
 from django.http import HttpResponse
 from .utils import generate_transaction_template, process_transaction_excel, export_transactions_to_excel
+import logging
+
+logger = logging.getLogger(__name__)
 
 # ============================================================
 # Category
@@ -405,7 +413,9 @@ def transaction_list(request):
         total_income=Sum('amount', filter=Q(tx_type='IN')),
         total_expense=Sum('amount', filter=Q(tx_type='OUT')),
         total_vat=Sum('vat_amount'),
-        count=Count('id')
+        count=Count('id'),
+        income_vat=Sum('vat_amount', filter=Q(tx_type='IN')), 
+        expense_vat=Sum('vat_amount', filter=Q(tx_type='OUT')),
     )
 
     # 페이지네이션
@@ -646,22 +656,42 @@ def upload_transactions_excel(request):
         form = ExcelUploadForm(request.POST, request.FILES)
         if form.is_valid():
             try:
-                count = process_transaction_excel(request.FILES['excel_file'], request.user)
+                result = process_transaction_excel(request.FILES['excel_file'], request.user)
+                
+                # 성공 메시지 생성
+                msg = f"✅ {result['success_count']}건의 거래가 등록되었습니다."
+
+                if result.get('skipped_count', 0) > 0:
+                  msg += f" (중복된 {result['skipped_count']}건은 제외됨)"
+                
+                # 자동 생성 항목 알림
+                auto = result['auto_created']
+                if any([auto['accounts'], auto['businesses'], auto['merchants'], auto['categories_matched']]):
+                    msg += "\n\n📝 자동 생성/매칭된 항목:"
+                    
+                    if auto['accounts']:
+                        msg += f"\n• 계좌: {len(auto['accounts'])}개"
+                    if auto['businesses']:
+                        msg += f"\n• 사업장: {len(auto['businesses'])}개"
+                    if auto['merchants']:
+                        msg += f"\n• 거래처: {len(auto['merchants'])}개"
+                    if auto['categories_matched']:
+                        msg += f"\n• 카테고리 매칭: {len(auto['categories_matched'])}건"
+                
+                messages.success(request, msg)
                 return redirect('transactions:transaction_list')
+                
             except Exception as e:
-                # 여기에 print를 넣으면 터미널 로그(ROLLBACK 근처)에 에러 내용이 찍힙니다.
-                print("\n" + "!"*30)
-                print(f"실제 에러 내용: {e}")
-                print("!"*30 + "\n")
-                messages.error(request, f"저장 실패: {e}")
+                print(f"\n{'!'*30}\n실제 에러: {e}\n{'!'*30}\n")
+                messages.error(request, f"업로드 실패: {str(e)}")
         else:
-            print(f"폼 에러: {form.errors}")
+            messages.error(request, f"폼 에러: {form.errors}")
     else:
         form = ExcelUploadForm()
     
     return render(request, 'transactions/excel_upload.html', {'form': form})
 
-
+@login_required
 def transaction_export_view(request):
     # 현재 로그인한 사용자의 활성 거래 내역만 가져옴
     # (원한다면 여기서 날짜 필터링 등을 추가할 수 있습니다)
@@ -669,9 +699,11 @@ def transaction_export_view(request):
     
     # 엑셀 파일 생성
     excel_file = export_transactions_to_excel(queryset)
-    
+    now = timezone.localtime(timezone.now())
+    timestamp = timezone.localtime().strftime('%Y%m%d_%H%M%S')    
+
     # HTTP 응답 설정
-    filename = f"transactions_{datetime.now().strftime('%Y%m%d')}.xlsx"
+    filename = f"transaction_{request.user.username}_{timestamp}.xlsx"
     response = HttpResponse(
         excel_file.read(),
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
@@ -680,6 +712,144 @@ def transaction_export_view(request):
     
     return response
 
+@login_required
+def attachment_upload(request, transaction_id):
+    """영수증 첨부파일 업로드"""
+    transaction_obj = get_object_or_404(Transaction, pk=transaction_id, user=request.user)
+    
+    # 이미 첨부파일이 있으면 수정
+    try:
+        attachment = transaction_obj.attachment
+        is_update = True
+    except Attachment.DoesNotExist:
+        attachment = None
+        is_update = False
+    
+    if request.method == 'POST':
+        form = AttachmentForm(request.POST, request.FILES, instance=attachment)
+        
+        if form.is_valid():
+            try:
+                attachment = form.save(commit=False)
+                attachment.user = request.user
+                attachment.transaction = transaction_obj
+                
+                # 파일 정보 저장
+                uploaded_file = request.FILES['file']
+                attachment.original_name = uploaded_file.name
+                attachment.size = uploaded_file.size
+                attachment.content_type = uploaded_file.content_type
+                
+                attachment.save()
+                
+                messages.success(request, '영수증이 업로드되었습니다.')
+                return redirect('transactions:transaction_detail', pk=transaction_id)
+                
+            except Exception as e:
+                logger.error(f"파일 업로드 실패: {e}")
+                messages.error(request, '파일 업로드 중 오류가 발생했습니다.')
+        else:
+            messages.error(request, '파일 업로드에 실패했습니다. 입력 내용을 확인해주세요.')
+    else:
+        form = AttachmentForm(instance=attachment)
+    
+    context = {
+        'form': form,
+        'transaction': transaction_obj,
+        'is_update': is_update,
+    }
+    
+    return render(request, 'transactions/attachment_form.html', context)
+
+
+@login_required
+def attachment_download(request, pk):
+    """첨부파일 다운로드"""
+    attachment = get_object_or_404(
+        Attachment, 
+        pk=pk, 
+        user=request.user
+    )
+    
+    try:
+        # 파일 응답
+        response = FileResponse(attachment.file.open('rb'))
+        
+        # Content-Type 설정
+        content_type = attachment.content_type or mimetypes.guess_type(attachment.original_name)[0] or 'application/octet-stream'
+        response['Content-Type'] = content_type
+        
+        # 파일명 설정 (한글 지원)
+        from django.utils.encoding import escape_uri_path
+        encoded_filename = escape_uri_path(attachment.original_name)
+        response['Content-Disposition'] = f'attachment; filename="{encoded_filename}"; filename*=UTF-8\'\'{encoded_filename}'
+        
+        return response
+        
+    except Exception as e:
+        logger.error(f"파일 다운로드 실패: {e}")
+        raise Http404("파일을 찾을 수 없습니다.")
+
+
+@login_required
+def attachment_delete(request, pk):
+    """첨부파일 삭제"""
+    attachment = get_object_or_404(
+        Attachment, 
+        pk=pk, 
+        user=request.user
+    )
+    
+    transaction_id = attachment.transaction.pk
+    
+    if request.method == 'POST':
+        attachment_name = attachment.original_name
+        attachment.delete()  # Signal이 물리 파일도 자동 삭제
+        
+        logger.info(f"첨부파일 삭제: {attachment_name} (ID: {pk})")
+        messages.success(request, f'첨부파일 "{attachment_name}"이 삭제되었습니다.')
+        
+        return redirect('transactions:transaction_detail', pk=transaction_id)
+    
+    context = {
+        'attachment': attachment,
+    }
+    
+    return render(request, 'transactions/attachment_confirm_delete.html', context)
+
+# @login_required
+# def attachment_list_view(request):
+#     """첨부파일(증빙자료)이 포함된 모든 거래 목록"""
+#     # 1. 쿼리 최적화: select_related로 Attachment를 JOIN해서 가져옴
+#     # 2. 필터: attachment가 있는 것만
+#     # 3. 정렬: 최신 거래순
+#     evidence_list = Transaction.objects.select_related('attachment', 'account') \
+#                                        .filter(user=request.user, attachment__isnull=False) \
+#                                        .order_by('-occurred_at')
+
+#     return render(request, 'transactions/attachment_list.html', {
+#         'evidence_list': evidence_list
+#     })
+
+
+@login_required
+def attachment_list_view(request):
+    # 기존 필터링 코드
+    evidence_queryset = Transaction.objects.select_related('attachment', 'account') \
+        .filter(
+            Q(user=request.user),
+            Q(attachment__isnull=False) | Q(memo__icontains='영수증')
+        ) \
+        .order_by('-occurred_at').distinct()
+
+    # 페이지네이션 추가 (한 페이지에 10개씩)
+    paginator = Paginator(evidence_queryset, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    return render(request, 'transactions/attachment_list.html', {
+        'page_obj': page_obj,                   # 하단 테이블용
+    })
 # @login_required
 # def transaction_list(request):
 #     """거래 목록 (개선 버전)"""

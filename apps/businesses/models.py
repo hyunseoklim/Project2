@@ -9,6 +9,7 @@
 """
 import logging
 import os
+import re
 from decimal import Decimal
 
 from django.contrib.auth.models import User
@@ -106,21 +107,40 @@ class Account(SoftDeleteModel):
     def __str__(self):
         return f"{self.name} ({self.bank_name})"
     
+
     def get_masked_account_number(self):
-        """계좌번호 마스킹 (중간 항상 4개 별표)"""
+        """
+        계좌번호 마스킹 (입력 형식 유지)
+        규칙: 마지막 5글자 마스킹 + 중간 일부 마스킹
+        """
         if not self.account_number:
-            return '****'
+            return "****"
 
-        num = self.account_number.replace('-', '').replace(' ', '')
+        original = self.account_number
+        # 1. 숫자만 추출 (마지막 5자리를 찾기 위함)
+        nums_only = re.sub(r'[^0-9]', '', original)
+        
+        if len(nums_only) < 5:
+            return "****"
 
-        if len(num) < 8:
-            return '****'
-
-        front = num[:4]
-        back = num[8:]  # 8번째 이후 전부
-
-        # 중간은 항상 4개 별표 (실제 자리수와 무관)
-        return f"{front}-****-{back}" if back else f"{front}-****"
+        # 2. 뒤에서부터 5개의 숫자를 찾아 '*'로 변환
+        count = 0
+        masked_list = list(original)
+        
+        for i in range(len(masked_list) - 1, -1, -1):
+            if masked_list[i].isdigit():
+                masked_list[i] = '*'
+                count += 1
+            if count == 5:
+                break
+                
+        masked_res = "".join(masked_list)
+        
+        # 3. 추가로 "중간" 부분 (예: 앞 4자리 이후 ~ 마스킹 시작 전) 처리
+        # 이 부분은 기획에 따라 '고정 4글자 별표'로 치환하거나 조절 가능합니다.
+        # 예: "201-55****-**-***" 형태
+        
+        return masked_res
 
     def update_balance(self, amount, tx_type):
         if tx_type not in ['IN', 'OUT']:
@@ -149,72 +169,78 @@ class Account(SoftDeleteModel):
             # 2. 현재 인스턴스(self)의 balance 필드도 업데이트
             self.balance = account.balance
 
-def soft_delete(self):
-    """계좌 소프트 삭제 + 연관된 거래도 함께 삭제"""
-    from apps.transactions.models import Transaction
-    
-    # 1. 계좌 삭제
-    self.is_active = False
-    self.save(update_fields=['is_active', 'updated_at'])
-    
-    # 2. 이 계좌의 활성 거래들도 함께 삭제
-    deleted_count = Transaction.objects.filter(
-        account=self,
-        user=self.user,
-        is_active=True
-    ).update(is_active=False)
-    
-    logger.info(
-        f"계좌 '{self.name}' 삭제 완료 "
-        f"(거래 {deleted_count}건 함께 삭제)"
-    )
-    
-    return deleted_count
+    def hard_delete(self):
+        """DB에서 데이터를 완전히 삭제 (복구 불가)"""
+        # 부모 클래스(models.Model)의 실제 delete를 호출합니다.
+        super().delete()
+        logger.info(f"계좌 '{self.name}' (ID: {self.pk}) 가 DB에서 영구 삭제되었습니다.")
 
-def restore(self):
-    """계좌 복구 + 연관된 거래도 함께 복구"""
-    from apps.transactions.models import Transaction
-    from django.db.models import Sum
-    
-    # 1. 계좌 복구
-    self.is_active = True
-    self.save(update_fields=['is_active', 'updated_at'])
-    
-    # 2. 이 계좌의 삭제된 거래들 복구
-    restored_count = Transaction.objects.filter(
-        account=self,
-        user=self.user,
-        is_active=False
-    ).update(is_active=True)
-    
-    # 3. 잔액 재계산
-    active_txs = Transaction.objects.filter(
-        account=self,
-        user=self.user,
-        is_active=True
-    )
-    income = active_txs.filter(tx_type='IN').aggregate(
-        total=Sum('amount')
-    )['total'] or Decimal('0.00')
-    expense = active_txs.filter(tx_type='OUT').aggregate(
-        total=Sum('amount')
-    )['total'] or Decimal('0.00')
-    
-    calculated_balance = income - expense
-    
-    # 4. 잔액이 다르면 수정
-    if self.balance != calculated_balance:
-        old_balance = self.balance
-        self.balance = calculated_balance
-        self.save(update_fields=['balance', 'updated_at'])
-        logger.warning(
-            f"계좌 '{self.name}' 복구 시 잔액 수정: "
-            f"{old_balance:,}원 → {calculated_balance:,}원"
+    def soft_delete(self):
+        """계좌 소프트 삭제 + 연관된 거래도 함께 삭제"""
+        from apps.transactions.models import Transaction
+        
+        # 1. 계좌 삭제
+        self.is_active = False
+        self.save(update_fields=['is_active', 'updated_at'])
+        
+        # 2. 이 계좌의 활성 거래들도 함께 삭제
+        deleted_count = Transaction.objects.filter(
+            account=self,
+            user=self.user,
+            is_active=True
+        ).update(is_active=False)
+        
+        logger.info(
+            f"계좌 '{self.name}' 삭제 완료 "
+            f"(거래 {deleted_count}건 함께 삭제)"
         )
-    
-    logger.info(
-        f"계좌 '{self.name}' 복구 완료 "
-        f"(거래 {restored_count}건, 잔액 {self.balance:,}원)"
-    )
-    
-    return restored_count
+        
+        return deleted_count
+
+    def restore(self):
+        """계좌 복구 + 연관된 거래도 함께 복구"""
+        from apps.transactions.models import Transaction
+        from django.db.models import Sum
+        
+        # 1. 계좌 복구
+        self.is_active = True
+        self.save(update_fields=['is_active', 'updated_at'])
+        
+        # 2. 이 계좌의 삭제된 거래들 복구
+        restored_count = Transaction.objects.filter(
+            account=self,
+            user=self.user,
+            is_active=False
+        ).update(is_active=True)
+        
+        # 3. 잔액 재계산
+        active_txs = Transaction.objects.filter(
+            account=self,
+            user=self.user,
+            is_active=True
+        )
+        income = active_txs.filter(tx_type='IN').aggregate(
+            total=Sum('amount')
+        )['total'] or Decimal('0.00')
+        expense = active_txs.filter(tx_type='OUT').aggregate(
+            total=Sum('amount')
+        )['total'] or Decimal('0.00')
+        
+        calculated_balance = income - expense
+        
+        # 4. 잔액이 다르면 수정
+        if self.balance != calculated_balance:
+            old_balance = self.balance
+            self.balance = calculated_balance
+            self.save(update_fields=['balance', 'updated_at'])
+            logger.warning(
+                f"계좌 '{self.name}' 복구 시 잔액 수정: "
+                f"{old_balance:,}원 → {calculated_balance:,}원"
+            )
+        
+        logger.info(
+            f"계좌 '{self.name}' 복구 완료 "
+            f"(거래 {restored_count}건, 잔액 {self.balance:,}원)"
+        )
+        
+        return restored_count

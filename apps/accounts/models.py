@@ -33,7 +33,9 @@ class Profile(TimeStampedModel):
     business_registration_number = models.CharField(
         max_length=10,
         blank=True,
-        validators=[BUSINESS_NUMBER_VALIDATOR]
+        validators=[BUSINESS_NUMBER_VALIDATOR],
+        null=True,  # null=True 추가 권장 (아래 설명 참조)
+        unique=True, # 중복 방지의 핵심!
     )
     business_type = models.CharField(max_length=20, choices=BUSINESS_TYPE_CHOICES, blank=True)
     phone = models.CharField(max_length=20, blank=True, validators=[PHONE_VALIDATOR])
@@ -49,8 +51,6 @@ class Profile(TimeStampedModel):
         if not self.business_registration_number:
             return ''
         num = self.business_registration_number.replace('-', '')
-        if len(num) != 10:
-            return self.business_registration_number
-
-        middle = '*' * 3  
-        return f"{num[:3]}-{middle}-{num[-4:]}"
+        if len(num) == 10:
+            return f"{num[:3]}-{num[3:5]}-*****"
+        return self.business_registration_number
