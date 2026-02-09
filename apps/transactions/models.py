@@ -345,12 +345,21 @@ class Attachment(TimeStampedModel):
     def clean(self):
         if self.file and hasattr(self.file, 'size') and self.file.size > ATTACHMENT_MAX_FILE_SIZE:
             raise ValidationError({'file': f'파일 크기는 {ATTACHMENT_MAX_FILE_SIZE // (1024*1024)}MB를 초과할 수 없습니다'})
+        
+    def save(self, *args, **kwargs):
+        if self.pk: # 수정 시 기존 파일 삭제 로직
+            try:
+                old_obj = Attachment.objects.get(pk=self.pk)
+                # 새로운 파일이 업로드되었고 기존 파일과 다를 때만 삭제
+                if old_obj.file and self.file != old_obj.file:
+                    # 장고 storage API를 사용하여 실제 파일 삭제
+                    old_obj.file.storage.delete(old_obj.file.name)
+            except Attachment.DoesNotExist:
+                pass
+        super().save(*args, **kwargs)
 
-@receiver(post_delete, sender=Attachment)
-def delete_file_on_attachment_delete(sender, instance, **kwargs):
-    if not instance.file: return
-    try:
-        if os.path.isfile(instance.file.path):
-            os.remove(instance.file.path)
-    except Exception as e:
-        logger.warning(f"파일 삭제 실패: {e}")
+    def delete(self, *args, **kwargs):
+        # 레코드가 삭제될 때 실제 파일도 함께 삭제
+        if self.file:
+            self.file.storage.delete(self.file.name)
+        super().delete(*args, **kwargs)
