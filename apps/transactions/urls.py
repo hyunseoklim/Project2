@@ -13,6 +13,9 @@ urlpatterns = [
     path('categories/<int:pk>/update/', views.category_update, name='category_update'),
     path('categories/<int:pk>/delete/', views.category_delete, name='category_delete'),
 
+    # 카테고리별 집계
+    path('categories/statistics/', views.category_statistics, name='category_statistics'),
+
     # Merchant
     path('merchants/', views.merchant_list, name='merchant_list'),
     path('merchants/create/', views.merchant_create, name='merchant_create'),

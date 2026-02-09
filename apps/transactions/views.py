@@ -134,6 +134,92 @@ def category_delete(request, pk):
         'category': category
     })
 
+@login_required
+def category_statistics(request):
+    """카테고리별 집계 뷰"""
+    user = request.user
+    
+    # 1. 날짜 필터 (기본값: 올해)
+    current_year = datetime.now().year
+    try:
+        year = int(request.GET.get('year', current_year))
+        if year < 2000 or year > 2100:
+            year = current_year
+    except (ValueError, TypeError):
+        year = current_year
+    
+    # 월 필터 (선택사항)
+    try:
+        month = request.GET.get('month', None)
+        if month:
+            month = int(month)
+            if not 1 <= month <= 12:
+                month = None
+    except (ValueError, TypeError):
+        month = None
+    
+    # 거래 유형 필터 (수입/지출)
+    tx_type = request.GET.get('tx_type', 'OUT')  # 기본값: 지출
+    
+    # 2. 기본 쿼리셋
+    base_qs = Transaction.active.filter(
+        user=user,
+        occurred_at__year=year,
+        tx_type=tx_type
+    )
+    
+    if month:
+        base_qs = base_qs.filter(occurred_at__month=month)
+    
+    # 3. 카테고리별 집계
+    category_stats = base_qs.values(
+        'category__id',
+        'category__name',
+        'category__type'
+    ).annotate(
+        total_amount=Sum('amount'),
+        transaction_count=Count('id')
+    ).order_by('-total_amount')
+    
+    # 4. 전체 금액 계산 (비율 계산용)
+    total_amount = base_qs.aggregate(total=Sum('amount'))['total'] or 0
+    
+    # 5. 비율 계산 및 데이터 가공
+    category_list = []
+    for idx, item in enumerate(category_stats, 1):
+        amount = item['total_amount'] or 0
+        percentage = (amount / total_amount * 100) if total_amount > 0 else 0
+        
+        category_list.append({
+            'rank': idx,
+            'category_id': item['category__id'],
+            'category_name': item['category__name'],
+            'category_type': item['category__type'],
+            'total_amount': amount,
+            'transaction_count': item['transaction_count'],
+            'percentage': round(percentage, 1)
+        })
+    
+    # 6. TOP 5 추출
+    top_5_categories = category_list[:5]
+    
+    # 7. 연도 선택지 생성
+    year_list = Transaction.active.filter(user=user).dates('occurred_at', 'year', order='DESC')
+    year_list = [d.year for d in year_list]
+    
+    # 8. 컨텍스트 구성
+    context = {
+        'year': year,
+        'month': month,
+        'tx_type': tx_type,
+        'year_list': year_list,
+        'total_amount': total_amount,
+        'category_list': category_list,
+        'top_5_categories': top_5_categories,
+        'stats_count': len(category_list),
+    }
+    
+    return render(request, 'transactions/category_statistics.html', context)
 
 # ============================================================
 # Merchant CRUD

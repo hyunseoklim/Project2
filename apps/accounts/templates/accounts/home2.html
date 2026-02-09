@@ -75,7 +75,7 @@
                             <tr>
                                 <td class="ps-4 fw-bold text-secondary">{{ transaction.occurred_at|date:"Y-m-d" }}</td>
                                 <td>
-                                    {% if transaction.tx_type == 'INCOME' %}
+                                    {% if transaction.tx_type == 'IN' %}
                                         <span class="badge rounded-pill bg-success-subtle text-success px-3">수입</span>
                                     {% else %}
                                         <span class="badge rounded-pill bg-danger-subtle text-danger px-3">지출</span>
@@ -83,10 +83,10 @@
                                 </td>
                                 <td class="text-secondary">{{ transaction.merchant_name }}</td>
                                 <td class="text-secondary">{{ transaction.category.name }}</td>
-                                <td class="fw-bold {% if transaction.tx_type == 'INCOME' %}text-success{% else %}text-danger{% endif %}">
+                                <td class="fw-bold {% if transaction.tx_type == 'IN' %}text-success{% else %}text-danger{% endif %}">
                                     {{ transaction.amount|intcomma }}원
                                 </td>
-                                <td class="pe-4 text-secondary">{{ transaction.account.account_name }}</td>
+                                <td class="pe-4 text-secondary">{{ transaction.account.name }}</td>
                             </tr>
                             {% endfor %}
                         {% else %}

@@ -111,8 +111,8 @@ def dashboard(request):
 
     # 3. 합계 계산 (필드명 수정됨: tx_type)
     # 주의: DB에 저장된 값이 'INCOME'/'EXPENSE'가 맞는지 확인 필요 (일단 기존 코드 따름)
-    total_income = monthly_qs.filter(tx_type='INCOME').aggregate(Sum('amount'))['amount__sum'] or 0
-    total_expense = monthly_qs.filter(tx_type='EXPENSE').aggregate(Sum('amount'))['amount__sum'] or 0
+    total_income = monthly_qs.filter(tx_type='IN').aggregate(Sum('amount'))['amount__sum'] or 0
+    total_expense = monthly_qs.filter(tx_type='OUT').aggregate(Sum('amount'))['amount__sum'] or 0
     
     net_profit = total_income - total_expense
 
