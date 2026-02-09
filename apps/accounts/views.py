@@ -9,7 +9,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login as auth_login, update_session_auth_hash
 from django.db import IntegrityError, transaction
-from django.db.models import Sum, Q, DecimalField, Value, F
+from django.db.models import Sum, Count, Q, DecimalField, Value, F
 from django.db.models.functions import Coalesce
 from django.utils import timezone
 from django.core.exceptions import ValidationError
@@ -20,6 +20,8 @@ from django.contrib.messages.views import SuccessMessageMixin
 from django.contrib.auth.views import PasswordChangeView
 from apps.transactions.models import Transaction
 from apps.businesses.models import Business
+from django.db.models.functions import ExtractMonth
+from datetime import timedelta
 
 logger = logging.getLogger(__name__)
 
@@ -87,7 +89,7 @@ def home(request):
         context = {
             'uncategorized_count': uncategorized_count,
         }
-        return render(request, "accounts/home_loggedin.html", context)
+        return render(request, "accounts/imsi_home.html", context)
     else:
         # 로그아웃 시 → 랜딩 페이지
         return render(request, "accounts/home.html")
@@ -110,19 +112,77 @@ def dashboard(request):
         occurred_at__month=month
     )
 
-    # 3. 합계 계산 (대소문자 이슈 방지를 위해 __iexact 사용)
-    # DB의 tx_type이 'income', 'INCOME' 무엇이든 상관없이 가져옵니다.
+    # 3. 합계 계산
     total_income = monthly_qs.filter(tx_type__iexact='IN').aggregate(Sum('amount'))['amount__sum'] or 0
     total_expense = monthly_qs.filter(tx_type__iexact='OUT').aggregate(Sum('amount'))['amount__sum'] or 0
     net_profit = total_income - total_expense
+    transaction_count = monthly_qs.count()
 
-    # 4. 최근 거래 (상위 5개)
-    # 수정, timezone.now를 통해 미래내용 없앰.
+    # 4. 전월 데이터 (전월 대비 비교용)
+    if month == 1:
+        prev_year, prev_month = year - 1, 12
+    else:
+        prev_year, prev_month = year, month - 1
+    
+    prev_monthly_qs = Transaction.objects.filter(
+        user=request.user,
+        occurred_at__year=prev_year,
+        occurred_at__month=prev_month
+    )
+    
+    prev_income = prev_monthly_qs.filter(tx_type__iexact='IN').aggregate(Sum('amount'))['amount__sum'] or 0
+    prev_expense = prev_monthly_qs.filter(tx_type__iexact='OUT').aggregate(Sum('amount'))['amount__sum'] or 0
+    prev_profit = prev_income - prev_expense
+    
+    # 전월 대비 증감 계산
+    profit_diff = net_profit - prev_profit
+    profit_diff_percent = round((profit_diff / prev_profit * 100), 1) if prev_profit != 0 else 0
+
+    # 5. 카테고리별 집계 (지출만) - 이번 달
+    category_stats = monthly_qs.filter(tx_type='OUT').values('category__name').annotate(
+        total=Sum('amount'),
+        count=Count('id')
+    ).order_by('-total')
+    
+    # 6. 카테고리별 집계 (지출만) - 전월
+    prev_category_stats = prev_monthly_qs.filter(tx_type='OUT').values('category__name').annotate(
+        total=Sum('amount')
+    )
+    
+    # 전월 데이터를 딕셔너리로 변환 (빠른 조회)
+    prev_category_dict = {item['category__name']: item['total'] for item in prev_category_stats}
+    
+    # 카테고리별 비율 계산 + 전월 대비 + 건당 평균
+    for stat in category_stats:
+        # 비율
+        if total_expense > 0:
+            stat['percentage'] = round((stat['total'] / total_expense) * 100, 1)
+        else:
+            stat['percentage'] = 0
+        
+        # 건당 평균
+        stat['avg_per_transaction'] = stat['total'] / stat['count'] if stat['count'] > 0 else 0
+        
+        # 전월 대비
+        category_name = stat['category__name']
+        prev_total = prev_category_dict.get(category_name, 0)
+        
+        if prev_total > 0:
+            stat['prev_total'] = prev_total
+            stat['diff'] = stat['total'] - prev_total
+            stat['diff_percent'] = round((stat['diff'] / prev_total * 100), 1)
+        else:
+            stat['prev_total'] = 0
+            stat['diff'] = stat['total']
+            stat['diff_percent'] = 0  # 전월 데이터 없으면 0
+
+    # 7. 최근 거래 (상위 5개)
     recent_transactions = Transaction.objects.filter(
         user=request.user,
-        occurred_at__lte=timezone.now() # 현재 시간보다 작거나 같은(과거~현재) 거래만
+        occurred_at__lte=timezone.now()
     ).order_by('-occurred_at', '-id')[:5]
-    # 5. 사업장별 집계
+
+    # 8. 사업장별 집계
     businesses = Business.objects.filter(
         user=request.user,
         is_active=True
@@ -146,7 +206,7 @@ def dashboard(request):
         profit=F('revenue') - F('expense')
     ).order_by('branch_type', 'name')
 
-    # 6. Context 한 번만!
+    # 9. Context
     context = {
         'user': request.user,
         'profile': profile,
@@ -157,8 +217,21 @@ def dashboard(request):
         'total_income': total_income,
         'total_expense': total_expense,
         'net_profit': net_profit,
-        'recent_transactions': recent_transactions,
+        'transaction_count': transaction_count,
         
+        # 전월 대비
+        'prev_year': prev_year,
+        'prev_month': prev_month,
+        'prev_income': prev_income,
+        'prev_expense': prev_expense,
+        'prev_profit': prev_profit,
+        'profit_diff': profit_diff,
+        'profit_diff_percent': profit_diff_percent,
+        
+        # 카테고리별
+        'category_stats': category_stats,
+        
+        'recent_transactions': recent_transactions,
         'businesses': businesses,
     }
     return render(request, "accounts/home2.html", context)

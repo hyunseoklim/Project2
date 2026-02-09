@@ -1,170 +1,340 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
+{% load static %}
 {% load humanize %}
 
-{% block title %}대시보드 - 스마트 사업자 가계부{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/base.css' %}">
+{% endblock %}
 
 {% block content %}
-<div class="container-fluid px-4 py-3">
+<div class="content-wrapper">
+    <!-- 헤더 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">📊 대시보드</h2>
+            <p class="text-muted mb-0">{{ year }}년 {{ month }}월 현황</p>
+        </div>
+    </div>
 
-<!-- 월 요약 박스 -->
-<div class="card border-0 shadow-sm mb-4">
-    <div class="card-body p-4">
-        <h5 class="mb-3 fw-bold text-dark">📅 {{ year }}년 {{ month }}월 요약</h5>
-        <div class="row g-3">
-            <!-- 총 수입 - 밝은 블루 -->
-            <div class="col-md-4">
-                <div class="card border-0 shadow-sm h-100" style="background-color: #e3f2fd;">
-                    <div class="card-body p-3 text-center">
-                        <small class="text-muted fw-bold">총 수입</small>
-                        <h4 class="mt-2 mb-0 fw-bold text-primary">{{ total_income|floatformat:0|intcomma }} <small class="fs-6">원</small></h4>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- 총 지출 - 밝은 레드 -->
-            <div class="col-md-4">
-                <div class="card border-0 shadow-sm h-100" style="background-color: #ffebee;">
-                    <div class="card-body p-3 text-center">
-                        <small class="text-muted fw-bold">총 지출</small>
-                        <h4 class="mt-2 mb-0 fw-bold text-danger">{{ total_expense|floatformat:0|intcomma }} <small class="fs-6">원</small></h4>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- 순이익 - 밝은 그린/옐로우 -->
-            <div class="col-md-4">
-                <div class="card border-0 shadow-sm h-100" style="background-color: {% if net_profit >= 0 %}#e8f5e9{% else %}#fff3e0{% endif %};">
-                    <div class="card-body p-3 text-center">
-                        <small class="text-muted fw-bold">순이익</small>
-                        <h4 class="mt-2 mb-0 fw-bold {% if net_profit >= 0 %}text-success{% else %}text-warning{% endif %}">{{ net_profit|floatformat:0|intcomma }} <small class="fs-6">원</small></h4>
-                    </div>
+    <!-- 상단 요약 카드 -->
+    <div class="row g-4 mb-4">
+        <!-- 총 수입 -->
+        <div class="col-md-3">
+            <div class="card border-0 hover-float">
+                <div class="card-body">
+                    <div class="text-muted mb-2">💰 총 수입</div>
+                    <h3 class="fw-bold text-success mb-0">{{ total_income|floatformat:0|intcomma }}원</h3>
                 </div>
             </div>
         </div>
-    </div>
-</div>
-
-    <!-- 메인 콘텐츠: 좌우 2분할 -->
-    <div class="row g-3">
         
-        <!-- 왼쪽: 최근 거래 (클릭 시 거래관리 페이지로) -->
-        <div class="col-lg-6">
-            <a href="{% url 'transactions:transaction_list' %}" class="text-decoration-none" style="color: inherit;">
-                <div class="card border-0 shadow-sm h-100" style="cursor: pointer; transition: transform 0.2s;" 
-                     onmouseover="this.style.transform='translateY(-2px)'" 
-                     onmouseout="this.style.transform='translateY(0)'">
-                    <div class="card-header bg-white py-3 border-bottom">
-                        <h6 class="mb-0 fw-bold">📋 최근 거래</h6>
-                    </div>
-                    {% if recent_transactions %}
-                        <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th class="ps-4">날짜</th>
-                                        <th>구분</th>
-                                        <th>거래처</th>
-                                        <th class="text-end pe-4">금액</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for tx in recent_transactions %}
-                                    <tr>
-                                        <td class="ps-4">
-                                            <small class="text-muted">{{ tx.occurred_at|date:"m/d H:i" }}</small>
-                                        </td>
-                                        <td>
-                                            {% if tx.tx_type == 'IN' %}
-                                                <span class="badge bg-primary-subtle text-primary rounded-pill">수입</span>
-                                            {% else %}
-                                                <span class="badge bg-danger-subtle text-danger rounded-pill">지출</span>
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            <small>{{ tx.get_merchant_display|truncatechars:15 }}</small>
-                                        </td>
-                                        <td class="text-end pe-4 fw-bold {% if tx.tx_type == 'IN' %}text-primary{% else %}text-danger{% endif %}">
-                                            {{ tx.amount|floatformat:0|intcomma }}원
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    {% else %}
-                        <div class="card-body text-center py-5">
-                            <p class="text-muted mb-3">📭 이번 달 거래 내역이 없습니다.</p>
-                            <span class="btn btn-primary btn-sm px-4 fw-bold">
-                                거래 등록하기
-                            </span>
-                        </div>
-                    {% endif %}
+        <!-- 총 지출 -->
+        <div class="col-md-3">
+            <div class="card border-0 hover-float">
+                <div class="card-body">
+                    <div class="text-muted mb-2">💸 총 지출</div>
+                    <h3 class="fw-bold text-danger mb-0">{{ total_expense|floatformat:0|intcomma }}원</h3>
                 </div>
-            </a>
+            </div>
         </div>
-
-        <!-- 오른쪽: 사업장별 집계 (클릭 시 사업장 관리 페이지로) -->
-        <div class="col-lg-6">
-            <a href="{% url 'businesses:business_list' %}" class="text-decoration-none" style="color: inherit;">
-                <div class="card border-0 shadow-sm h-100" style="cursor: pointer; transition: transform 0.2s;" 
-                     onmouseover="this.style.transform='translateY(-2px)'" 
-                     onmouseout="this.style.transform='translateY(0)'">
-                    <div class="card-header bg-white py-3 border-bottom">
-                        <h6 class="mb-0 fw-bold">🏢 사업장별 집계 (전체 기간)</h6>
-                    </div>
-                    {% if businesses %}
-                        <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th class="ps-4">사업장</th>
-                                        <th class="text-end">매출</th>
-                                        <th class="text-end">지출</th>
-                                        <th class="text-end pe-4">순이익</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for business in businesses %}
-                                    <tr>
-                                        <td class="ps-4">
-                                            <div class="d-flex align-items-center gap-2">
-                                                <strong>{{ business.name }}</strong>
-                                                {% if business.branch_type == 'main' %}
-                                                    <span class="badge bg-primary rounded-pill" style="font-size: 0.7rem;">본점</span>
-                                                {% else %}
-                                                    <span class="badge bg-secondary rounded-pill" style="font-size: 0.7rem;">지점</span>
-                                                {% endif %}
-                                            </div>
-                                        </td>
-                                        <td class="text-end">
-                                            <small class="text-dark fw-bold">{{ business.revenue|floatformat:0|intcomma }}원</small>
-                                        </td>
-                                        <td class="text-end">
-                                            <small class="text-dark fw-bold">{{ business.expense|floatformat:0|intcomma }}원</small>
-                                        </td>
-                                        <td class="text-end pe-4">
-                                            <small class="{% if business.profit >= 0 %}text-success{% else %}text-danger{% endif %} fw-bold">
-                                                {{ business.profit|floatformat:0|intcomma }}원
-                                            </small>
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    {% else %}
-                        <div class="card-body text-center py-5">
-                            <p class="text-muted mb-3">🏢 등록된 사업장이 없습니다.</p>
-                            <span class="btn btn-primary btn-sm px-4 fw-bold">
-                                사업장 등록하기
-                            </span>
-                        </div>
-                    {% endif %}
+        
+        <!-- 순이익 (전월 대비) -->
+        <div class="col-md-3">
+            <div class="card border-0 hover-float">
+                <div class="card-body">
+                    <div class="text-muted mb-2">📈 순이익</div>
+                    <h3 class="fw-bold mb-1" style="color: var(--gray-900);">{{ net_profit|floatformat:0|intcomma }}원</h3>
+                    <small class="{% if profit_diff >= 0 %}text-success{% else %}text-danger{% endif %}">
+                        전월 대비 
+                        {% if profit_diff >= 0 %}▲{% else %}▼{% endif %}
+                        {{ profit_diff|floatformat:0|intcomma }}원 ({{ profit_diff_percent }}%)
+                    </small>
                 </div>
-            </a>
+            </div>
         </div>
-
+        
+        <!-- 거래 건수 -->
+        <div class="col-md-3">
+            <div class="card border-0 hover-float">
+                <div class="card-body">
+                    <div class="text-muted mb-2">📋 거래 건수</div>
+                    <h3 class="fw-bold mb-0" style="color: var(--gray-900);">{{ transaction_count }}건</h3>
+                </div>
+            </div>
+        </div>
     </div>
 
+    <!-- 차트 영역 -->
+    <div class="row g-4 mb-4">
+        <!-- 전월 vs 이번 달 비교 차트 -->
+        <div class="col-lg-7">
+            <div class="card border-0 hover-float">
+                <div class="card-body">
+                    <h5 class="card-title mb-4">📊 전월 대비 수입/지출 비교</h5>
+                    <div style="height: 320px;">
+                        <canvas id="monthlyComparisonChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 카테고리별 비율 차트 -->
+        <div class="col-lg-5">
+            <div class="card border-0 hover-float">
+                <div class="card-body">
+                    <h5 class="card-title mb-4">🎯 카테고리별 지출 비율</h5>
+                    {% if category_stats %}
+                    <div style="height: 320px;">
+                        <canvas id="categoryPieChart"></canvas>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <div class="bg-yellow-soft p-4 rounded">
+                            <p class="text-muted mb-0">이번 달 지출 데이터가 없습니다.</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 카테고리별 상세 (Top 10) -->
+    {% if category_stats %}
+    <div class="row g-4 mb-4">
+        <div class="col-12">
+            <div class="card border-0 hover-float">
+                <div class="card-body">
+                    <h5 class="card-title mb-4">💳 카테고리별 지출 TOP 10</h5>
+                    <div class="row g-3">
+                        {% for stat in category_stats|slice:":10" %}
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <!-- 헤더 -->
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="fw-bold" style="color: var(--gray-900);">
+                                            {{ forloop.counter }}. {{ stat.category__name }}
+                                        </span>
+                                        <span class="badge bg-secondary">{{ stat.count }}건</span>
+                                    </div>
+                                    {% if stat.diff_percent != 0 %}
+                                    <small class="{% if stat.diff >= 0 %}text-danger{% else %}text-success{% endif %} fw-bold">
+                                        {% if stat.diff >= 0 %}▲{% else %}▼{% endif %} 
+                                        {{ stat.diff_percent|floatformat:1 }}%
+                                    </small>
+                                    {% else %}
+                                    <small class="text-muted">신규</small>
+                                    {% endif %}
+                                </div>
+                                
+                                <!-- 금액 -->
+                                <div class="mb-1">
+                                    <span class="fw-bold fs-5" style="color: var(--gray-900);">
+                                        {{ stat.total|floatformat:0|intcomma }}원
+                                    </span>
+                                </div>
+                                
+                                <!-- 프로그레스바 -->
+                                <div class="progress mb-2" style="height: 20px;">
+                                    <div class="progress-bar" 
+                                        role="progressbar" 
+                                        style="width: {{ stat.percentage }}%; background: linear-gradient(90deg, #FF6B6B, #FF8E53);"
+                                        aria-valuenow="{{ stat.percentage }}" 
+                                        aria-valuemin="0" 
+                                        aria-valuemax="100">
+                                        <small class="fw-bold">{{ stat.percentage }}%</small>
+                                    </div>
+                                </div>
+                                
+                                <!-- 하단 정보 -->
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">
+                                        건당 평균: <span class="fw-bold">{{ stat.avg_per_transaction|floatformat:0|intcomma }}원</span>
+                                    </small>
+                                    {% if stat.prev_total > 0 %}
+                                    <small class="text-muted">
+                                        전월: {{ stat.prev_total|floatformat:0|intcomma }}원
+                                    </small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- 최근 거래 내역 -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 hover-float">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="card-title mb-0">🕒 최근 거래</h5>
+                        <a href="{% url 'transactions:transaction_list' %}" class="btn btn-sm btn-outline-secondary btn-hover-scale">
+                            전체보기
+                        </a>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>날짜</th>
+                                    <th>유형</th>
+                                    <th>내용</th>
+                                    <th>카테고리</th>
+                                    <th class="text-end">금액</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for tx in recent_transactions %}
+                                <tr onclick="location.href='{% url 'transactions:transaction_detail' tx.pk %}'" style="cursor: pointer;">
+                                    <td><small>{{ tx.occurred_at|date:"m/d H:i" }}</small></td>
+                                    <td>
+                                        <span class="badge {% if tx.tx_type == 'IN' %}bg-success{% else %}bg-danger{% endif %}">
+                                            {{ tx.get_tx_type_display }}
+                                        </span>
+                                    </td>
+                                    <td>{{ tx.title|default:tx.memo|truncatechars:20 }}</td>
+                                    <td><small>{{ tx.category.name }}</small></td>
+                                    <td class="text-end fw-bold">{{ tx.amount|floatformat:0|intcomma }}원</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-4 text-muted">거래 내역이 없습니다.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 1. 전월 vs 이번 달 비교 차트
+    const monthlyComparisonCtx = document.getElementById('monthlyComparisonChart');
+    if (monthlyComparisonCtx) {
+        new Chart(monthlyComparisonCtx, {
+            type: 'bar',
+            data: {
+                labels: ['수입', '지출'],
+                datasets: [
+                    {
+                        label: '{{ prev_month }}월 (전월)',
+                        data: [{{ prev_income }}, {{ prev_expense }}],
+                        backgroundColor: 'rgba(158, 158, 158, 0.6)',
+                        borderColor: 'rgb(158, 158, 158)',
+                        borderWidth: 2
+                    },
+                    {
+                        label: '{{ month }}월 (이번달)',
+                        data: [{{ total_income }}, {{ total_expense }}],
+                        backgroundColor: [
+                            'rgba(76, 175, 80, 0.8)',
+                            'rgba(244, 67, 54, 0.8)'
+                        ],
+                        borderColor: [
+                            'rgb(76, 175, 80)',
+                            'rgb(244, 67, 54)'
+                        ],
+                        borderWidth: 2
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: { font: { size: 13, weight: 'bold' } }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': ' + context.parsed.y.toLocaleString() + '원';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return (value / 10000).toLocaleString() + '만원';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    {% if category_stats %}
+    // 2. 카테고리별 비율 차트 (파이)
+    const categoryPieCtx = document.getElementById('categoryPieChart');
+    if (categoryPieCtx) {
+        new Chart(categoryPieCtx, {
+            type: 'doughnut',
+            data: {
+                labels: [
+                    {% for stat in category_stats|slice:":10" %}
+                    '{{ stat.category__name }}'{% if not forloop.last %},{% endif %}
+                    {% endfor %}
+                ],
+                datasets: [{
+                    data: [
+                        {% for stat in category_stats|slice:":10" %}
+                        {{ stat.total }}{% if not forloop.last %},{% endif %}
+                        {% endfor %}
+                    ],
+                    backgroundColor: [
+                        '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
+                        '#FF9F40', '#FF6B9D', '#C9CBCF', '#4BC0C0', '#FFB6C1'
+                    ],
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: { 
+                            boxWidth: 15,
+                            font: { size: 12 },
+                            padding: 10
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const value = context.parsed;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percent = ((value / total) * 100).toFixed(1);
+                                return context.label + ': ' + value.toLocaleString() + '원 (' + percent + '%)';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+    {% endif %}
+});
+</script>
 {% endblock %}

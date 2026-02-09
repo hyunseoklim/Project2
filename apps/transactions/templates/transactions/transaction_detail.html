@@ -70,7 +70,7 @@
                                 <td>{{ transaction.category.name }} <small class="text-muted">({{ transaction.category.get_type_display }})</small></td>
                             </tr>
                             <tr>
-                                <th class="bg-light">금액</th>
+                                <th class="bg-light">공급가액</th>
                                 <td class="fw-bold text-primary fs-5">{{ transaction.supply_value|floatformat:0|intcomma }}원</td>
                             </tr>
                             <tr>
@@ -83,7 +83,7 @@
                                 <td class="fw-bold">{{ transaction.vat_amount|floatformat:0|intcomma }}원</td>
                             </tr>
                             <tr>
-                                <th class="bg-light">총액</th>
+                                <th class="bg-light">금액 (총 금액)</th>
                                 <td class="fw-bold fs-5">{{ transaction.amount|floatformat:0|intcomma }}원</td>
                             </tr>
                             {% endif %}
