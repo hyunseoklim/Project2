@@ -156,7 +156,7 @@ class BusinessForm(forms.ModelForm):
     
     class Meta:
         model = Business
-        fields = ['name', 'location', 'business_type', 'branch_type', 'registration_number']
+        fields = ['name', 'location', 'business_type', 'branch_type', 'registration_number', 'memo']
         widgets = {
             'name': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -176,6 +176,12 @@ class BusinessForm(forms.ModelForm):
             'registration_number': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': '123-45-67890 형식으로 입력'
+            }),
+
+            'memo': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': '사업장 관련 메모를 입력하세요.'
             }),
         }
         labels = {
