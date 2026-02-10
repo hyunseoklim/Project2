@@ -1,124 +1,202 @@
 {% extends "base.html" %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/base.css' %}">
+<style>
+    /* 클릭 가능한 리스트 카드 스타일 */
+    .receipt-list-card {
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border-left: 4px solid transparent;
+    }
+    .receipt-list-card:hover {
+        transform: translateX(5px);
+        border-left-color: var(--primary-yellow);
+        box-shadow: var(--shadow-md);
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <h2>📑 증빙 자료(영수증) 모아보기</h2>
-    <p class="text-muted">첨부파일이 등록되었거나 '영수증' 메모가 포함된 거래 내역입니다.</p>
+<div class="content-wrapper">
+    <!-- 헤더 섹션 -->
+    <div class="mb-4">
+        <h2 class="mb-2">📑 증빙 자료(영수증) 모아보기</h2>
+        <p class="text-muted">첨부파일이 등록되었거나 '영수증' 메모가 포함된 거래 내역입니다.</p>
+    </div>
 
+    <!-- 카드 그리드 - 깔끔한 스타일 -->
     <div class="row row-cols-1 row-cols-md-3 g-4 mb-5">
         {% for tx in page_obj %}
         <div class="col">
-            <div class="card h-100 shadow-sm">
-                <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 180px;">
+            <div class="card h-100 hover-float border-0">
+                <!-- 이미지 영역 -->
+                <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px; border-radius: 12px 12px 0 0;">
                     {% if tx.attachment %}
                         {% if tx.attachment.content_type == 'application/pdf' %}
                             <i class="bi bi-file-earmark-pdf text-danger" style="font-size: 4rem;"></i>
                         {% else %}
-                            <img src="{{ tx.attachment.file.url }}" class="img-fluid h-100" style="object-fit: cover;" alt="영수증">
+                            <img src="{{ tx.attachment.file.url }}" class="img-fluid w-100 h-100" style="object-fit: cover; border-radius: 12px 12px 0 0;" alt="영수증">
                         {% endif %}
                     {% else %}
                         <div class="text-center">
-                            <i class="bi bi-camera-fill text-secondary" style="font-size: 3rem;"></i>
-                            <p class="small text-danger mt-2">파일을 등록해주세요</p>
+                            <i class="bi bi-camera-fill" style="font-size: 3rem; color: var(--gray-400);"></i>
+                            <p class="small text-danger mt-2 mb-0">파일을 등록해주세요</p>
                         </div>
                     {% endif %}
                 </div>
                 
+                <!-- 카드 내용 -->
                 <div class="card-body">
-                    <h5 class="card-title text-truncate">{{ tx.title|default:"제목 없음" }}</h5>
-                    <p class="card-text mb-1"><strong>금액:</strong> {{ tx.amount|floatformat:0 }}원</p>
-                    <p class="card-text mb-1"><small class="text-muted">계좌: {{ tx.account.name }}</small></p>
-                    <p class="card-text"><small class="text-muted">날짜: {{ tx.occurred_at|date:"Y-m-d" }}</small></p>
+                    <h5 class="card-title text-truncate fw-bold mb-3">{{ tx.title|default:"제목 없음" }}</h5>
+                    <div class="mb-2">
+                        <strong>금액:</strong> 
+                        <span class="fw-bold" style="color: var(--gray-900);">{{ tx.amount|floatformat:0 }}원</span>
+                    </div>
+                    <div class="text-muted small">
+                        <div class="mb-1">📍 계좌: {{ tx.account.name }}</div>
+                        <div>📅 날짜: {{ tx.occurred_at|date:"Y-m-d" }}</div>
+                    </div>
                 </div>
                 
-                <div class="card-footer bg-transparent border-top-0 d-grid gap-2">
+                <!-- 카드 푸터 버튼 -->
+                <div class="card-footer bg-transparent border-0 d-grid gap-2 pb-3">
                     {% if tx.attachment %}
-                        <a href="{{ tx.attachment.file.url }}" class="btn btn-outline-primary btn-sm" target="_blank">파일 크게 보기</a>
+                        <a href="{{ tx.attachment.file.url }}" class="btn btn-outline-primary btn-sm btn-hover-scale" target="_blank">
+                            📂 파일 크게 보기
+                        </a>
                     {% endif %}
-                    <a href="{% url 'transactions:transaction_detail' tx.pk %}" class="btn btn-warning btn-sm">
-                        {% if tx.attachment %}내용 확인하기{% else %}<i class="bi bi-plus-circle"></i> 영수증 등록하기{% endif %}
+                    <a href="{% url 'transactions:transaction_detail' tx.pk %}" class="btn btn-warning btn-sm btn-hover-scale">
+                        {% if tx.attachment %}✅ 내용 확인하기{% else %}➕ 영수증 등록하기{% endif %}
                     </a>
                 </div>
             </div>
         </div>
         {% empty %}
         <div class="col-12 text-center py-5">
-            <p class="text-muted">아직 등록된 증빙 자료가 없습니다.</p>
+            <div class="bg-yellow-soft p-5 rounded">
+                <i class="bi bi-inbox" style="font-size: 3rem; color: var(--gray-400);"></i>
+                <p class="text-muted mt-3 mb-0">아직 등록된 증빙 자료가 없습니다.</p>
+            </div>
         </div>
         {% endfor %}
     </div>
 
-    <hr class="my-5">
+    <!-- 구분선 -->
+    <hr class="my-5" style="border-color: var(--gray-300);">
 
+    <!-- 카드 리스트 섹션 -->
     <h4 class="mb-3">📋 증빙 자료 상세 리스트</h4>
-    <div class="card border-0 shadow-sm">
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th>날짜</th>
-                            <th>유형</th>
-                            <th>제목/거래처</th>
-                            <th>계좌</th>
-                            <th class="text-end">금액</th>
-                            <th>증빙상태</th>
-                            <th class="text-center">관리</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for transaction in page_obj %}
-                        <tr>
-                            <td><small>{{ transaction.occurred_at|date:"m/d H:i" }}</small></td>
-                            <td>
-                                <span class="badge {% if transaction.tx_type == 'IN' %}bg-success{% else %}bg-danger{% endif %}">
-                                    {{ transaction.get_tx_type_display }}
-                                </span>
-                            </td>
-                            <td>{{ transaction.title|default:transaction.memo|truncatechars:15 }}</td>
-                            <td><small>{{ transaction.account.name }}</small></td>
-                            <td class="text-end fw-bold">{{ transaction.amount|floatformat:0 }}원</td>
-                            <td>
-                                {% if transaction.attachment %}
-                                    <span class="badge rounded-pill bg-info text-dark">📎 파일 있음</span>
-                                {% else %}
-                                    <span class="badge rounded-pill bg-secondary">❓ 미등록</span>
-                                {% endif %}
-                            </td>
-                            <td class="text-center">
-                                <div class="btn-group btn-group-sm">
-                                    <a href="{% url 'transactions:transaction_detail' transaction.pk %}" class="btn btn-outline-secondary">👁️</a>
-                                    <a href="{% url 'transactions:transaction_update' transaction.pk %}" class="btn btn-outline-warning">✏️</a>
-                                </div>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-
-            {% if page_obj.has_other_pages %}
-            <div class="p-3 border-top">
-                <nav>
-                    <ul class="pagination pagination-sm justify-content-center mb-0">
-                        {% if page_obj.has_previous %}
-                        <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">이전</a></li>
-                        {% endif %}
-                        {% for num in page_obj.paginator.page_range %}
-                            {% if page_obj.number == num %}
-                            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
-                            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-                            <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+    
+    <div class="row g-3">
+        {% for transaction in page_obj %}
+        <div class="col-12">
+            <div class="card border-0 receipt-list-card" data-url="{% url 'transactions:transaction_detail' transaction.pk %}">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <!-- 날짜 -->
+                        <div class="col-auto">
+                            <div class="text-muted small" style="min-width: 80px;">
+                                {{ transaction.occurred_at|date:"m/d H:i" }}
+                            </div>
+                        </div>
+                        
+                        <!-- 유형 뱃지 -->
+                        <div class="col-auto">
+                            <span class="badge {% if transaction.tx_type == 'IN' %}bg-success{% else %}bg-danger{% endif %}">
+                                {{ transaction.get_tx_type_display }}
+                            </span>
+                        </div>
+                        
+                        <!-- 제목/거래처 -->
+                        <div class="col">
+                            <strong>{{ transaction.title|default:transaction.memo|truncatechars:30 }}</strong>
+                        </div>
+                        
+                        <!-- 계좌 -->
+                        <div class="col-auto">
+                            <small class="text-muted">{{ transaction.account.name }}</small>
+                        </div>
+                        
+                        <!-- 금액 -->
+                        <div class="col-auto">
+                            <div class="fw-bold text-end" style="min-width: 100px; color: var(--gray-900);">
+                                {{ transaction.amount|floatformat:0|intcomma| }}원
+                            </div>
+                        </div>
+                        
+                        <!-- 증빙상태 -->
+                        <div class="col-auto">
+                            {% if transaction.attachment %}
+                                <span class="badge rounded-pill bg-info text-dark">📎 파일 있음</span>
+                            {% else %}
+                                <span class="badge rounded-pill bg-secondary">❓ 미등록</span>
                             {% endif %}
-                        {% endfor %}
-                        {% if page_obj.has_next %}
-                        <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">다음</a></li>
-                        {% endif %}
-                    </ul>
-                </nav>
+                        </div>
+                        
+                        <!-- 수정 버튼만 -->
+                        <div class="col-auto">
+                            <a href="{% url 'transactions:transaction_update' transaction.pk %}" 
+                               class="btn btn-outline-warning btn-sm btn-hover-scale"
+                               onclick="event.stopPropagation();">
+                                ✏️ 수정
+                            </a>
+                        </div>
+                    </div>
+                </div>
             </div>
-            {% endif %}
         </div>
+        {% endfor %}
     </div>
+
+    <!-- 페이지네이션 -->
+    {% if page_obj.has_other_pages %}
+    <div class="mt-4">
+        <nav>
+            <ul class="pagination pagination-sm justify-content-center">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">이전</a>
+                </li>
+                {% endif %}
+                
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">다음</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
 </div>
+
+<!-- 클릭 이벤트 스크립트 -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 모든 리스트 카드에 클릭 이벤트 추가
+    const cards = document.querySelectorAll('.receipt-list-card');
+    cards.forEach(card => {
+        card.addEventListener('click', function() {
+            const url = this.getAttribute('data-url');
+            if (url) {
+                window.location.href = url;
+            }
+        });
+    });
+});
+</script>
 {% endblock %}

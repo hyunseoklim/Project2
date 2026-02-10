@@ -159,31 +159,26 @@ class Account(SoftDeleteModel):
         return masked_res
 
     def update_balance(self, amount, tx_type):
+        """계좌 잔액 업데이트 (F() 표현식으로 race condition 방지)"""
         if tx_type not in ['IN', 'OUT']:
             raise ValueError(f"잘못된 tx_type: {tx_type}")
         
-        with transaction.atomic():
-            # select_for_update(of='self')를 쓰면 PostgreSQL 등에서 더 정밀한 잠금이 가능합니다.
-            account = Account.objects.select_for_update().get(pk=self.pk)
-            
-            # if tx_type == 'OUT' and account.balance < amount:
-            #     raise ValidationError({
-            #         'balance': f'잔액 부족 (현재: {account.balance:,.0f}원, 요청: {amount:,.0f}원)'
-            #     })
-            
-            if tx_type == 'IN':
-                account.balance = F('balance') + amount
-            else:
-                account.balance = F('balance') - amount
-            
-            # updated_at이 확실히 존재하는지 core/models.py 확인 필수!
-            account.save(update_fields=['balance', 'updated_at'])
-            
-            # 1. DB에서 계산된 값을 메모리로 즉시 반영
-            account.refresh_from_db(fields=['balance'])
-            
-            # 2. 현재 인스턴스(self)의 balance 필드도 업데이트
-            self.balance = account.balance
+        from django.utils import timezone
+        
+        # F() 표현식으로 한 번에 업데이트 (쿼리 1개로 줄임)
+        if tx_type == 'IN':
+            Account.objects.filter(pk=self.pk).update(
+                balance=F('balance') + amount,
+                updated_at=timezone.now()
+            )
+        else:
+            Account.objects.filter(pk=self.pk).update(
+                balance=F('balance') - amount,
+                updated_at=timezone.now()
+            )
+        
+        # 업데이트된 값 메모리에 반영
+        self.refresh_from_db(fields=['balance'])
 
     def hard_delete(self):
         """DB에서 데이터를 완전히 삭제 (복구 불가)"""

@@ -53,6 +53,21 @@ class ProfileForm(forms.ModelForm):
             existing_classes = field.widget.attrs.get('class', '')
             field.widget.attrs['class'] = f'{existing_classes} form-control'.strip()
 
+
+    def save(self, commit=True):
+        profile = super().save(commit=False)
+        
+        # full_name을 User 모델의 first_name에 저장
+        if self.cleaned_data.get('full_name'):
+            profile.user.first_name = self.cleaned_data['full_name']
+            if commit:
+                profile.user.save()
+        
+        if commit:
+            profile.save()
+        
+        return profile
+
     
     def clean_business_registration_number(self):
         # 1. 값 가져오기 및 전처리
