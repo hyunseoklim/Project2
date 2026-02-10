@@ -71,6 +71,14 @@ class TransactionForm(forms.ModelForm):
 
     def clean(self):
         cleaned_data = super().clean()
+
+        account = cleaned_data.get('account')
+        if account and account.balance is not None and account.balance < 0:
+            balance_value = f"{account.balance:,.0f}원"
+            self.add_error(
+                'account',
+                f"해당 계좌는 현재 잔액이 {balance_value}입니다. 마이너스 잔액 계좌는 등록할 수 없습니다."
+            )
         
         # 거래처 필수 검증
         merchant = cleaned_data.get('merchant')

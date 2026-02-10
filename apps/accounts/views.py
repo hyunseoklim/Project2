@@ -137,7 +137,7 @@ def dashboard(request):
     month = now.month
 
     # 2. 이번 달 거래 필터링
-    monthly_qs = Transaction.objects.filter(
+    monthly_qs = Transaction.active.filter(
         user=request.user,
         occurred_at__year=year,
         occurred_at__month=month
@@ -155,7 +155,7 @@ def dashboard(request):
     else:
         prev_year, prev_month = year, month - 1
     
-    prev_monthly_qs = Transaction.objects.filter(
+    prev_monthly_qs = Transaction.active.filter(
         user=request.user,
         occurred_at__year=prev_year,
         occurred_at__month=prev_month
@@ -208,10 +208,10 @@ def dashboard(request):
             stat['diff_percent'] = 0  # 전월 데이터 없으면 0
 
     # 7. 최근 거래 (상위 5개)
-    recent_transactions = Transaction.objects.filter(
+    recent_transactions = Transaction.active.filter(
         user=request.user,
-        occurred_at__lte=timezone.now()
-    ).order_by('-occurred_at', '-id')[:5]
+        occurred_at__lte=now
+    ).order_by('-occurred_at')[:5]
 
     # 8. 사업장별 집계
     businesses = Business.objects.filter(

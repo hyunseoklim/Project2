@@ -39,7 +39,7 @@
                     </div>
                     <div class="row py-2 border-bottom border-light-subtle">
                         <div class="col-sm-4 text-muted">사업자 등록번호</div>
-                        <div class="col-sm-8 fw-semibold">{{ business.registration_number|default:"미등록" }}</div>
+                        <div class="col-sm-8 fw-semibold">{{ business.get_masked_registration_number|default:"미등록" }}</div>
                     </div>
                     <div class="row py-2 border-bottom border-light-subtle">
                         <div class="col-sm-4 text-muted">업종</div>
