@@ -30,7 +30,7 @@
                     <label class="form-label">월</label>
                     <select name="month" class="form-select">
                         <option value="">전체</option>
-                        {% for m in "123456789101112"|make_list %}
+                        {% for m in "months_range"|make_list %}
                             <option value="{{ forloop.counter }}" {% if month == forloop.counter %}selected{% endif %}>
                                 {{ forloop.counter }}월
                             </option>
