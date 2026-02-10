@@ -650,6 +650,7 @@ def business_statistics(request, pk):
     available_years = [str(y) for y in range(current_year, current_year - 5, -1)]
 
     context = {
+        'months_range': range(1, 13),
         'business': business,
         'stats': stats,
         'total_sum': total_sum,

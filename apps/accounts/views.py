@@ -81,6 +81,9 @@ def home(request):
         today = timezone.now()
         this_month_start = today.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         
+        # 다음 달 1일 00:00 (이번 달의 끝)
+        next_month = (this_month_start + timedelta(days=32)).replace(day=1)
+
         last_month_end = this_month_start - timedelta(days=1)
         last_month_start = last_month_end.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
@@ -89,14 +92,16 @@ def home(request):
         monthly_expense = Transaction.active.filter(
             user=request.user,
             tx_type='OUT',
-            occurred_at__gte=this_month_start
+            occurred_at__gte=this_month_start,
+            occurred_at__lt=next_month  # 다음 달 전까지!
         ).aggregate(total=Sum('amount'))['total'] or 0
 
         # 저번 달 지출
         last_month_expense = Transaction.active.filter(
             user=request.user,
             tx_type='OUT',
-            occurred_at__range=(last_month_start, last_month_end)
+            occurred_at__gte=last_month_start,  # 수정
+            occurred_at__lt=this_month_start    # 수정
         ).aggregate(total=Sum('amount'))['total'] or 0
 
         # 3. 데이터 가공 (증감액 및 그래프 퍼센트)
@@ -137,7 +142,7 @@ def dashboard(request):
     month = now.month
 
     # 2. 이번 달 거래 필터링
-    monthly_qs = Transaction.active.filter(
+    monthly_qs = Transaction.objects.filter(
         user=request.user,
         occurred_at__year=year,
         occurred_at__month=month
@@ -155,7 +160,7 @@ def dashboard(request):
     else:
         prev_year, prev_month = year, month - 1
     
-    prev_monthly_qs = Transaction.active.filter(
+    prev_monthly_qs = Transaction.objects.filter(
         user=request.user,
         occurred_at__year=prev_year,
         occurred_at__month=prev_month
@@ -208,10 +213,10 @@ def dashboard(request):
             stat['diff_percent'] = 0  # 전월 데이터 없으면 0
 
     # 7. 최근 거래 (상위 5개)
-    recent_transactions = Transaction.active.filter(
+    recent_transactions = Transaction.objects.filter(
         user=request.user,
-        occurred_at__lte=now
-    ).order_by('-occurred_at')[:5]
+        occurred_at__lte=timezone.now()
+    ).order_by('-occurred_at', '-id')[:5]
 
     # 8. 사업장별 집계
     businesses = Business.objects.filter(

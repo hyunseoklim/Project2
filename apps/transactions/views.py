@@ -294,6 +294,7 @@ def monthly_summary(request):
     year_list = [d.year for d in year_list] or [current_year]
 
     context = {
+        'months_range': range(1, 13),
         'year': year,
         'month': month,
         'year_list': year_list,
