@@ -677,6 +677,7 @@ class VATReportView(LoginRequiredMixin, TemplateView):
         total_sales_vat = sales_summary['total_sales_vat'] or 0
         total_purchase_vat = purchase_summary['total_purchase_vat'] or 0
         estimated_tax = total_sales_vat - total_purchase_vat
+        abs_estimated_tax = abs(estimated_tax)
 
         
         # ========================================
@@ -753,6 +754,7 @@ class VATReportView(LoginRequiredMixin, TemplateView):
             'estimated_tax': estimated_tax,
             'monthly_stats': monthly_stats,
             'page_obj': page_obj,  # 페이지네이션 객체
+            'abs_estimated_tax':abs_estimated_tax
         })
         return context
     

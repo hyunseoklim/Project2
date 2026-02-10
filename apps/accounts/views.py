@@ -154,7 +154,8 @@ def dashboard(request):
     monthly_qs = Transaction.objects.filter(
         user=request.user,
         occurred_at__year=year,
-        occurred_at__month=month
+        occurred_at__month=month,
+        is_active=True
     )
 
     # 3. 합계 계산
@@ -172,7 +173,8 @@ def dashboard(request):
     prev_monthly_qs = Transaction.objects.filter(
         user=request.user,
         occurred_at__year=prev_year,
-        occurred_at__month=prev_month
+        occurred_at__month=prev_month,
+        is_active=True
     )
     
     prev_income = prev_monthly_qs.filter(tx_type__iexact='IN').aggregate(Sum('amount'))['amount__sum'] or 0
@@ -190,7 +192,7 @@ def dashboard(request):
     # 1. 이번 달 카테고리별 집계
     category_stats = monthly_qs.filter(tx_type='OUT').values('category__name').annotate(
         total=Sum('amount'),
-        count=Count('id')
+        count=Count('id'),
     ).order_by('-total')
 
     # 2. 전월 카테고리별 집계 (비교용)
@@ -234,7 +236,8 @@ def dashboard(request):
     # 7. 최근 거래 (상위 5개)
     recent_transactions = Transaction.objects.filter(
         user=request.user,
-        occurred_at__lte=timezone.now()
+        occurred_at__lte=timezone.now(),
+        is_active=True
     ).order_by('-occurred_at', '-id')[:5]
 
     # 7. 사업장별 집계

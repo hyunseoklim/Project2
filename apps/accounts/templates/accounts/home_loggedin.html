@@ -82,10 +82,17 @@
             <div class="card border-0 shadow-sm h-100 text-white hover-up" style="border-radius: 24px; background: linear-gradient(135deg, #1e293b 0%, #334155 100%);">
                 <div class="card-body p-4 d-flex justify-content-between align-items-center">
                     <div>
-                        <h5 class="fw-bold mb-1">부가세 신고 준비</h5>
-                        <p class="text-white-50 small mb-0">누락된 매입 내역이 없는지 지금 바로 확인하세요.</p>
+                        <h5 class="fw-bold mb-1">부가세 참고확인</h5>
+                        <p class="text-white-50 small mb-0">현재까지 </p>
                     </div>
                     <a href="{% url 'transactions:vat_report_default' %}" class="btn btn-light px-4 rounded-pill fw-bold text-dark shadow-sm">신고서 조회</a>
+                </div>
+                <div class="card-body p-4 d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="fw-bold mb-1">종소세 참고 확인</h5>
+                        <p class="text-white-50 small mb-0">누락된 매입 내역이 없는지 지금 바로 확인하세요.</p>
+                    </div>
+                    <a href="{% url 'tax:income_tax_report' %}" class="btn btn-light px-4 rounded-pill fw-bold text-dark shadow-sm">신고서 조회</a>
                 </div>
             </div>
         </div>
