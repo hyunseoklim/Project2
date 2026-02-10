@@ -326,12 +326,17 @@ def merchant_list(request):
     )
     
     if view_type == 'frequent':
-        merchants = base_qs.filter(transaction_count__gt=0).order_by('-transaction_count')[:10]
+        merchants = base_qs.filter(transaction_count__gt=0).order_by('-transaction_count')
     else:
         merchants = base_qs.order_by('-created_at')
-    
+
+    paginator = Paginator(merchants, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
     return render(request, 'transactions/merchant_list.html', {
-        'merchants': merchants,
+        'merchants': page_obj,
+        'page_obj': page_obj,
         'view_type': view_type,
     })
 
