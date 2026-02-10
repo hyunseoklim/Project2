@@ -10,6 +10,7 @@ from apps.transactions.forms import TransactionForm, MerchantForm, CategoryForm
 from apps.transactions.models import Category, Merchant, MerchantCategory
 
 
+# Fixtures
 @pytest.fixture
 def test_user(db):
     return User.objects.create_user(username='tester', password='pass')
@@ -46,6 +47,7 @@ def merchant_category():
     return MerchantCategory.objects.create(name='도매처', user=None)
 
 
+# Transaction form tests
 @pytest.mark.django_db
 class TestTransactionForm:
     def test_requires_merchant_or_name(self, test_user, business, account, income_category):
@@ -137,6 +139,25 @@ class TestTransactionForm:
         form = TransactionForm(data=data, user=test_user)
         assert form.is_valid()
 
+    def test_merchant_selected_allows_blank_name(self, test_user, business, account, income_category):
+        """거래처 선택 시 거래처명은 비어도 됨"""
+        merchant = Merchant.objects.create(user=test_user, name='선택거래처')
+        data = {
+            'business': business.id,
+            'account': account.id,
+            'merchant': merchant.id,
+            'merchant_name': '',
+            'category': income_category.id,
+            'tx_type': 'IN',
+            'tax_type': 'taxable',
+            'is_business': True,
+            'amount': '10000.00',
+            'occurred_at': timezone.now().strftime('%Y-%m-%dT%H:%M'),
+        }
+
+        form = TransactionForm(data=data, user=test_user)
+        assert form.is_valid()
+
     def test_vat_amount_manual_input(self, test_user, business, account, income_category):
         """수동으로 입력한 부가세는 유지됨"""
         data = {
@@ -157,6 +178,7 @@ class TestTransactionForm:
         assert form.cleaned_data['vat_amount'] == Decimal('500.00')
 
 
+# Merchant form tests
 @pytest.mark.django_db
 class TestMerchantForm:
     def test_valid_merchant_creation(self, test_user, merchant_category):
@@ -224,6 +246,17 @@ class TestMerchantForm:
         if form.is_valid():
             assert form.cleaned_data['business_number'] == '123-45-67890'
 
+    def test_business_number_formatting_with_spaces(self, test_user):
+        """사업자등록번호 공백 포함 입력도 처리"""
+        data = {
+            'name': '테스트',
+            'business_number': '123 45 67890',
+        }
+        form = MerchantForm(data=data, user=test_user)
+
+        if form.is_valid():
+            assert form.cleaned_data['business_number'] == '123-45-67890'
+
     def test_optional_fields(self, test_user):
         """선택 필드 검증 - 이름만으로도 생성 가능"""
         data = {
@@ -250,6 +283,7 @@ class TestMerchantForm:
         assert other_cat.id not in category_ids
 
 
+# Category form tests
 @pytest.mark.django_db
 class TestCategoryForm:
     def test_income_category_creation(self):
@@ -293,6 +327,18 @@ class TestCategoryForm:
         }
         form = CategoryForm(data=data)
         assert form.is_valid()
+
+    def test_expense_type_preserved_for_expense(self):
+        """지출 카테고리에서 expense_type 값 유지"""
+        data = {
+            'name': '광고비',
+            'type': 'expense',
+            'expense_type': 'advertising',
+        }
+        form = CategoryForm(data=data)
+
+        if form.is_valid():
+            assert form.cleaned_data['expense_type'] == 'advertising'
 
     def test_type_field_required(self):
         """카테고리 타입은 필수"""
