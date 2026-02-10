@@ -119,6 +119,11 @@ def home(request):
         else:
             # 저번 달 기록이 없으면 이번 달 지출이 있는 경우 100%, 없으면 0%
             expense_percent = 100 if monthly_expense > 0 else 0
+        # ✅ 카테고리 미지정 거래 건수 추가
+        uncategorized_count = Transaction.active.filter(
+            user=request.user,
+            category__isnull=True
+        ).count()
 
         context = {
             'monthly_expense': monthly_expense,
@@ -128,6 +133,7 @@ def home(request):
             'expense_percent': expense_percent,
             'business_count': Business.objects.filter(user=request.user, is_active=True).count(),
             'account_count': Account.objects.filter(business__user=request.user, is_active=True).count(),
+            'uncategorized_count': uncategorized_count,  # ✅ 추가
         }
         return render(request, "accounts/home_loggedin.html", context)
     
