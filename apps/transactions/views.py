@@ -1,31 +1,34 @@
-from django.db.models import Sum, Q
-from django.views.generic import TemplateView
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.core.paginator import Paginator
-from datetime import datetime, date
 import calendar
-from django.shortcuts import render
-from .models import Transaction
-from django.db.models.functions import ExtractMonth
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import redirect, get_object_or_404
-from django.contrib import messages
-from django.db.models import Count
-from django.utils import timezone
-from .models import Merchant, Category
-from .forms import TransactionForm, MerchantForm, CategoryForm, ExcelUploadForm
-from apps.businesses.models import Account, Business
+import logging
+import mimetypes
+from datetime import datetime, date
 from decimal import Decimal
 
-from django.http import FileResponse, Http404
-from .models import Attachment
-from .forms import AttachmentForm
-import mimetypes
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.paginator import Paginator
+from django.db.models import Sum, Q, Count
+from django.db.models.functions import ExtractMonth
+from django.http import FileResponse, HttpResponse
+from django.shortcuts import render, redirect, get_object_or_404
+from django.utils import timezone
+from django.views.generic import TemplateView
 
-
-from django.http import HttpResponse
-from .utils import generate_transaction_template, process_transaction_excel, export_transactions_to_excel
-import logging
+from apps.businesses.models import Account, Business
+from .models import Transaction, Merchant, Category, Attachment
+from .forms import (
+    TransactionForm, 
+    MerchantForm, 
+    CategoryForm, 
+    ExcelUploadForm, 
+    AttachmentForm
+)
+from .utils import (
+    generate_transaction_template, 
+    process_transaction_excel, 
+    export_transactions_to_excel
+)
 
 logger = logging.getLogger(__name__)
 
@@ -670,26 +673,56 @@ class VATReportView(LoginRequiredMixin, TemplateView):
         estimated_tax = total_sales_vat - total_purchase_vat
 
         
-        # 6. 월별 집계 로직 (최적화 버전)
+        # ========================================
+        # 6. 월별 부가세 집계 (최적화된 쿼리)
+        # ========================================
+        # 
+        # 문제: 각 월마다 개별 쿼리 실행 (3개월이면 6번 쿼리)
+        # 해결: 1번의 쿼리로 모든 월 데이터 가져오기
+        # ========================================
+
+        # 1. DB에서 월별로 그룹화하여 합계를 한 번에 가져오기
+        #    쿼리 1번으로 모든 월의 IN/OUT 데이터 조회
         monthly_data = base_qs.annotate(
-        m=ExtractMonth('occurred_at')
+            m=ExtractMonth('occurred_at')  # 월 추출
         ).values('m', 'tx_type').annotate(
-            vat_sum=Sum('vat_amount')
+            vat_sum=Sum('vat_amount')  # 월별, 유형별 부가세 합계
         ).order_by('m')
 
-        # 데이터를 템플릿에서 쓰기 좋게 가공
+        # 예시 결과:
+        # [
+        #     {'m': 1, 'tx_type': 'IN', 'vat_sum': 100000},   # 1월 매출세액
+        #     {'m': 1, 'tx_type': 'OUT', 'vat_sum': 50000},   # 1월 매입세액
+        #     {'m': 2, 'tx_type': 'IN', 'vat_sum': 150000},   # 2월 매출세액
+        #     ...
+        # ]
+
+        # 2. 가져온 데이터를 템플릿에서 쓰기 좋게 가공
         monthly_stats = []
-        for m in range(start_month, end_month + 1):
-            # next()의 기본값인 0이 반환되더라도, item['vat_sum'] 자체가 None일 수 있으므로 마지막에 'or 0' 추가
-            m_sales = next((item['vat_sum'] for item in monthly_data if item['m'] == m and item['tx_type'] == 'IN'), 0) or 0
-            m_purchase = next((item['vat_sum'] for item in monthly_data if item['m'] == m and item['tx_type'] == 'OUT'), 0) or 0
+        for m in range(start_month, end_month + 1):  # 분기 내 모든 월 순회
+            # next()로 해당 월의 IN/OUT 데이터 찾기
+            # 없으면 0 반환 (or 0으로 None 방지)
+            m_sales = next(
+                (item['vat_sum'] for item in monthly_data 
+                if item['m'] == m and item['tx_type'] == 'IN'), 
+                0
+            ) or 0
+            
+            m_purchase = next(
+                (item['vat_sum'] for item in monthly_data 
+                if item['m'] == m and item['tx_type'] == 'OUT'), 
+                0
+            ) or 0
             
             monthly_stats.append({
                 'month': m,
-                'sales_vat': m_sales,
-                'purchase_vat': m_purchase,
-                'net_vat': m_sales - m_purchase  # 이제 0 - 0 = 0 으로 정상 계산됩니다.
-        })
+                'sales_vat': m_sales,        # 매출세액
+                'purchase_vat': m_purchase,  # 매입세액
+                'net_vat': m_sales - m_purchase  # 차감 납부세액
+            })
+
+        # 결과: 쿼리 1번으로 모든 월 데이터 처리 완료!
+        
         # 7. 거래 내역 필터링 (특정 월 선택 시)
         if month:
             transaction_qs = base_qs.filter(occurred_at__month=month)

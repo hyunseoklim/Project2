@@ -2,9 +2,6 @@ from django.db import models, transaction
 from django.contrib.auth.models import User
 from django.core.validators import FileExtensionValidator, MinValueValidator
 from django.core.exceptions import ValidationError
-from django.db.models.signals import post_delete
-from django.dispatch import receiver
-from django.db.models import F
 from decimal import Decimal
 import uuid
 import os
@@ -12,10 +9,8 @@ import logging
 
 from apps.core.models import TimeStampedModel, SoftDeleteModel
 from apps.businesses.models import Business, Account
-from django.db.models.signals import pre_save
 
 logger = logging.getLogger(__name__)
-
 # 상수
 ATTACHMENT_MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB
 

@@ -17,7 +17,7 @@ from django.db.models import Q
 from decimal import Decimal, ROUND_HALF_UP
 from .models import Transaction, Merchant, Category, Attachment
 from apps.businesses.models import Account, Business
-import re
+
 
 class TransactionForm(forms.ModelForm):
     """거래 입력/수정 폼"""

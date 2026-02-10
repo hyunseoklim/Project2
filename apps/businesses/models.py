@@ -1,26 +1,19 @@
-# =============================================================================
-# businesses/models.py - 사업장 및 계좌 관리
-# =============================================================================
-
 """
 사업장 및 계좌 관리
 
 다중 사업장(지점) 운영을 지원하며, 각 사업장별로 계좌를 연결할 수 있습니다.
 """
 import logging
-import os
 import re
 from decimal import Decimal
 
 from django.contrib.auth.models import User
-from django.core.exceptions import ValidationError
-from django.core.validators import FileExtensionValidator, MinValueValidator
-from django.db import models, transaction
+from django.core.validators import MinValueValidator
+from django.db import models
 from django.db.models import F, Sum
-from django.db.models.signals import post_delete
-from django.dispatch import receiver
 
 from apps.core.models import SoftDeleteModel
+
 logger = logging.getLogger(__name__)
 
 
@@ -159,25 +152,48 @@ class Account(SoftDeleteModel):
         return masked_res
 
     def update_balance(self, amount, tx_type):
-        """계좌 잔액 업데이트 (F() 표현식으로 race condition 방지)"""
+    
+    # 계좌 잔액 업데이트 (동시성 안전)
+
+    # F() 표현식을 사용하여 Race Condition 방지:
+    # - 일반적인 방법: balance = balance + amount (위험!)
+    #   → 동시에 2개 요청이 들어오면 한 번만 반영될 수 있음
+    
+    # - F() 사용: UPDATE balance = balance + amount (안전!)
+    #   → DB 레벨에서 원자적으로 처리, 동시성 문제 없음
+    
+    # Args:
+    #     amount: 변경할 금액
+    #     tx_type: 'IN' (입금) 또는 'OUT' (출금)
+    
+    # Example:
+    #     # 10,000원 입금
+    #     account.update_balance(Decimal('10000'), 'IN')
+        
+    #     # 5,000원 출금
+    #     account.update_balance(Decimal('5000'), 'OUT')
+
         if tx_type not in ['IN', 'OUT']:
             raise ValueError(f"잘못된 tx_type: {tx_type}")
         
         from django.utils import timezone
         
-        # F() 표현식으로 한 번에 업데이트 (쿼리 1개로 줄임)
+        # F() 표현식으로 DB 레벨에서 직접 연산
+        # → 메모리에 로드하지 않고 UPDATE 쿼리 1개로 처리
         if tx_type == 'IN':
+            # 입금: 잔액 증가
             Account.objects.filter(pk=self.pk).update(
                 balance=F('balance') + amount,
                 updated_at=timezone.now()
             )
         else:
+            # 출금: 잔액 감소
             Account.objects.filter(pk=self.pk).update(
                 balance=F('balance') - amount,
                 updated_at=timezone.now()
             )
         
-        # 업데이트된 값 메모리에 반영
+        # DB에서 변경된 값을 메모리에 반영 (self.balance 업데이트)
         self.refresh_from_db(fields=['balance'])
 
     def hard_delete(self):
