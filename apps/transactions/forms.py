@@ -1,10 +1,11 @@
 from django import forms
 from django.core.exceptions import ValidationError
 from django.db.models import Q
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 
 from .models import Transaction, Merchant, Category, Attachment, MerchantCategory
 from apps.businesses.models import Account, Business
+
 
 
 class TransactionForm(forms.ModelForm):
@@ -68,50 +69,41 @@ class TransactionForm(forms.ModelForm):
         self.fields['vat_amount'].required = False
 
     def clean(self):
-        """폼 전체 검증 및 부가세 자동 계산"""
         cleaned_data = super().clean()
         
-        # 1. 거래처 검증: 선택 또는 직접 입력 중 하나는 필수
+        # ========================================
+        # 1. 거래처 필수 검증
+        # ========================================
+        # 거래처 선택(merchant) 또는 직접 입력(merchant_name) 중
+        # 최소 하나는 반드시 입력되어야 함
         merchant = cleaned_data.get('merchant')
         merchant_name = cleaned_data.get('merchant_name')
         if not merchant and not merchant_name:
             raise ValidationError('거래처를 선택하거나 직접 입력하세요.')
         
-        # 2. 부가세 계산 관련 필드 가져오기
-        tx_type = cleaned_data.get('tx_type')  # 수입(IN) / 지출(OUT)
-        is_business = cleaned_data.get('is_business', True)  # 사업용 거래 여부
-        tax_type = cleaned_data.get('tax_type', 'taxable')  # 과세(taxable) / 면세(tax_free)
-        amount = cleaned_data.get('amount')  # 사용자가 입력한 총금액
-        vat_amount = cleaned_data.get('vat_amount')  # 사용자가 입력한 부가세 (선택)
-        
-        # 3. 부가세 자동 계산 조건:
-        #    - 금액이 입력되었고
-        #    - 부가세가 비어있고
-        #    - 지출(OUT)이고
-        #    - 사업용 거래이고
-        #    - 과세 거래인 경우
-        if amount and not vat_amount:
-            if tx_type == 'OUT' and is_business and tax_type == 'taxable':
-                # 총금액 11,000원 입력 시:
-                # - 공급가액 = 11,000 ÷ 1.1 = 10,000원
-                # - 부가세 = 11,000 - 10,000 = 1,000원
-                supply = (amount / Decimal('1.1')).quantize(
-                    Decimal('0.01'), 
-                    rounding=ROUND_HALF_UP
-                )
-                vat = (amount - supply).quantize(
-                    Decimal('0.01'), 
-                    rounding=ROUND_HALF_UP
-                )
-                
-                # cleaned_data 업데이트
-                cleaned_data['amount'] = supply  # amount는 공급가액으로 저장
-                cleaned_data['vat_amount'] = vat  # vat_amount는 부가세로 저장
-            else:
-                # 수입, 개인용, 면세 거래는 부가세 0원
-                cleaned_data['vat_amount'] = Decimal('0')
+        # ========================================
+        # 2. 부가세 자동 계산
+        # ========================================
+        # 부가세 계산에 필요한 필드 가져오기
+        is_business = cleaned_data.get('is_business', True) # 사업용 거래 여부 (기본값: True)
+        tax_type = cleaned_data.get('tax_type', 'taxable') # 과세 유형 (기본값: 과세)
+        amount = cleaned_data.get('amount') # 공급가액 (사용자 입력)
+        vat_amount = cleaned_data.get('vat_amount') # 부가세액 (사용자 입력, 선택사항)
+
+        # 부가세 자동 계산 조건:
+        #   1) 사업용 거래 (is_business=True)
+        #   2) 과세 거래 (tax_type='taxable')
+        #   3) 공급가액이 입력되었고 (amount 존재)
+        #   4) 부가세가 입력되지 않은 경우 (vat_amount 없음)
+        # → 공급가액의 10%를 부가세로 자동 계산 
+        if is_business and tax_type == 'taxable' and amount and not vat_amount:
+            # 공급가액 × 10% = 부가세
+            # 예: amount=10000 → vat_amount=1000
+            # quantize: 소수점 2자리로 반올림
+            cleaned_data['vat_amount'] = (amount * Decimal('0.1')).quantize(Decimal('0.01'))
         
         return cleaned_data
+
 
 
 class MerchantForm(forms.ModelForm):
