@@ -292,7 +292,7 @@
             {% if not bracket_info.is_max %}
             <div class="alert alert-info mt-3 mb-0">
                 <small>
-                    💡 소득이 <strong>{{ bracket_info.distance|floatformat:0 }}원</strong> 더 늘어나면 
+                    💡 소득이 <strong>{{ bracket_info.distance|floatformat:0|intcomma }}원</strong> 더 늘어나면 
                     세율이 <strong>{{ bracket_info.current_rate_percent }}% → {{ bracket_info.next_rate_percent }}%</strong>로 올라갑니다.
                 </small>
             </div>
