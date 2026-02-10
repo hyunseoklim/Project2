@@ -520,7 +520,7 @@ def export_transactions_to_excel(queryset):
         
         # Decimal을 float으로 변환 (엑셀 호환)
         total = float(tx.total_amount) if tx.total_amount else 0
-        supply = float(tx.amount) if tx.amount else 0
+        supply = float(tx.supply_value) if tx.amount else 0
         vat = float(tx.vat_amount) if tx.vat_amount else 0
         
         row = [
