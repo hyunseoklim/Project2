@@ -7,15 +7,6 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 
-# Django 기본
-from django.shortcuts import render, redirect
-from django.urls import reverse_lazy
-from django.contrib import messages
-from django.contrib.auth import login as auth_login, update_session_auth_hash
-from django.contrib.auth.decorators import login_required
-from django.core.exceptions import ValidationError
-from django.utils import timezone
-
 # Django 인증 관련
 from django.contrib.auth.views import (
     LoginView as DjangoLoginView,

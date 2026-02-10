@@ -34,7 +34,7 @@ class Profile(TimeStampedModel):
         max_length=10,
         blank=True,
         validators=[BUSINESS_NUMBER_VALIDATOR],
-        null=True,  # null=True 추가 권장 (아래 설명 참조)
+        null=True,  
         unique=True, # 중복 방지의 핵심!
     )
     business_type = models.CharField(max_length=20, choices=BUSINESS_TYPE_CHOICES, blank=True)
