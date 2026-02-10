@@ -19,7 +19,7 @@ from .models import Profile
 from django.contrib.messages.views import SuccessMessageMixin
 from django.contrib.auth.views import PasswordChangeView
 from apps.transactions.models import Transaction
-from apps.businesses.models import Business
+from apps.businesses.models import Business, Account
 from django.db.models.functions import ExtractMonth
 from datetime import timedelta
 
@@ -74,24 +74,55 @@ def signup(request):
 
 def home(request):
     """
-    홈 페이지
-    - 로그인 상태에 따라 동적 렌더링
-    - 단일 템플릿 사용 (home.html)
+    배포용 정식 홈: 전월 대비 지출 분석 및 성장형 대시보드 요약
     """
-    context = {}
     if request.user.is_authenticated:
-        # 로그인 시 → 빠른 메뉴만 있는 홈
-        uncategorized_count = Transaction.active.filter(
-            user=request.user,
-            category__isnull=True
-        ).count()
+        # 1. 시간 설정 (이번 달 vs 저번 달)
+        today = timezone.now()
+        this_month_start = today.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         
+        last_month_end = this_month_start - timedelta(days=1)
+        last_month_start = last_month_end.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+
+        # 2. 데이터 집계
+        # 이번 달 지출
+        monthly_expense = Transaction.active.filter(
+            user=request.user,
+            tx_type='OUT',
+            occurred_at__gte=this_month_start
+        ).aggregate(total=Sum('amount'))['total'] or 0
+
+        # 저번 달 지출
+        last_month_expense = Transaction.active.filter(
+            user=request.user,
+            tx_type='OUT',
+            occurred_at__range=(last_month_start, last_month_end)
+        ).aggregate(total=Sum('amount'))['total'] or 0
+
+        # 3. 데이터 가공 (증감액 및 그래프 퍼센트)
+        expense_diff = monthly_expense - last_month_expense
+        expense_diff_abs = abs(expense_diff)
+
+        # 전월 대비 퍼센트 계산 (그래프용)
+        if last_month_expense > 0:
+            # 100%가 넘더라도 그래프가 깨지지 않게 계산하되, UI에서 100% 이상임을 표시
+            expense_percent = int((monthly_expense / last_month_expense) * 100)
+        else:
+            # 저번 달 기록이 없으면 이번 달 지출이 있는 경우 100%, 없으면 0%
+            expense_percent = 100 if monthly_expense > 0 else 0
+
         context = {
-            'uncategorized_count': uncategorized_count,
+            'monthly_expense': monthly_expense,
+            'last_month_expense': last_month_expense,
+            'expense_diff': expense_diff,
+            'expense_diff_abs': expense_diff_abs,
+            'expense_percent': expense_percent,
+            'business_count': Business.objects.filter(user=request.user, is_active=True).count(),
+            'account_count': Account.objects.filter(business__user=request.user, is_active=True).count(),
         }
-        return render(request, "accounts/imsi_home.html", context)
+        return render(request, "accounts/home_loggedin.html", context)
+    
     else:
-        # 로그아웃 시 → 랜딩 페이지
         return render(request, "accounts/home.html")
 
 

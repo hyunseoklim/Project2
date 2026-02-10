@@ -1,65 +1,67 @@
-{% load static %}
+<div class="sidebar-content">
+    <div class="nav-section mt-3">
+        <small class="text-muted fw-bold text-uppercase px-4" style="font-size: 0.7rem; letter-spacing: 1px;">Main</small>
+        <ul class="nav-list">
+            <li class="nav-item">
+                <a href="{% url 'accounts:home' %}" class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
+                    🏠 <span class="ms-1">홈</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'accounts:dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                    📊 <span class="ms-1">대시보드</span>
+                </a>
+            </li>
+        </ul>
+    </div>
 
-<ul class="nav-list">
-    <li class="nav-item">
-        <a href="{% url 'accounts:home' %}" class="nav-link">
-            <span class="nav-icon">🏠</span>
-            <span class="nav-text">홈</span>
-        </a>
-    </li>
-    <li class="nav-item">
-        <a href="{% url 'accounts:dashboard' %}" class="nav-link">
-            <span class="nav-icon">📊</span>
-            <span class="nav-text">대시보드</span>
-        </a>
-    </li>
-    <li class="nav-item">
-        <a href="{% url 'transactions:transaction_list' %}" class="nav-link">
-            <span class="nav-icon">💰</span>
-            <span class="nav-text">거래 관리</span>
-        </a>
-    </li>
-    <li class="nav-item">
-        <a href="{% url 'businesses:business_list' %}" class="nav-link">
-            <span class="nav-icon">🏢</span>
-            <span class="nav-text">사업장 관리</span>
-        </a>
-    </li>
-    <li class="nav-item">
-        <a href="{% url 'transactions:merchant_list' %}" class="nav-link">
-            <span class="nav-icon">🏷️</span>
-            <span class="nav-text">거래처 관리</span>
-        </a>
-    </li>
-    <li class="nav-item">
-        <a href="{% url 'businesses:account_list' %}" class="nav-link">
-            <span class="nav-icon">🏦</span>
-            <span class="nav-text">계좌 관리</span>
-        </a>
-    </li>
-    <li class="nav-item">
-        <a href="{% url 'accounts:profile_detail' %}" class="nav-link">
-            <span class="nav-icon">👤</span>
-            <span class="nav-text">사업자 프로필</span>
-        </a>
-    </li>
-    
-    <div class="sidebar-divider"></div>
-    
-    <li class="nav-item">
-        <a href="{% url 'accounts:password_change' %}" class="nav-link">
-            <span class="nav-icon">🔒</span>
-            <span class="nav-text">비밀번호 변경</span>
-        </a>
-    </li>
+    <div class="nav-section mt-2">
+        <small class="text-muted fw-bold text-uppercase px-4" style="font-size: 0.7rem; letter-spacing: 1px;">Management</small>
+        <ul class="nav-list">
+            <li class="nav-item">
+                <a href="{% url 'transactions:transaction_list' %}" class="nav-link {% if 'transaction_list' in request.path %}active{% endif %}">
+                    📒 <span class="ms-1">거래 관리</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'businesses:business_list' %}" class="nav-link {% if 'business_list' in request.path %}active{% endif %}">
+                    🏢 <span class="ms-1">사업장 관리</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'transactions:merchant_list' %}" class="nav-link {% if 'merchant_list' in request.path %}active{% endif %}">
+                    🤝 <span class="ms-1">거래처 관리</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'businesses:account_list' %}" class="nav-link {% if 'account_list' in request.path %}active{% endif %}">
+                    💳 <span class="ms-1">계좌 관리</span>
+                </a>
+            </li>
+        </ul>
+    </div>
 
-    <li class="nav-item mt-auto">
-        <form action="{% url 'accounts:logout' %}" method="post">
-            {% csrf_token %}
-            <button type="submit" class="nav-link logout-btn-reset w-100 border-0 bg-transparent text-start">
-                <span class="nav-icon">🔓</span>
-                <span class="nav-text">로그아웃</span>
-            </button>
-        </form>
-    </li>
-</ul>
+    <div class="nav-section mt-2">
+        <small class="text-muted fw-bold text-uppercase px-4" style="font-size: 0.7rem; letter-spacing: 1px;">Report</small>
+        <ul class="nav-list">
+            <li class="nav-item">
+                <a href="{% url 'transactions:vat_report_default' %}" class="nav-link {% if 'vat_report' in request.path %}active{% endif %}">
+                    📑 <span class="ms-1">세무 리포트</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <hr class="mx-4 my-3" style="opacity: 0.1;">
+
+    <div class="px-4 mb-4">
+        <a href="{% url 'accounts:profile_detail' %}" class="d-flex align-items-center text-decoration-none sidebar-user-link">
+            <img src="https://ui-avatars.com/api/?name={{ user.username }}&background=FFD93D&color=212121&bold=true" 
+                 alt="" width="26" height="26" class="rounded-circle me-2">
+            <span class="user-name-info">
+                <strong class="user-name-text">{{ user.username }}</strong>
+                <span class="user-suffix">님</span>
+            </span>
+        </a>
+    </div>
+</div>
