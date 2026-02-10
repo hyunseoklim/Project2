@@ -10,6 +10,7 @@ from apps.businesses.models import Account, Business
 from apps.transactions.models import Category, Transaction, Merchant, MerchantCategory
 
 
+# Fixtures
 @pytest.fixture
 def test_user(db):
     return User.objects.create_user(username='tester', password='pass')
@@ -52,6 +53,7 @@ def merchant(test_user):
     return Merchant.objects.create(user=test_user, name='테스트 거래처')
 
 
+# Transaction views tests
 @pytest.mark.django_db
 class TestTransactionViews:
     def test_transaction_list_requires_login(self, client):
@@ -190,6 +192,7 @@ class TestTransactionViews:
         assert response.context['transaction'].id == tx.id
 
 
+# Monthly summary view tests
 @pytest.mark.django_db
 class TestMonthlyViews:
     def test_monthly_summary_view_renders(self, auth_client, test_user, business, account, income_category, expense_category):

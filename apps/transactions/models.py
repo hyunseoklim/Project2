@@ -266,6 +266,7 @@ class Transaction(SoftDeleteModel):
                 self.account.update_balance(self.amount, self.tx_type)
             else:
                 if old_account != self.account or old_amount != self.amount or old_tx_type != self.tx_type:
+                    # Reverse the previous impact before applying the updated transaction.
                     reverse_type = 'OUT' if old_tx_type == 'IN' else 'IN'
                     old_account.update_balance(old_amount, reverse_type)
                     self.account.update_balance(self.amount, self.tx_type)
@@ -348,6 +349,7 @@ class Attachment(TimeStampedModel):
                 old_obj = Attachment.objects.get(pk=self.pk)
                 # 새로운 파일이 업로드되었고 기존 파일과 다를 때만 삭제
                 if old_obj.file and self.file != old_obj.file:
+                    # Delete the old file to prevent orphaned uploads.
                     # 장고 storage API를 사용하여 실제 파일 삭제
                     old_obj.file.storage.delete(old_obj.file.name)
             except Attachment.DoesNotExist:
