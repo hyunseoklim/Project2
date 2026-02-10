@@ -1,23 +1,32 @@
-from django.contrib.auth.forms import UserCreationForm
-from django.contrib.auth.views import LoginView as DjangoLoginView
-from django.contrib.auth.views import LogoutView as DjangoLogoutView
-from django.contrib.auth.views import PasswordChangeView
-from django.contrib.messages.views import SuccessMessageMixin
+# Django 기본
 from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login as auth_login, update_session_auth_hash
+from django.contrib.auth.decorators import login_required
+from django.core.exceptions import ValidationError
+from django.utils import timezone
+
+# Django 인증 관련
+from django.contrib.auth.views import (
+    LoginView as DjangoLoginView,
+    LogoutView as DjangoLogoutView,
+    PasswordChangeView
+)
+from django.contrib.messages.views import SuccessMessageMixin
+
+# 데이터베이스
 from django.db import IntegrityError, transaction
 from django.db.models import Sum, Count, Q, DecimalField, Value, F
 from django.db.models.functions import Coalesce
-from django.utils import timezone
-from django.core.exceptions import ValidationError
+
+# 기타
 import logging
+from datetime import timedelta
+
+# 앱 내부
 from .forms import ProfileForm, CustomUserCreationForm
 from .models import Profile
-from django.contrib.messages.views import SuccessMessageMixin
-from django.contrib.auth.views import PasswordChangeView
 from apps.transactions.models import Transaction
 from apps.businesses.models import Business, Account
 from django.db.models.functions import ExtractMonth
@@ -174,43 +183,53 @@ def dashboard(request):
     profit_diff = net_profit - prev_profit
     profit_diff_percent = round((profit_diff / prev_profit * 100), 1) if prev_profit != 0 else 0
 
-    # 5. 카테고리별 집계 (지출만) - 이번 달
+    # ========================================
+    # 5. 카테고리별 지출 분석 (전월 대비 포함)
+    # ========================================
+
+    # 1. 이번 달 카테고리별 집계
     category_stats = monthly_qs.filter(tx_type='OUT').values('category__name').annotate(
         total=Sum('amount'),
         count=Count('id')
     ).order_by('-total')
-    
-    # 6. 카테고리별 집계 (지출만) - 전월
+
+    # 2. 전월 카테고리별 집계 (비교용)
     prev_category_stats = prev_monthly_qs.filter(tx_type='OUT').values('category__name').annotate(
         total=Sum('amount')
     )
-    
-    # 전월 데이터를 딕셔너리로 변환 (빠른 조회)
+
+    # 3. 전월 데이터를 딕셔너리로 변환 (빠른 조회를 위해)
+    #    예: {'식비': 500000, '교통비': 100000, ...}
     prev_category_dict = {item['category__name']: item['total'] for item in prev_category_stats}
-    
-    # 카테고리별 비율 계산 + 전월 대비 + 건당 평균
+
+    # 4. 이번 달 데이터에 분석 정보 추가
     for stat in category_stats:
-        # 비율
+        # 4-1. 전체 지출 대비 비율 계산
+        #      예: 식비 50만원 ÷ 총 지출 200만원 = 25%
         if total_expense > 0:
             stat['percentage'] = round((stat['total'] / total_expense) * 100, 1)
         else:
             stat['percentage'] = 0
         
-        # 건당 평균
+        # 4-2. 거래 건당 평균 금액
+        #      예: 식비 총 50만원 ÷ 10건 = 건당 5만원
         stat['avg_per_transaction'] = stat['total'] / stat['count'] if stat['count'] > 0 else 0
         
-        # 전월 대비
+        # 4-3. 전월 대비 증감 분석
         category_name = stat['category__name']
-        prev_total = prev_category_dict.get(category_name, 0)
+        prev_total = prev_category_dict.get(category_name, 0)  # 전월 금액 조회
         
         if prev_total > 0:
-            stat['prev_total'] = prev_total
-            stat['diff'] = stat['total'] - prev_total
-            stat['diff_percent'] = round((stat['diff'] / prev_total * 100), 1)
+            # 전월 데이터가 있는 경우
+            stat['prev_total'] = prev_total  # 전월 금액
+            stat['diff'] = stat['total'] - prev_total  # 증감액 (이번달 - 전월)
+            stat['diff_percent'] = round((stat['diff'] / prev_total * 100), 1)  # 증감률
+            # 예: 이번달 60만원, 전월 50만원 → +10만원, +20%
         else:
+            # 전월 데이터가 없는 경우 (새로운 카테고리)
             stat['prev_total'] = 0
-            stat['diff'] = stat['total']
-            stat['diff_percent'] = 0  # 전월 데이터 없으면 0
+            stat['diff'] = stat['total']  # 전액이 증가
+            stat['diff_percent'] = 0  # 비교 불가
 
     # 7. 최근 거래 (상위 5개)
     recent_transactions = Transaction.objects.filter(
@@ -218,7 +237,7 @@ def dashboard(request):
         occurred_at__lte=timezone.now()
     ).order_by('-occurred_at', '-id')[:5]
 
-    # 8. 사업장별 집계
+    # 7. 사업장별 집계
     businesses = Business.objects.filter(
         user=request.user,
         is_active=True
@@ -242,7 +261,7 @@ def dashboard(request):
         profit=F('revenue') - F('expense')
     ).order_by('branch_type', 'name')
 
-    # 9. Context
+    # 8. Context
     context = {
         'user': request.user,
         'profile': profile,

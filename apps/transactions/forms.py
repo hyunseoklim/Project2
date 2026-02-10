@@ -1,13 +1,12 @@
 from django import forms
 from django.core.exceptions import ValidationError
 from django.db.models import Q
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 
-
-from apps.accounts import models
 from .models import Transaction, Merchant, Category, Attachment, MerchantCategory
 from apps.businesses.models import Account, Business
-import re
+
+
 
 class TransactionForm(forms.ModelForm):
     """거래 입력/수정 폼"""
@@ -80,22 +79,39 @@ class TransactionForm(forms.ModelForm):
                 f"해당 계좌는 현재 잔액이 {balance_value}입니다. 마이너스 잔액 계좌는 등록할 수 없습니다."
             )
         
-        # 거래처 필수 검증
+        # ========================================
+        # 1. 거래처 필수 검증
+        # ========================================
+        # 거래처 선택(merchant) 또는 직접 입력(merchant_name) 중
+        # 최소 하나는 반드시 입력되어야 함
         merchant = cleaned_data.get('merchant')
         merchant_name = cleaned_data.get('merchant_name')
         if not merchant and not merchant_name:
             raise ValidationError('거래처를 선택하거나 직접 입력하세요.')
         
-        # 부가세 자동 계산
-        is_business = cleaned_data.get('is_business', True)
-        tax_type = cleaned_data.get('tax_type', 'taxable')
-        amount = cleaned_data.get('amount')
-        vat_amount = cleaned_data.get('vat_amount')
-        
+        # ========================================
+        # 2. 부가세 자동 계산
+        # ========================================
+        # 부가세 계산에 필요한 필드 가져오기
+        is_business = cleaned_data.get('is_business', True) # 사업용 거래 여부 (기본값: True)
+        tax_type = cleaned_data.get('tax_type', 'taxable') # 과세 유형 (기본값: 과세)
+        amount = cleaned_data.get('amount') # 공급가액 (사용자 입력)
+        vat_amount = cleaned_data.get('vat_amount') # 부가세액 (사용자 입력, 선택사항)
+
+        # 부가세 자동 계산 조건:
+        #   1) 사업용 거래 (is_business=True)
+        #   2) 과세 거래 (tax_type='taxable')
+        #   3) 공급가액이 입력되었고 (amount 존재)
+        #   4) 부가세가 입력되지 않은 경우 (vat_amount 없음)
+        # → 공급가액의 10%를 부가세로 자동 계산 
         if is_business and tax_type == 'taxable' and amount and not vat_amount:
+            # 공급가액 × 10% = 부가세
+            # 예: amount=10000 → vat_amount=1000
+            # quantize: 소수점 2자리로 반올림
             cleaned_data['vat_amount'] = (amount * Decimal('0.1')).quantize(Decimal('0.01'))
         
         return cleaned_data
+
 
 
 class MerchantForm(forms.ModelForm):
@@ -182,6 +198,7 @@ class MerchantForm(forms.ModelForm):
             raise ValidationError('사업자등록번호는 10자리여야 합니다.')
 
         return f"{cleaned[:3]}-{cleaned[3:5]}-{cleaned[5:]}"
+        
 class CategoryForm(forms.ModelForm):
     class Meta:
         model = Category

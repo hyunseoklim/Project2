@@ -32,42 +32,67 @@ def calculate_amounts(total, supply, vat, row_number):
     금융 데이터이므로 1원 오차도 허용하지 않음!
     모든 계산은 Decimal + quantize로 정확성 보장
     
-    반환: (공급가액, 부가세, 에러메시지)
+    Args:
+        total: 총금액 (공급가액 + 부가세)
+        supply: 공급가액 (부가세 제외)
+        vat: 부가세액
+        row_number: 엑셀 행 번호 (에러 메시지용)
+    
+    Returns:
+        tuple: (공급가액, 부가세, 에러메시지)
+        - 성공 시: (Decimal, Decimal, None)
+        - 실패 시: (None, None, str)
+    
+    지원 시나리오:
+        A. 총금액만 입력 → 공급가액, 부가세 자동 계산 (10% 부가세)
+        B. 공급가액 + 부가세 입력 → 그대로 사용
+        C. 공급가액만 입력 → 부가세 자동 계산 (10%)
+        D. 부가세만 입력 → 공급가액 자동 계산 (역산)
+        E. 모두 입력 → 검증 (총금액 = 공급가액 + 부가세)
     """
     # 모두 Decimal + 소수점 2자리로 통일
     total = to_decimal(total)
     supply = to_decimal(supply)
     vat = to_decimal(vat)
     
-    # 모두 비어있음 (is None으로 체크!)
+    # 1. 입력값 검증: 모두 비어있으면 에러
     if total is None and supply is None and vat is None:
         return None, None, f"{row_number}행: 금액 정보가 비어있습니다."
     
-    # 시나리오 A: 총금액만 입력
+    # 2. 시나리오 A: 총금액만 입력 → 공급가액/부가세 자동 계산
+    # 총금액 11,000원 입력 → 공급가액 10,000원, 부가세 1,000원
     if total is not None and supply is None and vat is None:
+        # 총금액 ÷ 1.1 = 공급가액
         supply = (total / Decimal('1.1')).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+        # 총금액 - 공급가액 = 부가세
         vat = (total - supply).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
         return supply, vat, None
     
-    # 시나리오 B: 공급가액 + 부가세만 입력
+    # 3. 시나리오 B: 공급가액 + 부가세만 입력 → 그대로 사용
+    # 공급가액 10,000원, 부가세 1,000원 입력 → 그대로 저장
     if supply is not None and vat is not None and total is None:
         supply = supply.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
         vat = vat.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
         return supply, vat, None
     
-    # 시나리오 C: 공급가액만
+    # 4. 시나리오 C: 공급가액만 입력 → 부가세 자동 계산
+    # 공급가액 10,000원 입력 → 부가세 1,000원 (10%)
     if supply is not None and vat is None and total is None:
         supply = supply.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+        # 공급가액 × 0.1 = 부가세
         vat = (supply * Decimal('0.1')).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
         return supply, vat, None
     
-    # 시나리오 D: 부가세만
+    # 5. 시나리오 D: 부가세만 입력 → 공급가액 역산
+    # 부가세 1,000원 입력 → 공급가액 10,000원
     if vat is not None and supply is None and total is None:
         vat = vat.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+        # 부가세 × 10 = 공급가액
         supply = (vat * Decimal('10')).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
         return supply, vat, None
     
-    # 시나리오 E: 모두 입력 → 검증
+    # 6. 시나리오 E: 모두 입력 → 검증 (총금액 = 공급가액 + 부가세)
+    # 불일치 시 상세 에러 메시지 반환
     if total is not None and supply is not None and vat is not None:
         total = total.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
         supply = supply.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
@@ -78,6 +103,7 @@ def calculate_amounts(total, supply, vat, row_number):
         if total == calculated_total:
             return supply, vat, None
         else:
+            # 불일치 시 상세 에러 메시지
             return None, None, (
                 f"{row_number}행: 금액 불일치\n"
                 f"  입력 총금액: {total:,}원\n"
@@ -87,6 +113,7 @@ def calculate_amounts(total, supply, vat, row_number):
                 f"  차이: {(total - calculated_total):,}원"
             )
     
+    # 7. 그 외 모든 경우 (예: 총금액+공급가액만 입력 등) → 에러
     return None, None, f"{row_number}행: 금액 정보가 부족하거나 잘못되었습니다."
 
 
@@ -379,8 +406,22 @@ def process_transaction_excel(excel_file, user):
                     })
                     continue
                 # -----------------------------------------------------------
-                # 2. [여기서부터 추가] 중복 체크 로직
+                # 2. [여기서부터 추가] 중복 체크 로직 (성능 최적화)
                 # -----------------------------------------------------------
+                # 문제: 엑셀 파일에 동일한 거래가 여러 번 들어있거나,
+                #       이미 DB에 등록된 거래를 다시 업로드하는 경우
+                # 
+                # 해결: 거래의 '지문(fingerprint)'을 만들어 set에 저장
+                #       → O(1) 시간복잡도로 중복 체크 (DB 조회 없음!)
+                #
+                # 지문 구성 요소:
+                #   - 계좌번호: 어느 계좌에서 발생한 거래인지
+                #   - 거래유형(IN/OUT): 수입인지 지출인지
+                #   - 금액(공급가액 + 부가세): 얼마를 거래했는지
+                #   - 거래처명: 누구와 거래했는지
+                #   - 발생일시(연/월/일/시/분): 언제 거래했는지
+                #   → 이 모든 정보가 같으면 '중복'으로 판단
+                # -----------------------------------------------------------                
                 current_merchant_name = merchant_name_clean or (category.name if category else "")
                 clean_occurred_at = occurred_at.replace(second=0, microsecond=0)
                 
@@ -398,12 +439,14 @@ def process_transaction_excel(excel_file, user):
                     occurred_at.minute
                 )
 
-                # 2. [핵심] DB를 조회하지 않고, 위에서 만든 set에 이 지문이 있는지 확인합니다. (매우 빠름!)
+                # 2. DB 또는 이미 처리한 거래 중에 동일한 지문이 있는지 확인
+                #    있으면 중복이므로 건너뜀 (DB에 저장하지 않음)
                 if current_fingerprint in existing_transactions:
                     skipped_count += 1
                     continue
                 
-                # 중복이 아니라면, 이 데이터도 지문에 추가 (엑셀 내 중복 방지)
+                # 3. 중복이 아니라면, 이 지문을 set에 추가
+                #    (같은 엑셀 파일 내에서 중복 방지)
                 existing_transactions.add(current_fingerprint)
                 # -----------------------------------------------------------
 
