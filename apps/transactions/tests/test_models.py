@@ -9,6 +9,7 @@ from apps.businesses.models import Account, Business
 from apps.transactions.models import Category, Transaction, Merchant, MerchantCategory
 
 
+# Fixtures
 @pytest.fixture
 def test_user(db):
     return User.objects.create_user(username='tester', password='pass')
@@ -41,6 +42,7 @@ def expense_category():
     return Category.objects.create(name='경비', type='expense', is_system=True)
 
 
+# Category model tests
 @pytest.mark.django_db
 class TestCategoryModel:
     def test_category_str_method(self):
@@ -92,6 +94,7 @@ class TestCategoryModel:
             Category.objects.create(name='매출', type='income', is_system=True)
 
 
+# Merchant model tests
 @pytest.mark.django_db
 class TestMerchantModel:
     def test_merchant_str_method(self, test_user):
@@ -133,6 +136,7 @@ class TestMerchantModel:
         assert merchant2.is_active is True
 
 
+# Transaction model tests
 @pytest.mark.django_db
 class TestTransactionModel:
     def test_vat_auto_calculated_on_save(self, test_user, business, account, income_category):

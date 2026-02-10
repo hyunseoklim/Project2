@@ -196,12 +196,23 @@ def process_transaction_excel(excel_file, user):
                 # ========================================
                 # 날짜 처리
                 # ========================================
+
+                date_formats = [
+                    '%Y-%m-%d %H:%M:%S',
+                    '%Y-%m-%d %H:%M',
+                    '%Y-%m-%d',
+                    '%Y/%m/%d %H:%M',
+                    '%Y/%m/%d',
+                    '%Y.%m.%d %H:%M',  # 추가!
+                    '%Y.%m.%d',        # 추가!
+                ]
+
                 if isinstance(raw_date, datetime):
                     occurred_at = raw_date
                 else:
                     try:
                         date_str = str(raw_date).strip()
-                        for fmt in ['%Y-%m-%d %H:%M:%S', '%Y-%m-%d %H:%M', '%Y-%m-%d', '%Y/%m/%d']:
+                        for fmt in date_formats:
                             try:
                                 occurred_at = datetime.strptime(date_str, fmt)
                                 break
@@ -443,10 +454,31 @@ def process_transaction_excel(excel_file, user):
         if new_merchants:
             Merchant.objects.bulk_create(new_merchants.values())
             print(f"  ✅ 거래처 {len(new_merchants)}개 생성")
-        
+
         if success_list:
             Transaction.objects.bulk_create(success_list)
             print(f"  ✅ 거래 {len(success_list)}건 생성")
+            
+            # 계좌 잔액 업데이트 추가!
+            from collections import defaultdict
+            from django.db.models import F
+            
+            account_changes = defaultdict(lambda: Decimal('0'))
+            
+            for tx in success_list:
+                if tx.account:
+                    if tx.tx_type == 'IN':
+                        account_changes[tx.account.id] += tx.amount
+                    else:
+                        account_changes[tx.account.id] -= tx.amount
+            
+            for account_id, change in account_changes.items():
+                Account.objects.filter(id=account_id).update(
+                    balance=F('balance') + change
+                )
+            
+            print(f"  ✅ 계좌 잔액 업데이트 완료 ({len(account_changes)}개 계좌)")
+
     
     print("✅ 완료!")
     
