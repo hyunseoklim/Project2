@@ -50,6 +50,26 @@ class Business(SoftDeleteModel):
 
     def __str__(self):
         return self.name
+
+    def get_masked_registration_number(self):
+        if not self.registration_number:
+            return "-"
+
+        original = str(self.registration_number)
+        nums_only = re.sub(r"[^0-9]", "", original)
+        if len(nums_only) < 5:
+            return "*****"
+
+        count = 0
+        masked_list = list(original)
+        for i in range(len(masked_list) - 1, -1, -1):
+            if masked_list[i].isdigit():
+                masked_list[i] = "*"
+                count += 1
+            if count == 5:
+                break
+
+        return "".join(masked_list)
     
     def get_total_revenue(self, start_date=None, end_date=None):
         """

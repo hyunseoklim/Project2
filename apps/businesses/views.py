@@ -147,11 +147,14 @@ def account_detail(request, pk):
         pk=pk,
         user=request.user
     )
+
+    now = timezone.now()
     
     # 최근 거래 내역 5건
     recent_transactions = account.transactions.filter(
-        is_active=True
-    ).select_related('category', 'merchant').order_by('-occurred_at')[:5]
+        is_active=True,
+        occurred_at__lte=now
+    ).select_related('category', 'merchant').order_by('-occurred_at', '-id')[:5]
 
         # 통계 계산
     stats = account.transactions.filter(is_active=True).aggregate(

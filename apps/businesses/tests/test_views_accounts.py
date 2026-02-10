@@ -25,12 +25,18 @@ def client():
 
 @pytest.fixture
 def user(db):
-    """테스트용 사용자"""
-    return User.objects.create_user(
-        username='testuser',
-        email='test@example.com',
-        password='testpass123'
+    """테스트용 사용자 (이미 있으면 get)"""
+    user, _ = User.objects.get_or_create(
+        username='tester',
+        defaults={
+            'email': 'tester@example.com',
+            'password': 'testpass123'
+        }
     )
+    if not user.check_password('testpass123'):
+        user.set_password('testpass123')
+        user.save()
+    return user
 
 
 @pytest.fixture
@@ -46,7 +52,7 @@ def other_user(db):
 @pytest.fixture
 def authenticated_client(client, user):
     """로그인된 클라이언트"""
-    client.login(username='testuser', password='testpass123')
+    client.login(username='tester', password='testpass123')
     return client
 
 
