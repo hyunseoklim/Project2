@@ -7,6 +7,7 @@ from apps.accounts.models import Profile
 from django.contrib.auth import authenticate
 from django.db import IntegrityError
 
+
 @pytest.fixture
 def test_user(db):
     """테스트용 유저 생성"""
@@ -79,7 +80,7 @@ class TestAccountsView:
             category=temp_category, # 이것도
             account=temp_account,    # 필수 필드 추가
             merchant=temp_merchant,    # 필수 필드 추가
-            occurred_at='2026-02-07 12:00:00'
+            occurred_at=timezone.now()
         )
         
         url = reverse('accounts:home')
