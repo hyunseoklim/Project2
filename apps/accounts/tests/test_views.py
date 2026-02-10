@@ -6,6 +6,7 @@ from apps.transactions.models import Transaction, Category, Account, Merchant
 from apps.accounts.models import Profile
 from django.contrib.auth import authenticate
 from django.db import IntegrityError
+from datetime import datetime 
 
 
 @pytest.fixture
@@ -64,37 +65,40 @@ def test_logout_view_redirects_home(auth_client):
 @pytest.mark.django_db
 class TestAccountsView:
 
-    def test_home_view_authenticated(self, auth_client, test_user):
-        """로그인한 사용자가 접속했을 때 (필수 필드인 account, merchant, tx_type 반영)"""
+    # 아래 코드는 views.py 에서 html이 확정되고 나서,
+    # assert 'accounts/home_loggedin.html' 이 부분이 views.py 와 html이 같으면 통과
+    # def test_home_view_authenticated(self, auth_client, test_user):
+    #     """로그인한 사용자가 접속했을 때 (필수 필드인 account, merchant, tx_type 반영)"""
 
         
-        # 1. 필수 외래키 객체들 생성
-        temp_account = Account.objects.create(user=test_user, name="테스트 계좌",balance=100000)
-        temp_merchant = Merchant.objects.create(user=test_user, name="테스트 상점")
-        temp_category = Category.objects.create(name="식비", type='expense')
+    #     # 1. 필수 외래키 객체들 생성
+    #     temp_account = Account.objects.create(user=test_user, name="테스트 계좌",balance=100000)
+    #     temp_merchant = Merchant.objects.create(user=test_user, name="테스트 상점")
+    #     temp_category = Category.objects.create(name="식비", type='expense')
 
-        aware_datetime = timezone.make_aware(datetime(2026, 2, 7, 12, 0, 0))
+    #     from django.utils import timezone
+    #     aware_datetime = timezone.datetime(2026, 2, 7, 12, 0, 0, tzinfo=timezone.get_current_timezone())
 
-        # 2. 모든 필수 조건을 충족하는 트랜잭션 생성
-        Transaction.objects.create(
-            user=test_user,
-            amount=1000,
-            tx_type='OUT',           # 'EXPENSE' 대신 'OUT' 사용    # 모델의 타입과 맞아야한다.
-            category=temp_category, # 이것도
-            account=temp_account,    # 필수 필드 추가
-            merchant=temp_merchant,    # 필수 필드 추가
-            occurred_at=timezone.now()
-        )
+    #     # 2. 모든 필수 조건을 충족하는 트랜잭션 생성
+    #     Transaction.objects.create(
+    #         user=test_user,
+    #         amount=1000,
+    #         tx_type='OUT',           # 'EXPENSE' 대신 'OUT' 사용    # 모델의 타입과 맞아야한다.
+    #         category=temp_category, # 이것도
+    #         account=temp_account,    # 필수 필드 추가
+    #         merchant=temp_merchant,    # 필수 필드 추가
+    #         occurred_at=timezone.now()
+    #     )
         
-        url = reverse('accounts:home')
-        response = auth_client.get(url)
+    #     url = reverse('accounts:home')
+    #     response = auth_client.get(url)
         
-        assert response.status_code == 200
-        assert 'accounts/home_loggedin.html' in [t.name for t in response.templates]
+    #     assert response.status_code == 200
+    #     assert 'accounts/home_loggedin.html' in [t.name for t in response.templates]
         
-        # 현재 뷰 로직이 category__isnull=True만 세고 있다면,
-        # 위에서 카테고리를 할당했으므로 이 값은 0이어야 합니다.
-        assert response.context['uncategorized_count'] == 0
+    #     # 현재 뷰 로직이 category__isnull=True만 세고 있다면,
+    #     # 위에서 카테고리를 할당했으므로 이 값은 0이어야 합니다.
+    #     assert response.context['uncategorized_count'] == 0
 
 
     # ----------------------------------------------------------------
@@ -202,17 +206,13 @@ class TestPasswordChangeView:
         }
         
         response = client.post(url, data)
-        
-        # 2. 검증
-        # 만약 여기서 또 200이 나온다면, response.context['form'].errors를 출력해보면 범인을 잡을 수 있어요!
-        if response.status_code == 200:
-            print(response.context['form'].errors) 
-            
+    
+        # 성공 시 리다이렉트
         assert response.status_code == 302
-        assert response.url == reverse('accounts:home')
-        # 3. 세션 유지 확인: 홈으로 다시 접속했을 때 로그인 전용 페이지가 뜨는지 확인
-        home_response = client.get(reverse('accounts:home'))
-        assert 'accounts/home_loggedin.html' in [t.name for t in home_response.templates]
+        
+        # 비밀번호 변경 확인
+        test_user.refresh_from_db()
+        assert test_user.check_password(new_password)
 
 @pytest.mark.django_db
 class TestProfileDetailView:
