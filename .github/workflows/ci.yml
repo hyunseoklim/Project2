@@ -31,7 +31,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: '3.11'  # 재용님 파이썬 버전에 맞게 수정
+        python-version: '3.12'  
     
     - name: Install dependencies
       run: |
