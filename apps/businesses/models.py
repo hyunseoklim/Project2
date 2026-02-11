@@ -20,37 +20,18 @@ logger = logging.getLogger(__name__)
 class Business(SoftDeleteModel):
     """사업장/지점 (다중 사업장 지원)"""
     
-    BRANCH_TYPE_CHOICES = [
-        ('main', '본점'),
-        ('branch', '지점'),
-    ]
-
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='businesses', db_index=True)
     name = models.CharField(max_length=100, db_index=True)
     location = models.CharField(max_length=200, blank=True)
     business_type = models.CharField(max_length=50, blank=True)
-    registration_number = models.CharField(
-        max_length=12, 
-        blank=True, 
-        verbose_name='사업자등록번호',
-        help_text='000-00-00000 형식'
-    )
-    branch_code = models.CharField(
-        max_length=4,
-        default='0001',
-        verbose_name='분류코드',
-        help_text='같은 사업자번호의 사업장 구분 (0001~9999)'
-    )
-    branch_type = models.CharField(
-        max_length=10,
-        choices=BRANCH_TYPE_CHOICES,
-        default='main',
-        verbose_name='점포 구분'
-    )
+    registration_number = models.CharField(max_length=12, blank=True)
 
     memo = models.TextField(blank=True, null=True, verbose_name="사업장 메모")
 
-    
+    BRANCH_TYPE_CHOICES = [
+        ('main', '본점'),
+        ('branch', '지점'),
+    ]
     branch_type = models.CharField(max_length=10, choices=BRANCH_TYPE_CHOICES, default='main', db_index=True)
 
     class Meta:
@@ -122,35 +103,6 @@ class Business(SoftDeleteModel):
         
         total = qs.aggregate(total=Sum('amount'))['total']
         return total or Decimal('0.00')
-    
-    def get_full_registration_number(self):
-        """사업자번호 + 분류코드"""
-        if self.registration_number:
-            return f"{self.registration_number} ({self.branch_code})"
-        return "-"
-    
-    def get_next_branch_code(self):
-        """같은 사업자번호의 다음 분류코드 생성"""
-        if not self.registration_number:
-            return "0001"
-        
-        existing = Business.objects.filter(
-            user=self.user,
-            registration_number=self.registration_number
-        ).exclude(pk=self.pk).count()
-        
-        return str(existing + 1).zfill(4)
-    
-    def save(self, *args, **kwargs):
-        # 새로 생성 시 branch_code 자동 설정
-        if not self.pk and self.registration_number:
-            if self.branch_code == '0001':  # 기본값인 경우
-                self.branch_code = self.get_next_branch_code()
-        
-        super().save(*args, **kwargs)
-        
-
-
 
 class Account(SoftDeleteModel):
     """은행 계좌 (잔액 자동 추적)"""
@@ -267,7 +219,6 @@ class Account(SoftDeleteModel):
     def hard_delete(self):
         """DB에서 데이터를 완전히 삭제 (복구 불가)"""
         # 부모 클래스(models.Model)의 실제 delete를 호출합니다.
-        self.transactions.all().delete()
         super().delete()
         logger.info(f"계좌 '{self.name}' (ID: {self.pk}) 가 DB에서 영구 삭제되었습니다.")
 

@@ -69,6 +69,36 @@ class ProfileForm(forms.ModelForm):
         return profile
 
     
+    def clean_business_registration_number(self):
+        # 1. 값 가져오기 및 전처리
+        brn = self.cleaned_data.get('business_registration_number')
+        
+        # 값이 비어있으면(blank=True) 이후 검사 없이 통과
+        if not brn:
+            return brn
+
+        # 사용자가 실수로 넣은 공백이나 하이픈(-) 제거
+        brn = brn.replace(" ", "").replace("-", "")
+
+        # 2. 형식 유효성 검사
+        if not brn.isdigit():
+            raise forms.ValidationError("사업자 번호는 숫자만 입력 가능합니다.")
+        
+        if len(brn) != 10:
+            raise forms.ValidationError("사업자 번호는 정확히 10자리여야 합니다.")
+
+        # 3. 중복 검사 (DB 조회)
+        # 현재 수정 중인 내 프로필은 제외하고 검색
+        exists = Profile.objects.exclude(user=self.instance.user).filter(
+            business_registration_number=brn
+        ).exists()
+        
+        if exists:
+            raise forms.ValidationError("이미 등록된 사업자 등록번호입니다.")
+            
+        # 최종적으로 정제된 번호를 반환
+        return brn
+    
 class CustomUserCreationForm(UserCreationForm):
     """
     커스텀 회원가입 폼
