@@ -298,7 +298,7 @@ def dashboard(request):
         'recent_transactions': recent_transactions,
         'businesses': businesses,
     }
-    return render(request, "accounts/home2.html", context)
+    return render(request, "accounts/main_dashboard.html", context)
 
 class MyPasswordChangeView(SuccessMessageMixin, PasswordChangeView):
     """

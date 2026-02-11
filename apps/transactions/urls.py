@@ -4,9 +4,8 @@ from . import views
 app_name = 'transactions'
 
 urlpatterns = [
-    # 최재용 코드작업
     path('vat-report/', views.VATReportView.as_view(), name='vat_report_default'),
-    # path('search', views.transaction_list, name='transaction_list'),
+
     # Category
     path('categories/', views.category_list, name='category_list'),
     path('categories/create/', views.category_create, name='category_create'),
