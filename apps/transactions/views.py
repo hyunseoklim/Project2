@@ -457,7 +457,7 @@ def merchant_frequently_used(request):
 @login_required
 def transaction_list(request):
     """거래 목록"""
-    transactions = Transaction.active.filter(user=request.user).with_relations()
+    transactions = Transaction.active.filter(user=request.user, occurred_at__lte=timezone.now()).with_relations()
 
     # 검색 필터
     search = request.GET.get('search', '')
