@@ -87,18 +87,29 @@ WSGI_APPLICATION = 'config.wsgi.application'
 #     }
 # }
 
+# DATABASES = {
+#     "default": {
+#         "ENGINE": "django.db.backends.postgresql",
+#         "NAME": os.environ.get("POSTGRES_DB", "django_project"),
+#         "USER": os.environ.get("POSTGRES_USER", "project_user"),
+#         "PASSWORD": os.environ.get("POSTGRES_PASSWORD", "project-password"),
+#         "HOST": os.environ.get("POSTGRES_HOST", "127.0.0.1"),
+#         "PORT": os.environ.get("POSTGRES_PORT", "5432"),
+#         'ATOMIC_REQUESTS': True,
+#     }
+# }
+
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.environ.get("POSTGRES_DB", "django_project"),
-        "USER": os.environ.get("POSTGRES_USER", "project_user"),
-        "PASSWORD": os.environ.get("POSTGRES_PASSWORD", "project-password"),
-        "HOST": os.environ.get("POSTGRES_HOST", "127.0.0.1"),
-        "PORT": os.environ.get("POSTGRES_PORT", "5432"),
+        "NAME": "smartbusinessbook",
+        "USER": "smartbusinessbook_user",
+        "PASSWORD": "u2R2JopHpF6Dxu0vkofTkakBRfKlDFtZ",
+        "HOST": "dpg-d662jqn5r7bs73c96fm0-a",
+        "PORT": "5432",
         'ATOMIC_REQUESTS': True,
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
