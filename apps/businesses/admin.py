@@ -33,7 +33,7 @@ class BusinessAdmin(SoftDeleteAdminMixin, admin.ModelAdmin):
     list_display = [
         'name', 
         'user', 
-        'get_masked_registration_number', 
+        'get_full_reg_number', 
         'branch_type', 
         'get_account_count', 
         'is_active', 
@@ -56,6 +56,11 @@ class BusinessAdmin(SoftDeleteAdminMixin, admin.ModelAdmin):
     ]
     
     inlines = [AccountInline]
+
+    def get_full_reg_number(self, obj):
+        """사업자번호 + 분류코드"""
+        return obj.get_full_registration_number()
+    get_full_reg_number.short_description = '사업자번호 (분류코드)'
 
     @admin.display(description='사업자 번호')
     def get_masked_registration_number(self, obj):

@@ -152,16 +152,23 @@
                 </div>
             </div>
             
-            {% if recommended == 'simple' %}
-            <div class="alert alert-success mt-3 mb-0">
-                <h6>💰 {{ savings|floatformat:0|intcomma }}원 절세 가능!</h6>
-                <p class="mb-0">단순경비율 방식으로 신고하면 더 유리합니다.</p>
-            </div>
+            {% if savings > 0 %}
+                {% if recommended == 'simple' %}
+                    <div class="alert alert-success mt-3 mb-0">
+                        <h6>💰 약 {{ savings|floatformat:0|intcomma }}원 절세 가능!</h6>
+                        <p class="mb-0 text-sm">단순경비율 방식이 실제 장부 기록보다 더 유리합니다.</p>
+                    </div>
+                {% else %}
+                    <div class="alert alert-primary mt-3 mb-0">
+                        <h6>📊 실제 지출 방식 유리</h6>
+                        <p class="mb-0 text-sm">장부에 기록된 경비가 많아 단순경비율보다 {{ savings|floatformat:0|intcomma }}원 더 아낄 수 있습니다.</p>
+                    </div>
+                {% endif %}
             {% else %}
-            <div class="alert alert-primary mt-3 mb-0">
-                <h6>📊 실제 지출 방식 추천</h6>
-                <p class="mb-0">실제 지출 방식이 {{ savings|floatformat:0|intcomma }}원 더 유리합니다.</p>
-            </div>
+                <div class="alert alert-secondary mt-3 mb-0">
+                    <h6>⚖️ 두 방식의 산출 세액이 동일합니다</h6>
+                    <p class="mb-0 text-sm">어떤 방식을 선택하셔도 무방합니다.</p>
+                </div>
             {% endif %}
         </div>
     </div>
