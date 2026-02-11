@@ -151,6 +151,27 @@ def dashboard(request):
     """대시보드 (통계 + 빠른 메뉴 + 사업장별 집계)"""
     profile = getattr(request.user, 'profile', None)
 
+    # ========================================
+    # 추가: 사업자번호 마스킹 함수
+    # ========================================
+    def get_masked_business_number(user):
+        """사용자의 대표 사업장 사업자번호 마스킹"""
+        main_business = Business.objects.filter(
+            user=user,
+            is_active=True,
+            branch_type='main'
+        ).first()
+        
+        if not main_business or not main_business.registration_number:
+            return "미등록"
+        
+        reg_num = main_business.registration_number.replace('-', '').replace(' ', '')
+        
+        if len(reg_num) == 10:
+            return f"{reg_num[:3]}-{reg_num[3:5]}-*****"
+        
+        return main_business.registration_number
+
     # 1. 날짜 설정
     now = timezone.now()
     year = now.year
@@ -191,55 +212,39 @@ def dashboard(request):
     profit_diff = net_profit - prev_profit
     profit_diff_percent = round((profit_diff / prev_profit * 100), 1) if prev_profit != 0 else 0
 
-    # ========================================
-    # 5. 카테고리별 지출 분석 (전월 대비 포함)
-    # ========================================
-
-    # 1. 이번 달 카테고리별 집계
+    # 5. 카테고리별 지출 분석
     category_stats = monthly_qs.filter(tx_type='OUT').values('category__name').annotate(
         total=Sum('amount'),
         count=Count('id'),
     ).order_by('-total')
 
-    # 2. 전월 카테고리별 집계 (비교용)
     prev_category_stats = prev_monthly_qs.filter(tx_type='OUT').values('category__name').annotate(
         total=Sum('amount')
     )
 
-    # 3. 전월 데이터를 딕셔너리로 변환 (빠른 조회를 위해)
-    #    예: {'식비': 500000, '교통비': 100000, ...}
     prev_category_dict = {item['category__name']: item['total'] for item in prev_category_stats}
 
-    # 4. 이번 달 데이터에 분석 정보 추가
     for stat in category_stats:
-        # 4-1. 전체 지출 대비 비율 계산
-        #      예: 식비 50만원 ÷ 총 지출 200만원 = 25%
         if total_expense > 0:
             stat['percentage'] = round((stat['total'] / total_expense) * 100, 1)
         else:
             stat['percentage'] = 0
         
-        # 4-2. 거래 건당 평균 금액
-        #      예: 식비 총 50만원 ÷ 10건 = 건당 5만원
         stat['avg_per_transaction'] = stat['total'] / stat['count'] if stat['count'] > 0 else 0
         
-        # 4-3. 전월 대비 증감 분석
         category_name = stat['category__name']
-        prev_total = prev_category_dict.get(category_name, 0)  # 전월 금액 조회
+        prev_total = prev_category_dict.get(category_name, 0)
         
         if prev_total > 0:
-            # 전월 데이터가 있는 경우
-            stat['prev_total'] = prev_total  # 전월 금액
-            stat['diff'] = stat['total'] - prev_total  # 증감액 (이번달 - 전월)
-            stat['diff_percent'] = round((stat['diff'] / prev_total * 100), 1)  # 증감률
-            # 예: 이번달 60만원, 전월 50만원 → +10만원, +20%
+            stat['prev_total'] = prev_total
+            stat['diff'] = stat['total'] - prev_total
+            stat['diff_percent'] = round((stat['diff'] / prev_total * 100), 1)
         else:
-            # 전월 데이터가 없는 경우 (새로운 카테고리)
             stat['prev_total'] = 0
-            stat['diff'] = stat['total']  # 전액이 증가
-            stat['diff_percent'] = 0  # 비교 불가
+            stat['diff'] = stat['total']
+            stat['diff_percent'] = 0
 
-    # 7. 최근 거래 (상위 5개)
+    # 7. 최근 거래
     recent_transactions = Transaction.objects.filter(
         user=request.user,
         occurred_at__lte=timezone.now(),
@@ -274,7 +279,7 @@ def dashboard(request):
     context = {
         'user': request.user,
         'profile': profile,
-        'masked_biz_num': profile.get_masked_business_number() if profile else "미등록",
+        'masked_biz_num': get_masked_business_number(request.user),  # 수정됨!
         
         'year': year,
         'month': month,
