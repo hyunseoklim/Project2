@@ -200,6 +200,16 @@ class BusinessForm(forms.ModelForm):
         self.user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
         
+         # 새로 생성 시 자동 branch_code 제안
+        if not self.instance.pk and self.user:
+            registration_number = self.data.get('registration_number', '')
+            if registration_number:
+                existing_count = Business.objects.filter(
+                    user=self.user,
+                    registration_number=registration_number
+                ).count()
+                self.fields['branch_code'].initial = str(existing_count + 1).zfill(4)
+
         # 선택 필드들
         self.fields['location'].required = False
         self.fields['business_type'].required = False
@@ -236,25 +246,65 @@ class BusinessForm(forms.ModelForm):
         return name
     
     def clean_registration_number(self):
-        """사업자등록번호 형식 검증"""
-        reg_num = self.cleaned_data.get('registration_number')
+        """사업자번호 형식 검증"""
+        reg_num = self.cleaned_data.get('registration_number', '').strip()
         
         if not reg_num:
-            return reg_num
+            return ''
         
-        # 하이픈/공백 제거 후 검증
-        cleaned = reg_num.replace('-', '').replace(' ', '')
+        # 하이픈 제거
+        clean_num = reg_num.replace('-', '').replace(' ', '')
         
-        # 숫자만 있는지 확인
-        if not cleaned.isdigit():
-            raise ValidationError('사업자등록번호는 숫자와 하이픈(-)만 입력 가능합니다.')
+        # 숫자 검증
+        if not clean_num.isdigit():
+            raise forms.ValidationError('사업자등록번호는 숫자만 입력 가능합니다.')
         
-        # 10자리 검증
-        if len(cleaned) != 10:
-            raise ValidationError('사업자등록번호는 10자리여야 합니다.')
+        # 길이 검증
+        if len(clean_num) != 10:
+            raise forms.ValidationError('사업자등록번호는 10자리여야 합니다.')
         
-        # 3-2-5 형식으로 정규화해 저장
-        return f"{cleaned[:3]}-{cleaned[3:5]}-{cleaned[5:]}"
+        # 하이픈 포맷
+        formatted = f"{clean_num[:3]}-{clean_num[3:5]}-{clean_num[5:]}"
+        return formatted
+    
+    def clean_branch_code(self):
+        """분류코드 검증"""
+        branch_code = self.cleaned_data.get('branch_code', '').strip()
+        
+        if not branch_code:
+            return '0001'
+        
+        # 숫자만
+        if not branch_code.isdigit():
+            raise forms.ValidationError('분류코드는 숫자만 입력 가능합니다.')
+        
+        # 4자리
+        if len(branch_code) != 4:
+            raise forms.ValidationError('분류코드는 4자리여야 합니다.')
+        
+        return branch_code
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        registration_number = cleaned_data.get('registration_number')
+        branch_code = cleaned_data.get('branch_code')
+        
+        if registration_number and branch_code and self.user:
+            # 중복 체크 (같은 사업자번호 + 같은 분류코드)
+            duplicate = Business.objects.filter(
+                user=self.user,
+                registration_number=registration_number,
+                branch_code=branch_code,
+                is_active=True
+            ).exclude(pk=self.instance.pk if self.instance.pk else None)
+            
+            if duplicate.exists():
+                raise forms.ValidationError(
+                    f"사업자번호 {registration_number}의 분류코드 {branch_code}는 "
+                    f"이미 사용 중입니다. 다른 분류코드를 입력하세요."
+                )
+        
+        return cleaned_data
 
 
 class BusinessSearchForm(forms.Form):

@@ -1,7 +1,8 @@
 """
 종합소득세 계산 유틸리티
 
-세율 하드코딩 - DB 불필요
+TODO: 향후 세율 정보가 빈번하게 변경될 경우,
+관리자 페이지에서 수정 가능하도록 DB(Table)화 및 캐싱 로직 도입 검토 예정
 """
 from decimal import Decimal
 from typing import Dict, Optional, List
@@ -263,6 +264,7 @@ def get_tax_saving_tip(
     if categories:
         top_category = categories[0]
         additional_expense = Decimal('1000000')  # 100만원
+        # 현재는 평균 세율 15%를 기준으로 계산됨, 가장 보편적인 소득구간 (1,400만 ~ 5,000만)
         tax_saved = additional_expense * Decimal('0.15')
         tips.append(
             f"💡 {top_category['category']} 항목에서 경비를 100만원 더 쓰면 "

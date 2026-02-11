@@ -460,7 +460,7 @@ def process_transaction_excel(excel_file, user):
                     category=category,
                     merchant=merchant,
                     tx_type=actual_tx_type,
-                    tax_type='taxable' if actual_tx_type == 'OUT' else 'tax_free',
+                    tax_type='taxable' if vat_amount > 0 else 'tax_free',
                     merchant_name=merchant_name_clean or (category.name if category else ""),
                     amount=supply_amount,
                     vat_amount=vat_amount,

@@ -67,7 +67,7 @@
                             📂 파일 크게 보기
                         </a>
                     {% endif %}
-                    <a href="{% url 'transactions:transaction_detail' tx.pk %}" class="btn btn-warning btn-sm btn-hover-scale">
+                    <a href="{% url 'transactions:transaction_detail' tx.pk %}?from=receipts" class="btn btn-warning btn-sm btn-hover-scale">
                         {% if tx.attachment %}✅ 내용 확인하기{% else %}➕ 영수증 등록하기{% endif %}
                     </a>
                 </div>
