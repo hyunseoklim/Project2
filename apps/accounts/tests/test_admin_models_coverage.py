@@ -1,9 +1,5 @@
 """
-<<<<<<< HEAD
-Accounts Admin & Models 커버리지 완성 테스트 (Pytest)
-=======
 Accounts Admin & Models 커버리지 완성 테스트 (Pytest) - PostgreSQL 호환
->>>>>>> main
 
 3순위: admin.py 누락 라인 커버 (8줄)
 - get_masked_brn() 마스킹 엣지 케이스 (50, 54-60 라인)
