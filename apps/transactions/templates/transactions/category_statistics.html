@@ -1,0 +1,385 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}카테고리별 집계{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- 헤더 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>
+            <i class="bi bi-bar-chart-fill"></i> 
+            카테고리별 집계
+        </h2>
+        <a href="{% url 'transactions:transaction_list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> 거래 목록으로
+        </a>
+    </div>
+
+    <!-- 필터 폼 -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">거래 유형</label>
+                    <select name="tx_type" class="form-select">
+                        <option value="OUT" {% if tx_type == 'OUT' %}selected{% endif %}>지출</option>
+                        <option value="IN" {% if tx_type == 'IN' %}selected{% endif %}>수입</option>
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label">연도</label>
+                    <select name="year" class="form-select">
+                        {% for y in year_list %}
+                            <option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}년</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label">월</label>
+                    <select name="month" class="form-select">
+                        <option value="">전체</option>
+                        {% for m in "123456789101112"|make_list %}
+                            <option value="{{ forloop.counter }}" {% if month == forloop.counter %}selected{% endif %}>
+                                {{ forloop.counter }}월
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-search"></i> 조회
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 요약 정보 -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h6 class="text-muted">기간</h6>
+                    <h4>
+                        {{ year }}년
+                        {% if month %}{{ month }}월{% else %}전체{% endif %}
+                    </h4>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h6 class="text-muted">총 {{ tx_type|yesno:"수입,지출" }} 금액</h6>
+                    <h4 class="{% if tx_type == 'OUT' %}text-danger{% else %}text-success{% endif %}">
+                        {{ total_amount|floatformat:0|intcomma }}원
+                    </h4>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h6 class="text-muted">카테고리 수</h6>
+                    <h4>{{ stats_count }}개</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 차트 섹션 -->
+    {% if category_list %}
+    <div class="row mb-4">
+        <!-- 파이 차트 -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-pie-chart-fill"></i> 카테고리별 비율</h5>
+                </div>
+                <div class="card-body" style="height: 400px;">
+                    <canvas id="pieChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- 막대 차트 -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-bar-chart-fill"></i> 카테고리별 금액</h5>
+                </div>
+                <div class="card-body" style="height: 400px;">
+                    <canvas id="barChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- TOP 5 카테고리 -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">
+                <i class="bi bi-trophy-fill"></i> 
+                {{ tx_type|yesno:"수입,지출" }} 카테고리 TOP 5
+            </h5>
+        </div>
+        <div class="card-body">
+            {% if top_5_categories %}
+                <div class="row">
+                    {% for cat in top_5_categories %}
+                        <div class="col-md-6 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <div>
+                                            <span class="badge bg-primary fs-5">{{ cat.rank }}위</span>
+                                            <h5 class="d-inline-block ms-2 mb-0">{{ cat.category_name }}</h5>
+                                        </div>
+                                        <span class="badge bg-secondary">{{ cat.transaction_count }}건</span>
+                                    </div>
+                                    
+                                    <h4 class="{% if tx_type == 'OUT' %}text-danger{% else %}text-success{% endif %} mb-2">
+                                        {{ cat.total_amount|floatformat:0|intcomma }}원
+                                    </h4>
+                                    
+                                    <div class="progress" style="height: 25px;">
+                                        <div class="progress-bar {% if tx_type == 'OUT' %}bg-danger{% else %}bg-success{% endif %}" 
+                                             role="progressbar" 
+                                             style="width: {{ cat.percentage }}%"
+                                             aria-valuenow="{{ cat.percentage }}" 
+                                             aria-valuemin="0" 
+                                             aria-valuemax="100">
+                                            {{ cat.percentage }}%
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> 해당 기간에 거래 내역이 없습니다.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- 전체 카테고리별 상세 내역 -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="bi bi-list-ul"></i> 
+                전체 카테고리별 내역
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            {% if category_list %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="text-center" style="width: 80px;">순위</th>
+                                <th>카테고리명</th>
+                                <th class="text-end" style="width: 150px;">금액</th>
+                                <th class="text-center" style="width: 100px;">거래 건수</th>
+                                <th style="width: 200px;">비율</th>
+                                <th class="text-end" style="width: 100px;">비율 (%)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for cat in category_list %}
+                                <tr>
+                                    <td class="text-center">
+                                        {% if cat.rank <= 3 %}
+                                            <span class="badge bg-warning text-dark">{{ cat.rank }}위</span>
+                                        {% else %}
+                                            {{ cat.rank }}위
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <strong>{{ cat.category_name }}</strong>
+                                    </td>
+                                    <td class="text-end {% if tx_type == 'OUT' %}text-danger{% else %}text-success{% endif %}">
+                                        <strong>{{ cat.total_amount|floatformat:0|intcomma }}원</strong>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-secondary">{{ cat.transaction_count }}건</span>
+                                    </td>
+                                    <td>
+                                        <div class="progress" style="height: 20px;">
+                                            <div class="progress-bar {% if tx_type == 'OUT' %}bg-danger{% else %}bg-success{% endif %}" 
+                                                 role="progressbar" 
+                                                 style="width: {{ cat.percentage }}%">
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="text-end">
+                                        {{ cat.percentage }}%
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot class="table-light">
+                            <tr>
+                                <th colspan="2" class="text-end">합계</th>
+                                <th class="text-end">{{ total_amount|floatformat:0|intcomma }}원</th>
+                                <th colspan="2"></th>
+                                <th class="text-end">100.0%</th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            {% else %}
+                <div class="alert alert-info m-3">
+                    <i class="bi bi-info-circle"></i> 해당 기간에 거래 내역이 없습니다.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+    .progress {
+        background-color: #e9ecef;
+    }
+    
+    .card {
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .table thead th {
+        font-weight: 600;
+        border-bottom: 2px solid #dee2e6;
+    }
+    
+    .table tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+</style>
+
+<!-- Chart.js CDN을 body 끝에 로드 -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+{% if category_list %}
+<script>
+    // DOM이 완전히 로드된 후 실행
+    document.addEventListener('DOMContentLoaded', function() {
+        // 차트 데이터 준비
+        const categoryData = [
+            {% for cat in category_list %}
+            {
+                name: '{{ cat.category_name|escapejs }}',
+                amount: parseFloat('{{ cat.total_amount }}'),
+                percentage: parseFloat('{{ cat.percentage }}')
+            }{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ];
+
+        // TOP 10 데이터만 추출 (차트 가독성)
+        const top10Data = categoryData.slice(0, 10);
+        
+        // 색상 팔레트
+        const colorPalette = [
+            '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
+            '#FF9F40', '#E74C3C', '#C9CBCF', '#1ABC9C', '#3498DB'
+        ];
+
+        // 파이 차트
+        const pieCanvas = document.getElementById('pieChart');
+        if (pieCanvas) {
+            const pieCtx = pieCanvas.getContext('2d');
+            new Chart(pieCtx, {
+                type: 'pie',
+                data: {
+                    labels: top10Data.map(d => d.name),
+                    datasets: [{
+                        data: top10Data.map(d => d.amount),
+                        backgroundColor: colorPalette,
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 15,
+                                font: {
+                                    size: 11
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed || 0;
+                                    const percentage = top10Data[context.dataIndex].percentage;
+                                    return label + ': ' + value.toLocaleString() + '원 (' + percentage + '%)';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 막대 차트
+        const barCanvas = document.getElementById('barChart');
+        if (barCanvas) {
+            const barCtx = barCanvas.getContext('2d');
+            new Chart(barCtx, {
+                type: 'bar',
+                data: {
+                    labels: top10Data.map(d => d.name),
+                    datasets: [{
+                        label: '금액 (원)',
+                        data: top10Data.map(d => d.amount),
+                        backgroundColor: '{% if tx_type == "OUT" %}rgba(220, 53, 69, 0.7){% else %}rgba(25, 135, 84, 0.7){% endif %}',
+                        borderColor: '{% if tx_type == "OUT" %}rgba(220, 53, 69, 1){% else %}rgba(25, 135, 84, 1){% endif %}',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toLocaleString() + '원';
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const value = context.parsed.y || 0;
+                                    const percentage = top10Data[context.dataIndex].percentage;
+                                    return value.toLocaleString() + '원 (' + percentage + '%)';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    });
+</script>
+{% endif %}
+{% endblock %}

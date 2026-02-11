@@ -1,50 +1,134 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+프로필 수정 - 스마트 사업자 가계부
+{% endblock %}
 
 {% block content %}
-<div class="content-wrapper">
-    <section class="welcome-section">
-        <div class="welcome-header">
-            <span class="welcome-icon">📝</span>
-            <h2 class="page-title">사업자 프로필 설정</h2>
-            <p class="description">세무 증빙과 가계부 관리를 위해 정확한 정보를 입력해주세요.</p>
-        </div>
+<div class="container-fluid px-4 py-3">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-xl-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3 border-bottom d-flex align-items-center gap-3">
+                    <a href="{% url 'accounts:profile_detail' %}" 
+                       class="btn btn-light btn-sm px-3 d-flex align-items-center fw-bold shadow-sm btn-hover-effect"
+                       style="height: 38px; transition: all 0.2s; background-color: #fff; border: 1px solid #dee2e6;">
+                        ← 이전
+                    </a>
+                    <h5 class="mb-0 fw-bold text-dark">
+                        ✏️ 프로필 수정
+                    </h5>
+                </div>
 
-        <div class="welcome-message">
-            <form method="post">
-                {% csrf_token %}
-                
-                {% for field in form %}
-                    <div style="margin-bottom: var(--spacing-md);">
-                        <label class="section-title" style="font-size: 1rem; margin-bottom: 0.5rem; display: block;">
-                            {{ field.label }}
-                        </label>
-                        
-                        {{ field }}
-                        
-                        {% if field.help_text %}
-                            <div class="description" style="font-size: 0.85rem; margin-top: 0.5rem; color: var(--gray-600);">
-                                {{ field.help_text|safe }}
+                <div class="card-body p-4">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                            <label for="{{ form.full_name.id_for_label }}" class="form-label fw-bold">
+                                성함 <small class="text-muted">(선택)</small>
+                            </label>
+                            {{ form.full_name }}
+                            {% if form.full_name.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.full_name.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.business_registration_number.id_for_label }}" class="form-label fw-bold">
+                                    사업자 등록번호 <span class="text-danger">*</span>
+                                </label>
+                                {{ form.business_registration_number }}
+                                {% if form.business_registration_number.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.business_registration_number.errors.0 }}
+                                    </div>
+                                {% endif %}
+                                <small class="form-text text-muted">
+                                    하이픈(-) 없이 숫자 10자리만 입력해주세요.
+                                </small>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.business_type.id_for_label }}" class="form-label fw-bold">
+                                    사업자 유형 <span class="text-danger">*</span>
+                                </label>
+                                {{ form.business_type }}
+                                {% if form.business_type.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.business_type.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger border-0 py-2 mb-3">
+                                ⚠️ {{ form.non_field_errors.0 }}
                             </div>
                         {% endif %}
-                        
-                        {% if field.errors %}
-                            {% for error in field.errors %}
-                                <div class="badge-expense" style="display: inline-block; margin-top: 5px; border-radius: 4px; padding: 5px 10px; font-size: 0.85rem;">
-                                    <strong>!</strong> {{ error }}
-                                </div>
-                            {% endfor %}
-                        {% endif %}
-                    </div>
-                {% endfor %}
 
-                <div class="cta-section" style="border: none; padding-top: var(--spacing-lg); background: none;">
-                    <div class="button-group">
-                        <button type="submit" class="btn btn-primary">프로필 저장하기</button>
-                        <a href="{% url 'accounts:home' %}" class="btn btn-secondary">취소</a>
-                    </div>
+                        <div class="alert alert-info border-0 mb-4">
+                            <h6 class="mb-2 fw-bold">💡 안내 사항</h6>
+                            <ul class="mb-0 small">
+                                <li class="fw-bold text-primary">정보 입력 시 사업자 등록증의 내용과 일치하는지 확인해주세요.</li>
+                                <li>사업자 등록번호는 하이픈(-) 없이 숫자 10자리만 입력해주세요.</li>
+                                <li>사업자 유형(개인/법인)에 따라 세무 설정이 달라질 수 있습니다.</li>
+                                <li>입력하신 정보는 세금신고 기초 자료로 활용되니 정확히 입력 바랍니다.</li>
+                            </ul>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{% url 'accounts:profile_detail' %}" class="btn btn-light border fw-bold px-4">
+                                취소
+                            </a>
+                            <button type="submit" class="btn btn-warning fw-bold px-4 shadow-sm">
+                                ✏️ 수정 완료
+                            </button>
+                        </div>
+                    </form>
                 </div>
-            </form>
+            </div>
         </div>
-    </section>
+    </div>
 </div>
+
+<style>
+    /* 입력 필드 디자인 */
+    input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]),
+    select,
+    textarea {
+        display: block;
+        width: 100%;
+        padding: 0.375rem 0.75rem;
+        font-size: 1rem;
+        font-weight: 400;
+        line-height: 1.5;
+        color: #212529;
+        background-color: #fff;
+        background-clip: padding-box;
+        border: 1px solid #dee2e6;
+        border-radius: 0.375rem;
+        transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+        color: #212529;
+        background-color: #fff;
+        border-color: #86b7fe;
+        outline: 0;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+
+    /* CSS hover 효과 */
+    .btn-hover-effect:hover {
+        background-color: #e9ecef !important;
+    }
+</style>
 {% endblock %}

@@ -10,6 +10,7 @@ urlpatterns = [
     path("login/", views.UserLoginView.as_view(), name="login"),
     path("logout/", views.UserLogoutView.as_view(), name="logout"),
     path("signup/", views.signup, name="signup"),
+    path("dashboard/", views.dashboard, name="dashboard"),
     # 비밀번호 변경 페이지 
     path('password_change/', views.MyPasswordChangeView.as_view(), name='password_change'),
 

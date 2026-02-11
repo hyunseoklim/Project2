@@ -1,0 +1,71 @@
+{% load static %}
+<div class="navbar-inner">
+    
+    <div class="nav-left">
+        <a href="{% url 'accounts:home' %}" 
+           class="nav-button {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
+           홈
+        </a>
+
+        {% if user.is_authenticated %}
+            <span class="nav-divider">|</span>
+
+            <a href="{% url 'accounts:dashboard' %}" 
+               class="nav-button {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+               대시보드
+            </a>
+
+            <a href="{% url 'transactions:transaction_list' %}" 
+               class="nav-button {% if request.resolver_match.url_name|slice:":11" == 'transaction' or request.resolver_match.url_name|slice:":8" == 'category' %}active{% endif %}">
+               거래 관리
+            </a>
+
+            <a href="{% url 'businesses:business_list' %}" 
+               class="nav-button {% if 'business' in request.resolver_match.url_name %}active{% endif %}">
+               사업장 관리
+            </a>
+
+            <a href="{% url 'transactions:merchant_list' %}" 
+               class="nav-button {% if 'merchant' in request.resolver_match.url_name %}active{% endif %}">
+               거래처 관리
+            </a>
+
+            <a href="{% url 'businesses:account_list' %}" 
+               class="nav-button {% if 'account' in request.resolver_match.url_name %}active{% endif %}">
+               계좌 관리
+            </a>
+        {% endif %}
+    </div>
+
+    <div class="nav-right">
+      {% if user.is_authenticated %}
+        <a href="{% url 'accounts:profile_detail' %}" 
+           class="nav-button {% if request.resolver_match.url_name == 'profile_detail' %}active{% endif %}">
+           프로필
+        </a>
+
+        <span class="nav-divider">|</span>
+        
+        <span class="user-name">
+            <strong>{{ user.username }}</strong> 님
+        </span>
+        
+        <span class="nav-divider">|</span>
+        
+        <form action="{% url 'accounts:logout' %}" method="post" class="form-inline">
+            {% csrf_token %}
+            <button type="submit" class="logout-btn">로그아웃</button>
+        </form>
+
+      {% else %}
+        <a href="{% url 'accounts:login' %}" class="nav-button">
+             로그인
+        </a>
+            
+        <a href="{% url 'accounts:signup' %}" class="nav-button active">
+             회원가입
+        </a>
+      {% endif %}
+    </div>
+
+</div>

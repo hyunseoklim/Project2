@@ -1,105 +1,45 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="ko">
-
-{% include 'components/head.html' %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}스마트 사업자 가계부{% endblock %}</title>
+    
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    
+    {% include 'components/head.html' %} 
+</head>
 
 <body>
     {% include 'components/header.html' %}
-
     
-    <div class="main-container">
-        {% load static %}
-
-    <!-- 사이드바 -->
-        <aside class="sidebar">
-            <div class="logo-section">
-                <span class="logo-icon">💼</span>
-                <h1 class="logo-text">스마트 사업자<br>가계부</h1>
+    <div class="main-container {% if not user.is_authenticated %}no-sidebar{% endif %}">
+        
+        {% if user.is_authenticated %}
+        <aside class="sidebar border-end">
+            <div class="logo-section p-3 text-center">
+                <span class="fs-2">💼</span>
+                <h1 class="logo-text h5 fw-bold mt-2">스마트 사업자<br>가계부</h1>
             </div>
+            {% include 'components/sidebar.html' %}
+        </aside>
+        {% endif %}
 
-            <nav class="sidebar-nav">
-                <!-- 사이드 네비게이션, 이부분 지우고 각 app의 사이드바로 설정 -->
-                {% block sidebar_nav %}
-                <ul class="nav-list">
-                    {% if user.is_authenticated %}
-                        <li class="nav-item">
-                            <a href="{% url 'accounts:home' %}" class="nav-link">
-                                <span class="nav-icon">🏠</span>
-                                <span class="nav-text">홈</span>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{% url 'accounts:home' %}" class="nav-link">
-                                <span class="nav-icon">📊</span>
-                                <span class="nav-text">대시보드</span>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{% url 'transactions:transaction_list' %}" class="nav-link">
-                                <span class="nav-icon">💰</span>
-                                <span class="nav-text">거래 관리</span>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{% url 'businesses:business_list' %}" class="nav-link">
-                                <span class="nav-icon">🏢</span>
-                                <span class="nav-text">사업장 관리</span>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{% url 'accounts:profile_detail' %}" class="nav-link">
-                                <span class="nav-icon">👤</span>
-                                <span class="nav-text">프로필</span>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <form action="{% url 'accounts:logout' %}" method="post" style="display:inline;">
-                                {% csrf_token %}
-                                <button type="submit" class="nav-link" style="background:none;border:none;padding:0;cursor:pointer;">
-                                    <span class="nav-icon">🔓</span>
-                                    <span class="nav-text">로그아웃</span>
-                                </button>
-                            </form>
-                        </li>
-                    {% else %}
-                        <li class="nav-item">
-                            <a href="{% url 'accounts:login' %}" class="nav-link">
-                                <span class="nav-icon">🔐</span>
-                                <span class="nav-text">로그인</span>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{% url 'accounts:signup' %}" class="nav-link">
-                                <span class="nav-icon">✏️</span>
-                                <span class="nav-text">회원가입</span>
-                            </a>
-                        </li>
-                    {% endif %}
-                </ul>
-                {% endblock %}
+        <main class="main-content">
+            <nav class="top-nav shadow-sm">
+                {% include 'components/navbar.html' %}
             </nav>
 
-            <div class="sidebar-footer">
-                <p class="copyright">© 2026 스마트 사업자 가계부.<br>All rights reserved.</p>
-            </div>
-        </aside>
-        <!-- 메인 콘텐츠 -->
-        <main class="main-content">
             {% include 'components/messages.html' %}
 
-            <!-- 상단 네비게이션, 이부분 지우고 각 app의 네비로 설정 -->
-            <nav class="top-nav">
-                {% block top_nav %}
-                {% endblock %}
-            </nav>
-
-            <!-- 페이지 콘텐츠 -->
             <div class="content-wrapper">
-                {% block content %}{% endblock %}
+                {% block content %}
+                {% endblock %}
+                
+                {% include "components/footer.html" %}
             </div>
         </main>
     </div>
 </body>
-
 </html>

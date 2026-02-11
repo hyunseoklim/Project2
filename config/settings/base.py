@@ -9,7 +9,7 @@ import os
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent.parent  # settings 폴더 안이므로 parent 하나 더
 
-
+load_dotenv(BASE_DIR / '.env')
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = (
     os.environ.get("DJANGO_SECRET_KEY")
@@ -19,8 +19,7 @@ SECRET_KEY = (
 DEBUG = os.environ.get("DEBUG", "0") == "1"
 
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
-
+ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
 
 # Application definition
 
@@ -31,6 +30,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.humanize',
     
     #내 앱들
     'apps.core', 
@@ -77,26 +77,26 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
-
-# 개발기간 동안은 SQLite3 사용
+# SQLlite3 주석
 # DATABASES = {
-#     "default": {
-#         "ENGINE": "django.db.backends.postgresql",
-#         "NAME": os.environ.get("POSTGRES_DB", "django_project"),
-#         "USER": os.environ.get("POSTGRES_USER", "project_user"),
-#         "PASSWORD": os.environ.get("POSTGRES_PASSWORD", "project-password"),
-#         "HOST": os.environ.get("POSTGRES_HOST", "127.0.0.1"),
-#         "PORT": os.environ.get("POSTGRES_PORT", "5432"),
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#         'ATOMIC_REQUESTS': True,
 #     }
 # }
 
-SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY") or "ci-dev-secret-key"
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": os.environ.get("POSTGRES_DB", "django_project"),
+        "USER": os.environ.get("POSTGRES_USER", "project_user"),
+        "PASSWORD": os.environ.get("POSTGRES_PASSWORD", "project-password"),
+        "HOST": os.environ.get("POSTGRES_HOST", "127.0.0.1"),
+        "PORT": os.environ.get("POSTGRES_PORT", "5432"),
+        'ATOMIC_REQUESTS': True,
+    }
+}
 
 
 # Password validation
@@ -159,3 +159,28 @@ PASSWORD_CHANGE_REDIRECT_URL = 'password_change_done'
 
 # 메시지 프레임워크 (이미 설정되어 있을 것)
 MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'
+
+# 로깅 설정
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': 'logs/django.log',
+        },
+    },
+    'loggers': {
+        'accounts': {
+            'handlers': ['file'],
+            'level': 'INFO',
+        },
+    },
+}
+
+# 개발 환경: 콘솔에 이메일 출력 (실제 발송 안 함)
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# 비밀번호 재설정 링크 유효 시간 (초 단위, 기본 3일)
+PASSWORD_RESET_TIMEOUT = 3600 * 24 * 3  # 3일

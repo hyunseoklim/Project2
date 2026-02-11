@@ -1,154 +1,123 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load humanize %}
 
 {% block title %}거래 관리 - 스마트 사업자 가계부{% endblock %}
 
-{% block banner_mode %}로그인 상태{% endblock %}
-{% block current_status %}로그인 상태{% endblock %}
-
-{% block sidebar_nav %}
-<ul class="nav-list">
-    <li class="nav-item">
-        <a href="{% url 'accounts:home' %}" class="nav-link">
-            <span class="nav-icon">🏠</span>
-            <span class="nav-text">홈</span>
-        </a>
-    </li>
-    <li class="nav-item">
-        <a href="{% url 'accounts:home' %}" class="nav-link">
-            <span class="nav-icon">📊</span>
-            <span class="nav-text">대시보드</span>
-        </a>
-    </li>
-    <li class="nav-item active">
-        <a href="{% url 'transactions:transaction_list' %}" class="nav-link">
-            <span class="nav-icon">💰</span>
-            <span class="nav-text">거래 관리</span>
-        </a>
-    </li>
-    <li class="nav-item">
-        <a href="{% url 'accounts:profile_detail' %}" class="nav-link">
-            <span class="nav-icon">👤</span>
-            <span class="nav-text">프로필</span>
-        </a>
-    </li>
-    <li class="nav-item logout">
-        <form action="{% url 'accounts:logout' %}" method="post" style="display:inline;">
-            {% csrf_token %}
-            <button type="submit"
-                style="background:none; border:none; color:blue; text-decoration:underline; cursor:pointer; padding:0;">
-                로그아웃
-            </button>
-        </form>
-    </li>
-</ul>
-{% endblock %}
-
-{% block top_nav %}
-<div class="top-nav-links">
-    <a href="{% url 'accounts:home' %}" class="nav-button">홈</a>
-    <a href="{% url 'accounts:home' %}" class="nav-button">대시보드</a>
-    <a href="{% url 'transactions:transaction_list' %}" class="nav-button active">거래 관리</a>
-    <a href="{% url 'businesses:account_list' %}" class="nav-button">계좌 관리</a>
-    <a href="{% url 'accounts:profile_detail' %}" class="nav-button">프로필</a>
-    <span class="nav-divider">|</span>
-    <span class="user-name">{{ user.username }} 님</span>
-    <span class="nav-divider">|</span>
-    <form action="{% url 'accounts:logout' %}" method="post" style="display:inline;">
-        {% csrf_token %}
-        <button type="submit"
-            style="background:none; border:none; color:blue; text-decoration:underline; cursor:pointer; padding:0;">
-            로그아웃
-        </button>
-    </form>
-</div>
-{% endblock %}
-
 {% block content %}
 <div class="container-fluid px-4 py-3">
-    <!-- 헤더 & 통계 -->
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h3 class="mb-0">💰 거래 관리</h3>
-        <a href="{% url 'transactions:transaction_create' %}" class="btn btn-primary btn-sm px-4">
-            + 거래 등록
-        </a>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="mb-0 fw-bold text-dark">💰 거래 관리</h3>
+        <div class="d-flex gap-2">
+            <a href="{% url 'transactions:category_list' %}" 
+               class="btn btn-outline-primary btn-sm px-3 fw-bold shadow-sm d-flex align-items-center" 
+               style="height: 38px;">
+                📁 거래 카테고리 관리
+            </a>
+            <a href="{% url 'transactions:monthly_summary' %}" 
+               class="btn btn-outline-dark btn-sm px-3 fw-bold shadow-sm d-flex align-items-center" 
+               style="height: 38px;">
+                📊 월별 요약
+            </a>
+            
+            <a href="{% url 'transactions:upload_excel'  %}"
+                class="btn btn-outline-info btn-sm px-3 fw-bold shadow-sm d-flex align-items-center" 
+                style="height: 38px;">
+                    📈 엑셀 사용
+                </a>
+
+            <a href="{% url 'transactions:attachment_list'  %}"
+                class="btn btn-outline-warning btn-sm px-3 fw-bold shadow-sm d-flex align-items-center" 
+                style="height: 38px;">
+                    🧾 영수증 모음
+            </a>
+
+
+            <a href="{% url 'transactions:merchant_list' %}" 
+               class="btn btn-outline-secondary btn-sm px-3 fw-bold shadow-sm d-flex align-items-center" 
+               style="height: 38px;">
+                🏪 거래처 관리
+            </a>
+            <a href="{% url 'transactions:transaction_create' %}" 
+               class="btn btn-success btn-sm px-3 fw-bold shadow-sm d-flex align-items-center" 
+               style="height: 38px;">
+                ➕ 거래 등록
+            </a>
+        </div>    
     </div>
 
-    <!-- 통계 카드 (간결하게) -->
     <div class="row g-3 mb-3">
-        <div class="col-md-3">
+        <div class="col-md-4">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body p-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <small class="text-muted">총 수입</small>
-                            <h5 class="mb-0 text-success">{{ stats.total_income|default:0|floatformat:0 }}원</h5>
-                        </div>
-                        <span class="fs-3">📈</span>
-                    </div>
+                    <small class="text-muted">총 수입</small>
+                    <h5 class="mb-0 text-success fw-bold">{{ stats.total_income|default:0|floatformat:0|intcomma }}원</h5>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-4">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body p-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <small class="text-muted">총 지출</small>
-                            <h5 class="mb-0 text-danger">{{ stats.total_expense|default:0|floatformat:0 }}원</h5>
-                        </div>
-                        <span class="fs-3">📉</span>
-                    </div>
+                    <small class="text-muted">총 지출</small>
+                    <h5 class="mb-0 text-danger fw-bold">{{ stats.total_expense|default:0|floatformat:0|intcomma }}원</h5>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-4">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body p-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <small class="text-muted">총 부가세</small>
-                            <h5 class="mb-0 text-info">{{ stats.total_vat|default:0|floatformat:0 }}원</h5>
-                        </div>
-                        <span class="fs-3">💵</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body p-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <small class="text-muted">거래 건수</small>
-                            <h5 class="mb-0">{{ stats.count|default:0 }}건</h5>
-                        </div>
-                        <span class="fs-3">📊</span>
-                    </div>
+                    <small class="text-muted">거래 건수</small>
+                    <h5 class="mb-0 fw-bold">{{ stats.count|default:0|intcomma }}건</h5>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- 필터 (컴팩트하게) -->
+    <div class="row g-3 mb-3">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-3">
+                    <small class="text-muted">총 매출세액 (수입 부가세)</small>
+                    <h5 class="mb-0 text-dark fw-bold">{{ stats.income_vat|default:0|floatformat:0|intcomma }}원</h5>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-3">
+                    <small class="text-muted">총 매입세액 (지출 부가세)</small>
+                    <h5 class="mb-0 text-dark fw-bold">{{ stats.expense_vat|default:0|floatformat:0|intcomma }}원</h5>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100 border-start border-4 {% if stats.vat_result_value > 0 %}border-danger{% else %}border-primary{% endif %}">
+                <div class="card-body p-3">
+                    <small class="text-muted">{{ stats.vat_result_label }}</small>
+                    <h5 class="mb-0 fw-bold {{ stats.vat_color_class }}">{{ stats.vat_result_value|floatformat:0|intcomma }}원</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="card border-0 shadow-sm mb-3">
         <div class="card-body p-3">
             <form method="get">
-                <div class="row g-2 align-items-end">
+                <div class="row g-2 align-items-center"> 
                     <div class="col-md-2">
-                        <input type="text" name="search" class="form-control form-control-sm" placeholder="거래처, 메모"
-                            value="{{ request.GET.search }}">
+                        <input type="text" name="search" class="form-control form-control-sm shadow-sm" 
+                            style="height: 38px;" placeholder="거래처, 메모" value="{{ request.GET.search }}">
                     </div>
-                    <div class="col-md-2">
-                        <select name="tx_type" class="form-select form-select-sm">
-                            <option value="">전체</option>
+                    <div class="col-md-auto" style="min-width: 110px;">
+                        <select name="tx_type" class="form-select form-select-sm shadow-sm" style="height: 38px;">
+                            <option value="">거래 구분</option>
                             <option value="IN" {% if request.GET.tx_type == 'IN' %}selected{% endif %}>수입</option>
                             <option value="OUT" {% if request.GET.tx_type == 'OUT' %}selected{% endif %}>지출</option>
                         </select>
                     </div>
-                    <div class="col-md-2">
-                        <select name="business" class="form-select form-select-sm">
-                            <option value="">사업장(전체)</option>
+                    <div class="col-md-auto" style="min-width: 110px;">
+                        <select name="business" class="form-select form-select-sm shadow-sm" style="height: 38px;">
+                            <option value="">사업장 전체</option>
                             {% for business in businesses %}
                             <option value="{{ business.id }}" {% if request.GET.business == business.id|stringformat:"s" %}selected{% endif %}>
                                 {{ business.name }}
@@ -156,9 +125,9 @@
                             {% endfor %}
                         </select>
                     </div>
-                    <div class="col-md-2">
-                        <select name="account" class="form-select form-select-sm">
-                            <option value="">계좌(전체)</option>
+                    <div class="col-md-auto" style="min-width: 110px;">
+                        <select name="account" class="form-select form-select-sm shadow-sm" style="height: 38px;">
+                            <option value="">계좌 전체</option>
                             {% for account in accounts %}
                             <option value="{{ account.id }}" {% if request.GET.account == account.id|stringformat:"s" %}selected{% endif %}>
                                 {{ account.name }}
@@ -166,23 +135,32 @@
                             {% endfor %}
                         </select>
                     </div>
-                    <div class="col-md-2">
-                        <input type="date" name="date_from" class="form-control form-control-sm" placeholder="시작일"
-                            value="{{ request.GET.date_from }}">
+                    <div class="col-md" style="flex: 1;">
+                        <input type="date" name="date_from" class="form-control form-control-sm text-center shadow-sm" 
+                            style="height: 38px; line-height: 24px;" value="{{ request.GET.date_from }}">
+                    </div>
+                    <div class="col-md" style="flex: 1;">
+                        <input type="date" name="date_to" class="form-control form-control-sm text-center shadow-sm" 
+                            style="height: 38px; line-height: 24px;" value="{{ request.GET.date_to }}">
                     </div>
                     <div class="col-md-1">
-                        <input type="date" name="date_to" class="form-control form-control-sm" placeholder="종료일"
-                            value="{{ request.GET.date_to }}">
+                        <button type="submit" class="btn btn-primary btn-sm w-100 fw-bold shadow-sm" 
+                                style="height: 38px; display: flex; align-items: center; justify-content: center;">
+                            검색
+                        </button>
                     </div>
-                    <div class="col-md-1">
-                        <button type="submit" class="btn btn-primary btn-sm w-100">검색</button>
+                    <div class="col-md-auto">
+                    <a href="{% url 'transactions:transaction_list' %}" 
+                       class="btn btn-outline-secondary btn-sm fw-bold" 
+                       style="height: 38px; white-space: nowrap; display: flex; align-items: center; padding: 0 0.75rem;">
+                        초기화
+                        </a>
                     </div>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- 거래 목록 테이블 -->
     <div class="card border-0 shadow-sm">
         <div class="card-body p-0">
             <div class="table-responsive">
@@ -202,29 +180,27 @@
                     </thead>
                     <tbody>
                         {% for transaction in page_obj %}
-                        <tr>
+                        <tr style="cursor: pointer;" onclick="location.href='{% url 'transactions:transaction_detail' transaction.pk %}'">
                             <td><small>{{ transaction.occurred_at|date:"m/d H:i" }}</small></td>
                             <td>
                                 {% if transaction.tx_type == 'IN' %}
-                                <span class="badge bg-success">수입</span>
+                                <span class="badge bg-primary-subtle text-primary rounded-pill">수입</span>
                                 {% else %}
-                                <span class="badge bg-danger">지출</span>
+                                <span class="badge bg-danger-subtle text-danger rounded-pill">지출</span>
                                 {% endif %}
                             </td>
                             <td>{{ transaction.get_merchant_display|truncatewords:3 }}</td>
                             <td><small>{{ transaction.category.name }}</small></td>
                             <td><small>{{ transaction.account.name }}</small></td>
-                            <td class="text-end fw-bold">{{ transaction.amount|floatformat:0 }}원</td>
-                            <td class="text-end"><small>{{ transaction.vat_amount|default:"-" }}</small></td>
-                            <td><small class="text-muted">{{ transaction.memo|truncatewords:3|default:"-" }}</small>
+                            <td class="text-end fw-bold">{{ transaction.amount|floatformat:0|intcomma }}원</td>
+                            <td class="text-end">
+                                <small>
+                                    {{ transaction.vat_amount|floatformat:0|intcomma|default:"-" }}{% if transaction.vat_amount %}원{% endif %}
+                                </small>
                             </td>
-                            <td class="text-center">
-                                <div class="btn-group btn-group-sm">
-                                    <a href="{% url 'transactions:transaction_detail' transaction.pk %}"
-                                        class="btn btn-outline-secondary btn-sm" title="상세">👁️</a>
-                                    <a href="{% url 'transactions:transaction_update' transaction.pk %}"
-                                        class="btn btn-outline-warning btn-sm" title="수정">✏️</a>
-                                </div>
+                            <td><small class="text-muted">{{ transaction.memo|truncatewords:3|default:"-" }}</small></td>
+                            <td class="text-center" onclick="event.stopPropagation();">
+                                <a href="{% url 'transactions:transaction_update' transaction.pk %}" class="btn btn-outline-warning btn-sm" style="font-size: 0.7rem; padding: 0.15rem 0.4rem;">✏️</a>
                             </td>
                         </tr>
                         {% empty %}
@@ -232,9 +208,13 @@
                             <td colspan="9" class="text-center py-5 text-muted">
                                 <div>
                                     <span class="fs-1">📭</span>
-                                    <p class="mt-2">거래 내역이 없습니다.</p>
-                                    <a href="{% url 'transactions:transaction_create' %}" class="btn btn-primary btn-sm">+ 첫 거래
-                                        등록하기</a>
+                                    {% if request.GET.urlencode %}
+                                        <p class="mt-2">조건에 맞는 거래 내역이 없습니다.</p>
+                                        <a href="{% url 'transactions:transaction_list' %}" class="btn btn-outline-secondary btn-sm">전체 내역 보기</a>
+                                    {% else %}
+                                        <p class="mt-2">거래 내역이 없습니다.</p>
+                                        <a href="{% url 'transactions:transaction_create' %}" class="btn btn-primary btn-sm">➕ 첫 거래 등록하기</a>
+                                    {% endif %}
                                 </div>
                             </td>
                         </tr>
@@ -243,34 +223,29 @@
                 </table>
             </div>
 
-            <!-- 페이지네이션 (간결하게) -->
             {% if page_obj.has_other_pages %}
             <div class="p-3 border-top">
                 <nav>
                     <ul class="pagination pagination-sm justify-content-center mb-0">
                         {% if page_obj.has_previous %}
                         <li class="page-item">
-                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">이전</a>
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if querystring %}&{{ querystring }}{% endif %}">이전</a>
                         </li>
                         {% endif %}
 
                         {% for num in page_obj.paginator.page_range %}
-                        {% if page_obj.number == num %}
-                        <li class="page-item active">
-                            <span class="page-link">{{ num }}</span>
-                        </li>
-                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %} <li
-                            class="page-item">
-                            <a class="page-link" href="?page={{ num }}">{{ num }}</a>
-                            </li>
+                            {% if page_obj.number == num %}
+                            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            <li class="page-item"><a class="page-link" href="?page={{ num }}{% if querystring %}&{{ querystring }}{% endif %}">{{ num }}</a></li>
                             {% endif %}
-                            {% endfor %}
+                        {% endfor %}
 
-                            {% if page_obj.has_next %}
-                            <li class="page-item">
-                                <a class="page-link" href="?page={{ page_obj.next_page_number }}">다음</a>
-                            </li>
-                            {% endif %}
+                        {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if querystring %}&{{ querystring }}{% endif %}">다음</a>
+                        </li>
+                        {% endif %}
                     </ul>
                 </nav>
             </div>

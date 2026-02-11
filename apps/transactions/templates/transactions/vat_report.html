@@ -1,0 +1,436 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<div class="container-fluid px-4 py-3">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="mb-0 fw-bold text-dark">📊 부가세 신고 준비</h3>
+            <p class="text-muted mb-0 mt-1">
+                <strong>
+                    {{ year }}년 {{ quarter }}분기 ({{ start_date|date:"Y.m.d" }} ~ {{ end_date|date:"Y.m.d" }})
+                </strong>
+            </p>
+        </div>
+    </div>
+
+    <!-- 법적 고지 -->
+    <div class="alert alert-warning">
+        <h6>⚠️ 중요 안내</h6>
+        <ul class="mb-0">
+            <li>
+                <strong>
+                    정확한 신고는 <a href="https://www.hometax.go.kr" target="_blank" class="alert-link">홈택스</a>를 이용하거나 세무사와 상담하세요.
+                </strong></li>
+            <li>이 계산 결과는 <strong>참고용</strong>으로만 사용해주세요.</li>
+            <li>실제 금액은 미등록 내용, 기타 요인에 따라 달라질 수 있습니다.</li>
+            <li>본 서비스는 계산 오류나 신고 결과에 대한 책임을 지지 않습니다.</li>
+            <li>환급의 경우, 일반과세자는 환급 가능하나 간이과세자는 0원으로 처리됩니다.</li>
+        </ul>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body d-flex align-items-center">
+                    <div class="flex-shrink-0 me-3">
+                        <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                            <span class="fs-4">💰</span>
+                        </div>
+                    </div>
+                    <div>
+                        <p class="mb-0 text-muted small fw-bold">매출세액 (납부)</p>
+                        <h4 class="mb-0 fw-bold text-primary">
+                            {{ sales.total_sales_vat|default:0|floatformat:0|intcomma }}원
+                        </h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body d-flex align-items-center">
+                    <div class="flex-shrink-0 me-3">
+                        <div class="rounded-circle bg-danger bg-opacity-10 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                            <span class="fs-4">📉</span>
+                        </div>
+                    </div>
+                    <div>
+                        <p class="mb-0 text-muted small fw-bold">매입세액 (공제)</p>
+                        <h4 class="mb-0 fw-bold text-danger">
+                            {{ purchase.total_purchase_vat|default:0|floatformat:0|intcomma }}원
+                        </h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100" style="background-color: var(--primary-yellow-soft);">
+                <div class="card-body d-flex align-items-center">
+                    <div class="flex-shrink-0 me-3">
+                        <div class="rounded-circle bg-warning bg-opacity-25 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                            <span class="fs-4">💳</span>
+                        </div>
+                    </div>
+                    <div>
+                        {% if estimated_tax >= 0 %}
+                            <p class="mb-0 text-dark small fw-bold">예상 납부세액</p>
+                            <h4 class="mb-0 fw-bold text-dark">
+                                {{ estimated_tax|floatformat:0|intcomma }}원
+                            </h4>
+                        {% else %}
+                            <p class="mb-0 text-primary small fw-bold">예상 환급세액</p>
+                            <h4 class="mb-0 fw-bold text-primary">
+                                {{ abs_estimated_tax|floatformat:0|intcomma }}원
+                            </h4>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white py-3 border-bottom-0">
+                    <h5 class="mb-0 fw-bold fs-6">⚖️ 부가세 구성 비율</h5>
+                </div>
+                <div class="card-body d-flex justify-content-center align-items-center" style="height: 300px;">
+                    <canvas id="vatDoughnutChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white py-3 border-bottom-0">
+                    <h5 class="mb-0 fw-bold fs-6">📅 월별 세금 흐름 ({{ quarter }}분기)</h5>
+                </div>
+                <div class="card-body d-flex justify-content-center align-items-center" style="height: 300px;">
+                    <canvas id="vatBarChart" style="width: 100%;"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <h5 class="fw-bold mb-3">📅 기간 선택</h5>
+            
+            <div class="mb-3">
+                <span class="text-muted me-2 small fw-bold" style="display:inline-block; width: 40px;">연도:</span>
+                <form method="get" class="d-inline-flex align-items-center gap-2">
+                    <input type="hidden" name="quarter" value="{{ quarter }}">
+                    {% if month %}
+                    <input type="hidden" name="month" value="{{ month }}">
+                    {% endif %}
+                    <select name="year" class="form-select form-select-sm" style="width: 120px;">
+                        {% for y in year_options %}
+                            <option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}년</option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit" class="btn btn-sm btn-warning fw-bold">적용</button>
+                </form>
+            </div>
+
+            <div class="mb-3">
+                <span class="text-muted me-2 small fw-bold" style="display:inline-block; width: 40px;">분기:</span>
+                <div class="btn-group" role="group">
+                    <a href="?year={{ year }}&quarter=1" class="btn btn-sm {% if quarter == 1 %}btn-warning fw-bold{% else %}btn-outline-secondary{% endif %}">1분기</a>
+                    <a href="?year={{ year }}&quarter=2" class="btn btn-sm {% if quarter == 2 %}btn-warning fw-bold{% else %}btn-outline-secondary{% endif %}">2분기</a>
+                    <a href="?year={{ year }}&quarter=3" class="btn btn-sm {% if quarter == 3 %}btn-warning fw-bold{% else %}btn-outline-secondary{% endif %}">3분기</a>
+                    <a href="?year={{ year }}&quarter=4" class="btn btn-sm {% if quarter == 4 %}btn-warning fw-bold{% else %}btn-outline-secondary{% endif %}">4분기</a>
+                </div>
+            </div>
+
+            <div>
+                <span class="text-muted me-2 small fw-bold" style="display:inline-block; width: 40px;">상세:</span>
+                <div class="btn-group" role="group">
+                    <a href="?year={{ year }}&quarter={{ quarter }}" class="btn btn-sm {% if not month %}btn-dark fw-bold{% else %}btn-outline-secondary{% endif %}">
+                        분기 전체
+                    </a>
+                    {% for stat in monthly_stats %}
+                    <a href="?year={{ year }}&quarter={{ quarter }}&month={{ stat.month }}" class="btn btn-sm {% if month == stat.month %}btn-dark fw-bold{% else %}btn-outline-secondary{% endif %}">
+                        {{ stat.month }}월
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white py-3">
+            <h5 class="mb-0 fw-bold">
+                📝 상세 내역 
+                <span class="text-muted fs-6 ms-2 fw-normal">
+                    {% if month %}({{ month }}월){% else %}(전체){% endif %}
+                </span>
+            </h5>
+        </div>
+        
+        {% if not month %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="py-3 ps-4">월</th>
+                        <th class="py-3 text-end text-primary">매출세액</th>
+                        <th class="py-3 text-end text-danger">매입세액</th>
+                        <th class="py-3 text-end">순 납부세액</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for stat in monthly_stats %}
+                    <tr>
+                        <td class="ps-4 fw-bold">{{ stat.month }}월</td>
+                        <td class="text-end text-primary fw-bold">{{ stat.sales_vat|floatformat:0|intcomma }}원</td>
+                        <td class="text-end text-danger fw-bold">{{ stat.purchase_vat|floatformat:0|intcomma }}원</td>
+                        <td class="text-end fw-bold text-dark">{{ stat.net_vat|floatformat:0|intcomma }}원</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-center py-5 text-muted">데이터가 없습니다.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% else %}
+        
+        {% for stat in monthly_stats %}
+            {% if stat.month == month %}
+            <div class="bg-light p-3 border-bottom">
+                <div class="d-flex justify-content-around text-center">
+                    <div>
+                        <small class="text-muted d-block">매출세액</small>
+                        <span class="fw-bold text-primary">{{ stat.sales_vat|floatformat:0|intcomma }}</span>
+                    </div>
+                    <div>
+                        <small class="text-muted d-block">매입세액</small>
+                        <span class="fw-bold text-danger">{{ stat.purchase_vat|floatformat:0|intcomma }}</span>
+                    </div>
+                    <div>
+                        <small class="text-muted d-block">합계</small>
+                        <span class="fw-bold text-dark">{{ stat.net_vat|floatformat:0|intcomma }}</span>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        {% endfor %}
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="py-3 ps-4">날짜</th>
+                        <th class="py-3">거래처</th>
+                        <th class="py-3">구분</th>
+                        <th class="py-3 text-center">증빙</th>
+                        <th class="py-3 text-end">공급가액</th>
+                        <th class="py-3 text-end">부가세</th>
+                        <th class="py-3 text-end pe-4">합계</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for tx in page_obj %}
+                    <tr>
+                        <td class="ps-4 text-secondary">{{ tx.occurred_at|date:"Y-m-d" }}</td>
+                        <td class="fw-bold text-dark">{{ tx.get_merchant_display }}</td>
+                        <td>
+                            {% if tx.tx_type == 'IN' %}
+                            <span class="badge bg-primary bg-opacity-10 text-primary px-2 py-1">매출</span>
+                            {% else %}
+                            <span class="badge bg-danger bg-opacity-10 text-danger px-2 py-1">지출</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if tx.has_attachment %}
+                            <a href="{{ tx.attachment.file.url }}" target="_blank" class="text-decoration-none" title="증빙 보기">
+                                📄
+                            </a>
+                            {% else %}
+                            <span class="text-muted opacity-25">📄</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end text-secondary">{{ tx.supply_value|floatformat:0|intcomma }}</td>
+                        <td class="text-end fw-bold {% if tx.tx_type == 'IN' %}text-primary{% else %}text-danger{% endif %}">
+                            {{ tx.vat_amount|floatformat:0|intcomma }}
+                        </td>
+                        <td class="text-end pe-4 fw-bold">{{ tx.amount|floatformat:0|intcomma }}원</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-5 text-muted">
+                            해당 기간의 과세 거래 내역이 없습니다.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        {% if page_obj.has_other_pages %}
+        <div class="p-3 border-top">
+            <nav>
+                <ul class="pagination pagination-sm justify-content-center mb-0">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?year={{ year }}&quarter={{ quarter }}{% if month %}&month={{ month }}{% endif %}&page={{ page_obj.previous_page_number }}">이전</a>
+                    </li>
+                    {% endif %}
+
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                        <li class="page-item active" aria-current="page">
+                            <span class="page-link bg-warning border-warning text-dark">{{ num }}</span>
+                        </li>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link text-dark" href="?year={{ year }}&quarter={{ quarter }}{% if month %}&month={{ month }}{% endif %}&page={{ num }}">{{ num }}</a>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?year={{ year }}&quarter={{ quarter }}{% if month %}&month={{ month }}{% endif %}&page={{ page_obj.next_page_number }}">다음</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+
+        {% endif %}
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 1. 데이터 준비 (Django Template Variables -> JS)
+    const totalSalesVat = {{ sales.total_sales_vat|default:0 }};
+    const totalPurchaseVat = {{ purchase.total_purchase_vat|default:0 }};
+    
+    // 월별 데이터 (리스트 형태)
+    const monthlyLabels = [{% for stat in monthly_stats %}"{{ stat.month }}월",{% endfor %}];
+    const monthlySalesData = [{% for stat in monthly_stats %}{{ stat.sales_vat|default:0 }},{% endfor %}];
+    const monthlyPurchaseData = [{% for stat in monthly_stats %}{{ stat.purchase_vat|default:0 }},{% endfor %}];
+
+    // 색상 변수 (base.css 참조)
+    const colorSales = '#6C9BCF';   // secondary-blue
+    const colorPurchase = '#FF6B6B'; // accent-red
+    const colorHoverSales = '#4a82c2';
+    const colorHoverPurchase = '#fa5252';
+
+    // ----------------------------------------
+    // A. 도넛 차트 (전체 비율)
+    // ----------------------------------------
+    const ctxDoughnut = document.getElementById('vatDoughnutChart');
+    if (ctxDoughnut) {
+        new Chart(ctxDoughnut, {
+            type: 'doughnut',
+            data: {
+                labels: ['매출세액 (납부)', '매입세액 (공제)'],
+                datasets: [{
+                    data: [totalSalesVat, totalPurchaseVat],
+                    backgroundColor: [colorSales, colorPurchase],
+                    hoverBackgroundColor: [colorHoverSales, colorHoverPurchase],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { font: { family: 'Pretendard', size: 12 }, padding: 20 }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.label || '';
+                                let value = context.raw || 0;
+                                return label + ': ' + value.toLocaleString() + '원';
+                            }
+                        }
+                    }
+                },
+                cutout: '65%', // 도넛 두께 조절
+            }
+        });
+    }
+
+    // ----------------------------------------
+    // B. 막대 차트 (월별 추세)
+    // ----------------------------------------
+    const ctxBar = document.getElementById('vatBarChart');
+    if (ctxBar) {
+        new Chart(ctxBar, {
+            type: 'bar',
+            data: {
+                labels: monthlyLabels,
+                datasets: [
+                    {
+                        label: '매출세액',
+                        data: monthlySalesData,
+                        backgroundColor: colorSales,
+                        borderRadius: 4, // 막대 둥글게
+                    },
+                    {
+                        label: '매입세액',
+                        data: monthlyPurchaseData,
+                        backgroundColor: colorPurchase,
+                        borderRadius: 4,
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        align: 'end',
+                        labels: { boxWidth: 12, usePointStyle: true }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                let value = context.raw || 0;
+                                return label + ': ' + value.toLocaleString() + '원';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { borderDash: [2, 2], drawBorder: false }, // 점선 그리드
+                        ticks: {
+                            callback: function(value) {
+                                return value.toLocaleString() + '원';
+                            },
+                            font: { size: 11 }
+                        }
+                    },
+                    x: {
+                        grid: { display: false } // X축 세로선 제거
+                    }
+                },
+                interaction: {
+                    mode: 'index', // 마우스 오버 시 같은 월의 데이터를 동시에 보여줌
+                    intersect: false,
+                }
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

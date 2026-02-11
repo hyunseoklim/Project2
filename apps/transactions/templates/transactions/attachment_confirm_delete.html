@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block title %}첨부파일 삭제{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-lg-6 offset-lg-3">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">🗑️ 첨부파일 삭제</h4>
+                </div>
+                <div class="card-body">
+                    <p class="mb-4">다음 첨부파일을 삭제하시겠습니까?</p>
+                    
+                    <div class="alert alert-info">
+                        <p><strong>파일명:</strong> {{ attachment.original_name }}</p>
+                        <p><strong>유형:</strong> {{ attachment.get_attachment_type_display }}</p>
+                        <p><strong>크기:</strong> {{ attachment.size|filesizeformat }}</p>
+                    </div>
+                    
+                    <div class="alert alert-warning">
+                        <strong>⚠️ 경고:</strong> 삭제된 파일은 복구할 수 없습니다.
+                    </div>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{% url 'transactions:transaction_detail' attachment.transaction.pk %}" class="btn btn-secondary">취소</a>
+                            <button type="submit" class="btn btn-danger">삭제</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

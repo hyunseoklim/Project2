@@ -4,8 +4,19 @@ from . import views
 app_name = 'transactions'
 
 urlpatterns = [
+    path('vat-report/', views.VATReportView.as_view(), name='vat_report_default'),
+
     # Category
     path('categories/', views.category_list, name='category_list'),
+    path('categories/create/', views.category_create, name='category_create'),
+    path('categories/<int:pk>/update/', views.category_update, name='category_update'),
+    path('categories/<int:pk>/delete/', views.category_delete, name='category_delete'),
+
+    # 카테고리별 집계
+    path('categories/statistics/', views.category_statistics, name='category_statistics'),
+
+    # 월별 요약
+    path('summary/monthly/', views.monthly_summary, name='monthly_summary'),
 
     # Merchant
     path('merchants/', views.merchant_list, name='merchant_list'),
@@ -20,4 +31,16 @@ urlpatterns = [
     path('<int:pk>/', views.transaction_detail, name='transaction_detail'),
     path('<int:pk>/update/', views.transaction_update, name='transaction_update'),
     path('<int:pk>/delete/', views.transaction_delete, name='transaction_delete'),
-]
+
+    # excel
+    path('download-template/', views.download_excel_template, name='download_template'),
+    path('upload-excel/', views.upload_transactions_excel, name='upload_excel'),
+    path('export/', views.transaction_export_view, name='transaction_export'),
+
+    # 첨부파일
+    path('<int:transaction_id>/attachment/upload/', views.attachment_upload, name='attachment_upload'),
+    path('attachment/<int:pk>/download/', views.attachment_download, name='attachment_download'),
+    path('attachment/<int:pk>/delete/', views.attachment_delete, name='attachment_delete'),
+    path('attachments/', views.attachment_list_view, name='attachment_list'),
+
+]   
