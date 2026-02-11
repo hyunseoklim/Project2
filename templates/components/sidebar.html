@@ -46,7 +46,10 @@
         <ul class="nav-list">
             <li class="nav-item">
                 <a href="{% url 'transactions:vat_report_default' %}" class="nav-link {% if 'vat_report' in request.path %}active{% endif %}">
-                    📑 <span class="ms-1">세무 리포트</span>
+                    📑 <span class="ms-1">부가세</span>
+                </a>
+                <a href="{% url 'tax:income_tax_report' %}" class="nav-link {% if 'vat_report' in request.path %}active{% endif %}">
+                    📑 <span class="ms-1">종합소득세</span>
                 </a>
             </li>
         </ul>
