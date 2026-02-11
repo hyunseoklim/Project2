@@ -602,6 +602,11 @@ def transaction_delete(request, pk):
     transaction = get_object_or_404(Transaction, pk=pk, user=request.user, is_active=True)
 
     if request.method == 'POST':
+        # 영수증이 있다면 먼저 삭제 (위에 만든 모델의 delete가 실행되며 파일도 지워짐)
+        if hasattr(transaction, 'attachment'):
+            transaction.attachment.delete()
+        
+        # 거래는 소프트 삭제
         transaction.soft_delete()
         messages.success(request, '거래가 삭제되었습니다.')
         return redirect('transactions:transaction_list')
@@ -972,6 +977,7 @@ def attachment_list_view(request):
     evidence_queryset = Transaction.objects.select_related('attachment', 'account') \
         .filter(
             Q(user=request.user),
+            Q(is_active=True),
             Q(attachment__isnull=False) | Q(memo__icontains='영수증')
         ) \
         .order_by('-occurred_at').distinct()
