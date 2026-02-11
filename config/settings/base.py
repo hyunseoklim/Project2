@@ -9,7 +9,7 @@ import os
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent.parent  # settings 폴더 안이므로 parent 하나 더
 
-
+load_dotenv(BASE_DIR / '.env')
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = (
     os.environ.get("DJANGO_SECRET_KEY")
@@ -19,8 +19,7 @@ SECRET_KEY = (
 DEBUG = os.environ.get("DEBUG", "0") == "1"
 
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
-
+ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
 
 # Application definition
 
@@ -78,27 +77,26 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-        'ATOMIC_REQUESTS': True,
-    }
-}
-
-# 개발기간 동안은 SQLite3 사용
+# SQLlite3 주석
 # DATABASES = {
-#     "default": {
-#         "ENGINE": "django.db.backends.postgresql",
-#         "NAME": os.environ.get("POSTGRES_DB", "django_project"),
-#         "USER": os.environ.get("POSTGRES_USER", "project_user"),
-#         "PASSWORD": os.environ.get("POSTGRES_PASSWORD", "project-password"),
-#         "HOST": os.environ.get("POSTGRES_HOST", "127.0.0.1"),
-#         "PORT": os.environ.get("POSTGRES_PORT", "5432"),
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#         'ATOMIC_REQUESTS': True,
 #     }
 # }
 
-SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY") or "ci-dev-secret-key"
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": os.environ.get("POSTGRES_DB", "django_project"),
+        "USER": os.environ.get("POSTGRES_USER", "project_user"),
+        "PASSWORD": os.environ.get("POSTGRES_PASSWORD", "project-password"),
+        "HOST": os.environ.get("POSTGRES_HOST", "127.0.0.1"),
+        "PORT": os.environ.get("POSTGRES_PORT", "5432"),
+        'ATOMIC_REQUESTS': True,
+    }
+}
 
 
 # Password validation
