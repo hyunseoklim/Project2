@@ -41,7 +41,7 @@
                 <div class="col-12 col-md">
                     <select name="month" class="form-select form-select-sm fw-bold border-light-subtle w-100">
                         <option value="all" {% if selected_month == 'all' %}selected{% endif %}>월 전체</option>
-                        {% for m in "123456789101112"|make_list %}
+                        {% for m in "months_range"|make_list %}
                         <option value="{{ forloop.counter }}" {% if selected_month == forloop.counter|stringformat:"s" %}selected{% endif %}>{{ forloop.counter }}월</option>
                         {% endfor %}
                     </select>

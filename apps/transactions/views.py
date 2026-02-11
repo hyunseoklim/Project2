@@ -297,6 +297,7 @@ def monthly_summary(request):
     year_list = [d.year for d in year_list] or [current_year]
 
     context = {
+        'months_range': range(1, 13),
         'year': year,
         'month': month,
         'year_list': year_list,
@@ -456,7 +457,7 @@ def merchant_frequently_used(request):
 @login_required
 def transaction_list(request):
     """거래 목록"""
-    transactions = Transaction.active.filter(user=request.user).with_relations()
+    transactions = Transaction.active.filter(user=request.user, occurred_at__lte=timezone.now()).with_relations()
 
     # 검색 필터
     search = request.GET.get('search', '')
