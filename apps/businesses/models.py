@@ -148,6 +148,7 @@ class Business(SoftDeleteModel):
                 self.branch_code = self.get_next_branch_code()
         
         super().save(*args, **kwargs)
+        
 
 
 
@@ -266,6 +267,7 @@ class Account(SoftDeleteModel):
     def hard_delete(self):
         """DB에서 데이터를 완전히 삭제 (복구 불가)"""
         # 부모 클래스(models.Model)의 실제 delete를 호출합니다.
+        self.transactions.all().delete()
         super().delete()
         logger.info(f"계좌 '{self.name}' (ID: {self.pk}) 가 DB에서 영구 삭제되었습니다.")
 
