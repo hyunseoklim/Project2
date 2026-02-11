@@ -35,6 +35,8 @@ def account(test_user, business):
         name='Main Account',
         bank_name='Test Bank',
         account_number='123-456',
+        balance=Decimal('1000000.00'),  # ✅ 충분한 잔액 설정
+        is_active=True
     )
 
 
@@ -122,6 +124,7 @@ class TestTransactionViews:
         """거래 생성 및 수정"""
         create_url = reverse('transactions:transaction_create')
         occurred_at = timezone.now().strftime('%Y-%m-%dT%H:%M')
+        
 
         # 생성
         response = auth_client.post(create_url, {
