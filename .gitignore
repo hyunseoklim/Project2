@@ -15,6 +15,9 @@ db.sqlite3
 media/*
 !.gitkeep
 
+/staticfiles
+*.log
+
 # Virtual environments
 .venv
 

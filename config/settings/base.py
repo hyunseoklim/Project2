@@ -19,7 +19,7 @@ SECRET_KEY = (
 DEBUG = os.environ.get("DEBUG", "0") == "1"
 
 
-ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1", '.onrender.com').split(",")
 
 # Application definition
 
@@ -43,6 +43,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -144,6 +145,8 @@ STATICFILES_DIRS = [
     BASE_DIR / 'static',  # 공용 static 폴더
 ]
 STATIC_ROOT = BASE_DIR / 'staticfiles'  # collectstatic 할 때 모일 곳
+
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 
 # Media files (사용자 업로드 파일)
