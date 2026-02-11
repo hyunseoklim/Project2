@@ -138,6 +138,7 @@ class TestTransactionViews:
             'occurred_at': occurred_at,
             'memo': '메모',
         })
+    
 
         assert response.status_code == 302
         tx = Transaction.objects.get(user=test_user, merchant_name='테스트 거래처')
