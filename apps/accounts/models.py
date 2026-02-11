@@ -7,6 +7,8 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import RegexValidator
 from apps.core.models import TimeStampedModel
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 
 # 공통 검증 패턴
@@ -30,13 +32,6 @@ class Profile(TimeStampedModel):
     ]
     
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
-    business_registration_number = models.CharField(
-        max_length=10,
-        blank=True,
-        validators=[BUSINESS_NUMBER_VALIDATOR],
-        null=True,  
-        unique=True, # 중복 방지의 핵심!
-    )
     business_type = models.CharField(max_length=20, choices=BUSINESS_TYPE_CHOICES, blank=True)
     phone = models.CharField(max_length=20, blank=True, validators=[PHONE_VALIDATOR])
 
@@ -46,11 +41,19 @@ class Profile(TimeStampedModel):
     def __str__(self):
         return f"{self.user.username} 프로필"
     
-    def get_masked_business_number(self):
-        """사업자번호 마스킹 (123-45-*****)"""
-        if not self.business_registration_number:
-            return ''
-        num = self.business_registration_number.replace('-', '')
-        if len(num) == 10:
-            return f"{num[:3]}-{num[3:5]}-*****"
-        return self.business_registration_number
+    def get_main_business(self):
+        """사용자의 대표 사업장 반환"""
+        return self.user.businesses.filter(
+            is_active=True,
+            branch_type='main'
+        ).first()
+    
+@receiver(post_save, sender=User)
+def create_user_profile(sender, instance, created, **kwargs):
+    if created:
+        Profile.objects.create(user=instance)
+
+@receiver(post_save, sender=User)
+def save_user_profile(sender, instance, **kwargs):
+    if hasattr(instance, 'profile'):
+        instance.profile.save()
