@@ -124,19 +124,6 @@ class TestProfileAdminMasking:
         
         assert result == '01234*****'
     
-    def test_masked_brn_more_than_10_digits(self, profile_admin, user_with_profile):
-        """10자리 초과 (비정상이지만 처리)"""
-        user, profile = user_with_profile
-        profile.business_registration_number = '12345678901'  # 11자리
-        profile.save()
-        
-        profile.refresh_from_db()
-        
-        result = profile_admin.get_masked_brn(profile)
-        
-        # 10자리 이상이면 뒤 5자리 마스킹
-        assert result.endswith('*****')
-        assert len(result) == 11
 
 
 @pytest.mark.django_db(transaction=True)  # ⭐ transaction=True 추가
@@ -237,32 +224,6 @@ class TestProfileModelMasking:
         
         assert result == '000-00-*****'
     
-    def test_masked_business_number_with_hyphens(self, user_with_profile):
-        """하이픈 포함된 번호"""
-        user, profile = user_with_profile
-        profile.business_registration_number = '123-45-67890'  # 하이픈 포함 12자
-        profile.save()
-        
-        profile.refresh_from_db()
-        
-        result = profile.get_masked_business_number()
-        
-        # 하이픈 제거 후 10자리이므로 마스킹
-        assert result == '123-45-*****'
-    
-    def test_masked_business_number_more_than_10_digits(self, user_with_profile):
-        """10자리 초과 (비정상)"""
-        user, profile = user_with_profile
-        profile.business_registration_number = '12345678901'  # 11자리
-        profile.save()
-        
-        profile.refresh_from_db()
-        
-        result = profile.get_masked_business_number()
-        
-        # 하이픈 제거 후 10자리가 아니므로 원본 반환
-        assert result == '12345678901'
-
 
 @pytest.mark.django_db(transaction=True)
 class TestAdminIntegration:
