@@ -316,7 +316,7 @@ def process_transaction_excel(excel_file, user):
                         user=user,
                         business=business if business != default_business else default_business,
                         account_number=a_number_clean,
-                        name=f'엑셀 업로드 계좌 ({a_number_clean})',
+                        name=f'엑셀 업로드 계좌',
                         bank_name='미등록',
                         account_type='checking',
                         balance=Decimal('0')

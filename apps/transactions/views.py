@@ -36,10 +36,6 @@ logger = logging.getLogger(__name__)
 # Category
 # ============================================================
 
-# @login_required
-# def category_list(request):
-#     categories = Category.objects.all().order_by('type', 'order', 'name')
-#     return render(request, 'transactions/category_list.html', {'categories': categories})
 
 @login_required
 def category_list(request):
@@ -316,10 +312,6 @@ def monthly_summary(request):
 # Merchant CRUD
 # ============================================================
 
-# @login_required
-# def merchant_list(request):
-#     merchants = Merchant.active.filter(user=request.user)
-#     return render(request, 'transactions/merchant_list.html', {'merchants': merchants})
 
 @login_required
 def merchant_list(request):
@@ -360,11 +352,6 @@ def merchant_create(request):
 
     return render(request, 'transactions/merchant_form.html', {'form': form})
 
-
-# @login_required
-# def merchant_detail(request, pk):
-#     merchant = get_object_or_404(Merchant, pk=pk, user=request.user, is_active=True)
-#     return render(request, 'transactions/merchant_detail.html', {'merchant': merchant})
 
 @login_required
 def merchant_detail(request, pk):
