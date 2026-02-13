@@ -28,3 +28,6 @@ media/*
 # macOS 자동 생성되는 거니까 지우지 말아주세요!
 .DS_Store
 **/.DS_Store
+
+.coverage
+coverage.xml
