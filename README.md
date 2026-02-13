@@ -92,10 +92,16 @@ project2/
 
 ---
 
+## 화면 흐름 예시
+
+<p align="center">
+  <img src="./assets/user_flow.png" width="800">
+</p>
+
 ## 🖼 화면 예시
 
-> 스크린샷 첨부 예정 (대시보드 / 거래 목록 / 세무 보고서)
 
+<img src="./assets/homepage.png" width="100%">
 ---
 
 ## ✅ 테스트 실행
